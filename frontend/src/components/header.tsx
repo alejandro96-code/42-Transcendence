@@ -4,9 +4,7 @@ import { Menubar } from 'primereact/menubar'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
 import type { MenuItem } from 'primereact/menuitem'
-
 import logo42 from '../img/42.png'
-import '../styles/header.css'
 
 function Header() {
 

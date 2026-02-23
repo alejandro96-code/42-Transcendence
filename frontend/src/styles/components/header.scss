@@ -1,0 +1,12 @@
+.p-menubar {
+  flex-wrap: wrap;
+
+  &-start {
+    flex: 1;
+  }
+
+  &-button {
+    margin-left: auto;
+    order: 2;
+  }
+}

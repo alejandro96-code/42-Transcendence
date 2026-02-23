@@ -1,4 +1,3 @@
-import '../styles/Home.css'
 import Header from '../components/header'
 import Footer from '../components/footer'
 import PersonalData from '../components/personal_data'
