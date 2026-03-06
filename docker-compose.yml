@@ -1,0 +1,51 @@
+version: '3.8'
+
+# Frontend y Backend
+# La base de datos corre en docker-compose.db.yml (separada)
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    container_name: transcendence-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:4000
+    stdin_open: true
+    tty: true
+    networks:
+      - transcendence-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: transcendence-backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=transcendence
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    stdin_open: true
+    tty: true
+    networks:
+      - transcendence-network
+
+networks:
+  transcendence-network:
+    external: true
+    name: transcendence-network

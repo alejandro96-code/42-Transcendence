@@ -5,8 +5,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    host: '0.0.0.0', // Permite conexiones desde el host de Docker
     port: 3000,
     strictPort: true,
-    open: true
+    open: false, // No abrir navegador automáticamente en Docker
+    watch: {
+      usePolling: true // Necesario para hot-reload en algunos sistemas
+    }
   }
 })

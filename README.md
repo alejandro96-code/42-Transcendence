@@ -1,12 +1,32 @@
-Para lanzar el proyecto:
+# Transcendence
 
-cd fronted
-npm install
-cd ..
-make dev
+Proyecto fullstack con React + Vite (frontend) y Node.js + Express (backend) + PostgreSQL (BBDD)
 
-(en casa me funciona, falta comprobarlo en 42)
+Inicio rápido
 
-Jira
+Esto levanta:
+1. PostgreSQL (queda corriendo siempre, datos persisten) (http://localhost:5432)
+2. Backend (http://localhost:4000)
+3. Frontend (http://localhost:3000)
 
-https://transcendence-42-network.atlassian.net?continue=https%3A%2F%2Ftranscendence-42-network.atlassian.net%2Fwelcome%2Fsoftware&atlOrigin=eyJpIjoiZmRjMzExYjAyZjJhNDllNDkyNWUwY2RkMzNjMDZhOWIiLCJwIjoiaiJ9
+Comandos disponibles
+
+Primera vez
+make install          # Instalar todas las dependencias (monorepo)
+make dev              # Iniciar frontend
+make dev-backend      # Iniciar backend
+
+Las demas:
+
+make docker-db        # Levantar solo PostgreSQL (se mantiene corriendo)
+make docker-up        # Levantar frontend + backend (levanta BD automáticamente)
+make docker-down      # Detener frontend + backend (BD sigue corriendo)
+make docker-down-all  # Detener TODO incluyendo PostgreSQL
+make docker-logs      # Ver logs de los servicios
+make docker-clean     # ⚠️  Eliminar TODO (incluyendo datos de BD)
+make clean            # Limpiar node_modules y lock files
+```
+
+## 🔗 Enlaces
+
+Jira: https://transcendence-42-network.atlassian.net

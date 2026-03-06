@@ -1,6 +1,10 @@
-# Dependencies
+# Dependencies (monorepo)
 node_modules/
 frontend/node_modules/
+backend/node_modules/
+package-lock.json
+frontend/package-lock.json
+backend/package-lock.json
 
 # Build outputs
 dist/
@@ -25,6 +29,7 @@ lerna-debug.log*
 .env.production
 .env.test
 frontend/.env
+backend/.env
 
 # Editor directories and files
 .vscode/*
