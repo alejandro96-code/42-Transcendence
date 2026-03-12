@@ -30,6 +30,10 @@ docker-up: docker-db
 	@echo "$(BLUE)Backend: http://localhost:4000$(NC)"
 	@sleep 2
 	docker-compose up -d
+	@echo "$(BLUE)Inicializando base de datos...$(NC)"
+	@sleep 3
+	docker exec transcendence-postgres psql -U postgres -d transcendence -f /docker-entrypoint-initdb.d/init.sql 2>/dev/null || true
+	@echo "$(GREEN)✓ Base de datos lista$(NC)"
 
 docker-down:
 	@echo "$(YELLOW)Deteniendo frontend y backend (PostgreSQL sigue corriendo)...$(NC)"

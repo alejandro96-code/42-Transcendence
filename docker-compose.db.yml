@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Servicio independiente solo para PostgreSQL
 # Se levanta una vez y queda corriendo, los datos persisten siempre
 

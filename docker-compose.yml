@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Frontend y Backend
 # La base de datos corre en docker-compose.db.yml (separada)
 
