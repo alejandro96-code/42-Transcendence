@@ -42,11 +42,9 @@ make clean            # Limpiar node_modules y lock files
 Si al hacer login con la intra de 42 aparece el error `relation "users" does not exist`, es porque el volumen de PostgreSQL ya existía cuando se creó el contenedor y el `init.sql` no se ejecutó automáticamente.
 
 **Solución**: ejecutar el script manualmente:
-```bash
 docker exec transcendence-postgres psql -U postgres -d transcendence -f /docker-entrypoint-initdb.d/init.sql
-```
 
-> `init.sql` solo se ejecuta automáticamente cuando el volumen `postgres_data` está vacío (primera vez). Si borras el volumen con `make docker-clean` y lo recreás, se ejecuta solo.
+`init.sql` solo se ejecuta automáticamente cuando el volumen `postgres_data` está vacío (primera vez). Si borras el volumen con `make docker-clean` y lo recreás, se ejecuta solo.
 
 ## 🔗 Enlaces
 
