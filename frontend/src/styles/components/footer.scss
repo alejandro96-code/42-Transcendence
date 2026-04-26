@@ -2,16 +2,38 @@
 
 .footer-container {
   margin-top: auto;
-  border-radius: 0px;
+  border-radius: 0;
+  padding: 0.35rem 0.65rem;
   background: linear-gradient(150deg, rgba($color-3, 0.96), rgba($color-2, 0.94));
   box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.3), 0 -14px 30px rgba($color-1, 0.45);
   color: $color-text-write;
   z-index: 10;
+
+  .surface-card {
+    border-radius: $radius-sm;
+    background: rgba($color-2, 0.28);
+  }
+
+  small {
+    text-align: center;
+    max-width: 92ch;
+  }
 }
 
 .footer-container a {
-  color: $color-5;}
+  color: $color-5;
+}
 
 .footer-container a:hover {
   color: $color-text-write;
+}
+
+@media (max-width: $bp-sm) {
+  .footer-container {
+    padding: 0.25rem 0.35rem;
+
+    .surface-card {
+      padding: 0.7rem !important;
+    }
+  }
 }

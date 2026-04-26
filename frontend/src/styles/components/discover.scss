@@ -1,10 +1,48 @@
 @use '../variables' as *;
 
-.discover-container{
+.discover-container {
+    height: 100%;
+
     .surface-card {
-        height: 39vh;
+        min-height: clamp(240px, 30vh, 420px);
         background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%) !important;
         box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 26px 46px rgba($color-1, 0.5), inset 0 -1px 0 rgba($color-1, 0.25);
         color: $color-text-write;
+        border-radius: $radius-md;
+        border: 1px solid rgba($color-5, 0.15);
+    }
+
+    h3 {
+        font-size: clamp(1rem, 1.3vw, 1.2rem);
+    }
+
+    li {
+        font-size: 0.95rem;
+    }
+}
+
+@media (min-width: #{$bp-lg + 1}) {
+    .discover-container {
+        .surface-card {
+            min-height: 0;
+            height: 100%;
+            overflow: auto;
+        }
+    }
+}
+
+@media (max-width: $bp-lg) {
+    .discover-container {
+        .surface-card {
+            min-height: auto;
+        }
+    }
+}
+
+@media (max-width: $bp-sm) {
+    .discover-container {
+        .surface-card {
+            padding: 0.95rem !important;
+        }
     }
 }

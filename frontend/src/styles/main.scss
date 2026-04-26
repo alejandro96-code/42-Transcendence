@@ -1,13 +1,109 @@
 @use 'variables' as *;
-
-// Estilos de páginas
 @use 'pages/perfil';
 @use 'pages/login';
-
-// Estilos de componentes
 @use 'components/header';
 @use 'components/personal_data';
 @use 'components/friends';
 @use 'components/discover';
 @use 'components/posts';
 @use 'components/footer';
+
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+	--bg-deep: #02131b;
+	--bg-mid: #031f2a;
+	--bg-soft: #053142;
+	--surface-1: rgba(4, 51, 68, 0.9);
+	--surface-2: rgba(5, 70, 92, 0.92);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: $spacing-none;
+	font-family: 'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	color: $color-text-write;
+	background:
+		radial-gradient(circle at 8% 12%, rgba($color-5, 0.2) 0%, rgba($color-5, 0) 40%),
+		radial-gradient(circle at 92% 8%, rgba($color-4, 0.18) 0%, rgba($color-4, 0) 38%),
+		linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 46%, var(--bg-soft) 100%);
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: 'Space Grotesk', 'Manrope', sans-serif;
+	line-height: 1.15;
+	letter-spacing: 0.01em;
+}
+
+p,
+span,
+small,
+button,
+input,
+textarea {
+	line-height: 1.45;
+}
+
+.app-shell {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.app-content {
+	flex: 1;
+	width: min(1360px, 100% - 2rem);
+	margin-inline: auto;
+	padding-block: 0.9rem 1.25rem;
+}
+
+.content-grid {
+	margin: 0 !important;
+	gap: 0;
+}
+
+.ui-surface {
+	border-radius: $radius-md;
+	background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%);
+	box-shadow:
+		0 12px 22px rgba(0, 0, 0, 0.35),
+		0 26px 46px rgba($color-1, 0.5),
+		inset 0 -1px 0 rgba($color-1, 0.25);
+	color: $color-text-write;
+	border: 1px solid rgba($color-5, 0.16);
+}
+
+@media (max-width: $bp-lg) {
+	.app-content {
+		width: min(1100px, 100% - 1.25rem);
+	}
+}
+
+@media (max-width: $bp-md) {
+	.app-content {
+		width: min(900px, 100% - 1rem);
+		padding-block: 0.7rem 1rem;
+	}
+}
+
+@media (max-width: $bp-sm) {
+	.app-content {
+		width: calc(100% - 0.85rem);
+	}
+}

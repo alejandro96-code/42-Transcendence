@@ -1,30 +1,57 @@
 @use '../variables' as *;
 
-.container-login
-{
-  .p-card{
+.container-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 3vw, 2.4rem);
+
+  .login-shell {
+    width: min(100%, 30rem);
+  }
+
+  .p-card {
+    border-radius: $radius-lg;
     background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%) !important;
     box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 26px 46px rgba($color-1, 0.5), inset 0 -1px 0 rgba($color-1, 0.25);
     color: $color-text-write;
+    border: 1px solid rgba($color-5, 0.2);
 
-    h1{
+    h1 {
       color: $color-text-write;
+      font-size: clamp(1.8rem, 2.8vw, 2.5rem);
+      margin-bottom: 0.25rem;
     }
-    
-    .p-button
-    {
+
+    .login-subtitle {
+      color: rgba($color-text-write, 0.78);
+      margin: 0;
+      font-size: clamp(0.9rem, 1vw, 1rem);
+    }
+
+    .p-button {
       background-color: $color-4;
       border-color: $color-4;
       color: $color-text-write;
-      font-weight: bold;
-      border-radius: 0px;
+      font-weight: 700;
+      border-radius: $radius-sm;
+      min-height: 2.95rem;
     }
 
-    .p-button:hover
-    {
+    .p-button:hover {
       background-color: $color-5;
       border-color: $color-5;
       color: $color-text-black;
+    }
+  }
+}
+
+@media (max-width: $bp-sm) {
+  .container-login {
+    padding: 0.75rem;
+
+    .p-card {
+      border-radius: $radius-md;
     }
   }
 }

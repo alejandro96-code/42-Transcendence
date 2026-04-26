@@ -1,153 +1,213 @@
 @use '../variables' as *;
 
-.posts-container{
+.posts-container {
+    height: 100%;
 
     .surface-card {
-        height: 82vh;
+        min-height: clamp(480px, 58vh, 860px);
         display: flex;
         flex-direction: column;
         background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%) !important;
         box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 26px 46px rgba($color-1, 0.5), inset 0 -1px 0 rgba($color-1, 0.25);
         color: $color-text-write;
+        border-radius: $radius-md;
+        border: 1px solid rgba($color-5, 0.16);
+    }
 
-        h3 {
-            margin: 0 0 1rem 0;
+    .surface-card h3 {
+        margin: 0 0 0.95rem 0;
+        font-size: clamp(1rem, 1.2vw, 1.3rem);
+    }
+
+    .posts-form .post-comment {
+        border: 1px solid rgba($color-5, 0.28);
+        border-radius: $radius-sm;
+        padding: 0.7rem;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        background: rgba($color-1, 0.22);
+    }
+
+    .posts-form .post-comment .post-comment-textarea.with-image {
+        margin-bottom: 0.45rem;
+    }
+
+    .posts-form .post-comment .character-counter {
+        position: absolute;
+        font-style: italic;
+        top: 4.3rem;
+        right: 1rem;
+        color: rgba($color-text-write, 0.6);
+        font-size: 0.82rem;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .posts-form .post-comment .preview-image-container {
+        margin-bottom: 0.5rem;
+    }
+
+    .posts-form .post-comment .preview-image {
+        width: clamp(140px, 28%, 250px);
+        border-radius: $radius-xs;
+        border: 1px solid rgba($color-5, 0.24);
+    }
+
+    .posts-form .post-comment .hidden-file-input {
+        display: none;
+    }
+
+    .posts-form .post-comment .post-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .posts-form .post-comment .post-actions label {
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .posts-form .post-comment .image-error {
+        color: var(--red-500);
+        font-size: 0.85rem;
+        margin-top: 0.2rem;
+    }
+
+    .p-card {
+        background: rgba($color-1, 0.3);
+        box-shadow: 0 8px 18px rgba($color-1, 0.28);
+        border-radius: $radius-sm;
+        border: 1px solid rgba($color-5, 0.18);
+    }
+
+    .p-card .post-image {
+        width: min(420px, 100%);
+        border-radius: $radius-xs;
+        margin-bottom: 1rem;
+    }
+
+    .p-card .p-card-body {
+        color: $color-text-write;
+    }
+
+    .p-card .p-card-body .p-card-content {
+        padding: 0;
+    }
+
+    .p-card .p-card-body .p-card-content .texto {
+        text-align: left;
+        overflow-wrap: anywhere;
+    }
+
+    .p-card .p-card-body .p-card-content .fecha {
+        font-style: italic;
+        font-size: 0.75rem;
+    }
+
+    .p-button {
+        background-color: $color-4;
+        border-color: $color-4;
+        color: $color-text-write;
+        font-weight: 700;
+        border-radius: $radius-xs;
+    }
+
+    .p-button:hover {
+        background-color: $color-5;
+        border-color: $color-5;
+        color: $color-text-black;
+    }
+
+    .p-inputtextarea:hover,
+    .p-inputtextarea:focus {
+        border-color: $color-4;
+    }
+
+    .posts-list {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-right: 0.35rem;
+        margin-top: 0.2rem;
+    }
+
+    .posts-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .posts-list::-webkit-scrollbar-track {
+        background: rgba($color-1, 0.2);
+        border-radius: 3px;
+    }
+
+    .posts-list::-webkit-scrollbar-thumb {
+        background: rgba($color-5, 0.5);
+        border-radius: 3px;
+    }
+
+    .posts-list::-webkit-scrollbar-thumb:hover {
+        background: rgba($color-5, 0.8);
+    }
+}
+
+@media (min-width: #{$bp-lg + 1}) {
+    .posts-container {
+        .surface-card {
+            min-height: 0;
+            height: 100%;
         }
 
-        // Sección de publicar
-        .posts-form {
-            
-            .post-comment {
-                border: 1px solid var(--surface-border);
-                border-radius: 6px;
-                padding: 0.5rem;
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-
-                .post-comment-textarea {
-                    position: relative;
-
-                    &.with-image {
-                        margin-bottom: 0.5rem;
-                    }
-                }
-
-                .character-counter {
-                    position: absolute;
-                    font-style: italic;
-                    top: 4.3rem;
-                    right: 1rem;
-                    color: rgb(173, 173, 173);
-                    font-size: 0.85rem;
-                    z-index: 10;
-                    pointer-events: none;
-                }
-
-                .preview-image-container {
-                    margin-bottom: 0.5rem;
-
-                    .preview-image {
-                        width: 25%;
-                        border-radius: 8px;
-                    }
-                }
-
-                .hidden-file-input {
-                    display: none;
-                }
-
-                .post-actions {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    justify-content: space-between;
-
-                    label {
-                        margin: 0;
-                        cursor: pointer;
-                    }
-                }
-
-                .image-error {
-                    color: var(--red-500);
-                    font-size: 0.85rem;
-                    margin-top: 0.25rem;
-                }
-            }
-        }
-
-        .p-card { 
-            background: rgba($color-1, 0.28);
-            box-shadow: 0 8px 18px rgba($color-1, 0.28);
-
-            .post-image {
-                width: 50%;
-                border-radius: 8px;
-                margin-bottom: 1rem;
-            }
-
-            .p-card-body{
-                color: $color-text-write;
-                .p-card-content{
-                    padding: 0px;
-                    .texto{
-                        text-align: justify;
-                    }
-                    .fecha{
-                        font-style: italic;
-                        font-size: 12px;
-                    }
-                }
-            }
-        }
-
-        .p-button{
-            background-color: $color-4;
-            border-color: $color-4;
-            color: $color-text-write;
-            font-weight: bold;
-            border-radius: 0px;
-        }
-
-        .p-button:hover{
-            background-color: $color-5;
-            border-color: $color-5;
-            color: $color-text-black;
-        }
-
-        .p-inputtextarea:hover{
-            border-color: $color-4;
-        }
-
-        // Contenedor de posts con scroll
         .posts-list {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            padding-right: 8px;
-            
-            // Estilos para la barra de scroll
-            &::-webkit-scrollbar {
-                width: 6px;
-            }
-            
-            &::-webkit-scrollbar-track {
-                background: rgba($color-1, 0.2);
-                border-radius: 3px;
-            }
-            
-            &::-webkit-scrollbar-thumb {
-                background: rgba($color-5, 0.5);
-                border-radius: 3px;
-                
-                &:hover {
-                    background: rgba($color-5, 0.8);
-                }
-            }
+            min-height: 0;
+        }
+    }
+}
+
+@media (max-width: $bp-lg) {
+    .posts-container {
+        .surface-card {
+            min-height: auto;
+        }
+    }
+}
+
+@media (max-width: $bp-md) {
+    .posts-container {
+        .surface-card {
+            padding: 0.9rem !important;
+        }
+
+        .posts-form .post-comment .post-actions {
+            justify-content: flex-start;
+        }
+
+        .posts-list {
+            max-height: 60vh;
+        }
+    }
+}
+
+@media (max-width: $bp-sm) {
+    .posts-container {
+        .surface-card {
+            padding: 0.8rem !important;
+        }
+
+        .posts-form .post-comment .character-counter {
+            top: auto;
+            bottom: 4.2rem;
+            right: 0.9rem;
+        }
+
+        .posts-form .post-comment .preview-image {
+            width: min(100%, 220px);
         }
     }
 }
