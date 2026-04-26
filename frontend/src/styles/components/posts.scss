@@ -2,16 +2,17 @@
 
 .posts-container {
     height: 100%;
+    animation: riseFade 0.5s ease-out;
 
     .surface-card {
         min-height: clamp(480px, 58vh, 860px);
         display: flex;
         flex-direction: column;
-        background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%) !important;
-        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 26px 46px rgba($color-1, 0.5), inset 0 -1px 0 rgba($color-1, 0.25);
+        background: linear-gradient(158deg, rgba($color-3, 0.88) 0%, rgba($color-2, 0.84) 52%, rgba($color-2, 0.95) 100%) !important;
+        box-shadow: 0 18px 28px rgba(0, 0, 0, 0.34), 0 34px 56px rgba($color-1, 0.45), inset 0 1px 0 rgba($color-accent, 0.2);
         color: $color-text-write;
         border-radius: $radius-md;
-        border: 1px solid rgba($color-5, 0.16);
+        border: 1px solid rgba($color-5, 0.25);
     }
 
     .surface-card h3 {
@@ -20,14 +21,14 @@
     }
 
     .posts-form .post-comment {
-        border: 1px solid rgba($color-5, 0.28);
+        border: 1px solid rgba($color-5, 0.3);
         border-radius: $radius-sm;
-        padding: 0.7rem;
+        padding: 0.8rem;
         position: relative;
         display: flex;
         flex-direction: column;
         gap: 0.55rem;
-        background: rgba($color-1, 0.22);
+        background: rgba($color-1, 0.28);
     }
 
     .posts-form .post-comment .post-comment-textarea.with-image {
@@ -39,7 +40,7 @@
         font-style: italic;
         top: 4.3rem;
         right: 1rem;
-        color: rgba($color-text-write, 0.6);
+        color: rgba($color-text-write, 0.7);
         font-size: 0.82rem;
         z-index: 10;
         pointer-events: none;
@@ -52,7 +53,7 @@
     .posts-form .post-comment .preview-image {
         width: clamp(140px, 28%, 250px);
         border-radius: $radius-xs;
-        border: 1px solid rgba($color-5, 0.24);
+        border: 1px solid rgba($color-5, 0.35);
     }
 
     .posts-form .post-comment .hidden-file-input {
@@ -79,10 +80,10 @@
     }
 
     .p-card {
-        background: rgba($color-1, 0.3);
-        box-shadow: 0 8px 18px rgba($color-1, 0.28);
+        background: rgba($color-1, 0.34);
+        box-shadow: 0 10px 18px rgba($color-1, 0.26);
         border-radius: $radius-sm;
-        border: 1px solid rgba($color-5, 0.18);
+        border: 1px solid rgba($color-5, 0.24);
     }
 
     .p-card .post-image {
@@ -110,17 +111,18 @@
     }
 
     .p-button {
-        background-color: $color-4;
-        border-color: $color-4;
+        background: linear-gradient(135deg, $color-4 0%, $color-5 100%);
+        border-color: rgba($color-accent, 0.7);
         color: $color-text-write;
         font-weight: 700;
         border-radius: $radius-xs;
+        box-shadow: 0 8px 14px rgba($color-4, 0.3);
     }
 
     .p-button:hover {
-        background-color: $color-5;
-        border-color: $color-5;
-        color: $color-text-black;
+        background: linear-gradient(135deg, $color-5 0%, $color-4 100%);
+        border-color: rgba($color-accent, 0.9);
+        color: $color-text-write;
     }
 
     .p-inputtextarea:hover,
@@ -134,7 +136,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
-        padding-right: 0.35rem;
+        padding-right: 0.45rem;
         margin-top: 0.2rem;
     }
 

@@ -4,21 +4,25 @@
   position: sticky;
   top: 0;
   z-index: 20;
+  backdrop-filter: blur(10px);
 
   .p-menubar {
-    border-radius: 0;
-    border: 0;
-    padding: 0.6rem 0.8rem;
-    background: linear-gradient(150deg, rgba($color-3, 0.97), rgba($color-2, 0.95));
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.32), 0 16px 34px rgba($color-1, 0.45);
+    border-radius: 0 0 $radius-md $radius-md;
+    border: 1px solid rgba($color-5, 0.2);
+    border-top: 0;
+    padding: 0.6rem 0.95rem;
+    background: linear-gradient(152deg, rgba($color-3, 0.94), rgba($color-2, 0.9));
+    box-shadow: 0 14px 22px rgba(0, 0, 0, 0.3), 0 26px 44px rgba($color-1, 0.42);
     flex-wrap: wrap;
 
     .p-menubar-root-list {
       row-gap: 0.2rem;
+      column-gap: 0.15rem;
     }
 
     .p-menuitem-link {
       border-radius: $radius-xs;
+      transition: all 0.22s ease;
 
       .p-menuitem-icon,
       .p-menuitem-text {
@@ -27,7 +31,8 @@
     }
 
     .p-menuitem-link:hover {
-      background: rgba($color-5, 0.3);
+      background: rgba($color-5, 0.28);
+      transform: translateY(-1px);
 
       .p-menuitem-icon,
       .p-menuitem-text {
@@ -36,26 +41,30 @@
     }
 
     .p-button {
-      background-color: $color-4;
-      border-color: $color-4;
+      background: linear-gradient(135deg, $color-4 0%, $color-5 100%);
+      border-color: rgba($color-accent, 0.7);
       color: $color-text-write;
       font-weight: 700;
       border-radius: $radius-xs;
+      box-shadow: 0 8px 16px rgba($color-4, 0.35);
     }
 
     .p-button:hover {
-      background-color: $color-5;
-      border-color: $color-5;
-      color: $color-text-black;
+      background: linear-gradient(135deg, $color-5 0%, $color-4 100%);
+      border-color: rgba($color-accent, 0.95);
+      color: $color-text-write;
+      transform: translateY(-1px);
     }
 
     .p-inputtext {
       border-radius: $radius-xs;
       min-width: 170px;
+      background: rgba($color-1, 0.24);
+      border: 1px solid rgba($color-5, 0.32);
     }
 
-    .p-component:hover {
-      border-color: $color-4;
+    .p-menubar-button {
+      border-radius: $radius-xs;
     }
   }
 }
@@ -64,6 +73,8 @@
   .header-container {
     .p-menubar {
       padding: 0.45rem 0.6rem;
+      border-radius: 0;
+      border-inline: 0;
 
       .p-menubar-button {
         width: 2.4rem;

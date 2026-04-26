@@ -5,43 +5,51 @@
   display: grid;
   place-items: center;
   padding: clamp(1rem, 3vw, 2.4rem);
+  background:
+    radial-gradient(circle at 20% 20%, rgba($color-5, 0.18) 0%, rgba($color-5, 0) 48%),
+    radial-gradient(circle at 82% 86%, rgba($color-4, 0.2) 0%, rgba($color-4, 0) 44%);
 
   .login-shell {
     width: min(100%, 30rem);
+    animation: riseFade 0.5s ease-out;
   }
 
   .p-card {
     border-radius: $radius-lg;
-    background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%) !important;
-    box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 26px 46px rgba($color-1, 0.5), inset 0 -1px 0 rgba($color-1, 0.25);
+    background: linear-gradient(160deg, rgba($color-3, 0.88) 0%, rgba($color-2, 0.84) 50%, rgba($color-2, 0.95) 100%) !important;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.36), 0 30px 56px rgba($color-1, 0.52), inset 0 1px 0 rgba($color-accent, 0.22);
     color: $color-text-write;
-    border: 1px solid rgba($color-5, 0.2);
+    border: 1px solid rgba($color-5, 0.25);
 
     h1 {
       color: $color-text-write;
       font-size: clamp(1.8rem, 2.8vw, 2.5rem);
       margin-bottom: 0.25rem;
+      letter-spacing: 0.02em;
     }
 
     .login-subtitle {
-      color: rgba($color-text-write, 0.78);
+      color: rgba($color-text-write, 0.82);
       margin: 0;
       font-size: clamp(0.9rem, 1vw, 1rem);
     }
 
     .p-button {
-      background-color: $color-4;
-      border-color: $color-4;
+      background: linear-gradient(135deg, $color-4 0%, $color-5 100%);
+      border-color: rgba($color-5, 0.65);
       color: $color-text-write;
       font-weight: 700;
       border-radius: $radius-sm;
       min-height: 2.95rem;
+      box-shadow: 0 10px 20px rgba($color-4, 0.35);
     }
 
     .p-button:hover {
-      background-color: $color-5;
-      border-color: $color-5;
-      color: $color-text-black;
+      background: linear-gradient(135deg, $color-5 0%, $color-4 100%);
+      border-color: rgba($color-accent, 0.95);
+      color: $color-text-write;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 22px rgba($color-4, 0.45);
     }
   }
 }

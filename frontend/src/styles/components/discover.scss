@@ -2,22 +2,34 @@
 
 .discover-container {
     height: 100%;
+    animation: riseFade 0.52s ease-out;
 
     .surface-card {
         min-height: clamp(240px, 30vh, 420px);
-        background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%) !important;
-        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 26px 46px rgba($color-1, 0.5), inset 0 -1px 0 rgba($color-1, 0.25);
+        background: linear-gradient(160deg, rgba($color-3, 0.84) 0%, rgba($color-2, 0.82) 55%, rgba($color-2, 0.94) 100%) !important;
+        box-shadow: 0 14px 24px rgba(0, 0, 0, 0.32), 0 28px 50px rgba($color-1, 0.42), inset 0 1px 0 rgba($color-accent, 0.2);
         color: $color-text-write;
         border-radius: $radius-md;
-        border: 1px solid rgba($color-5, 0.15);
+        border: 1px solid rgba($color-5, 0.24);
     }
 
     h3 {
         font-size: clamp(1rem, 1.3vw, 1.2rem);
+        color: $color-accent;
     }
 
     li {
         font-size: 0.95rem;
+        padding: 0.45rem 0.5rem;
+        border-radius: $radius-xs;
+        background: rgba($color-1, 0.18);
+        border: 1px solid rgba($color-5, 0.2);
+    }
+
+    .p-badge {
+        border-radius: 999px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
     }
 }
 

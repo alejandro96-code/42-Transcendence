@@ -1,10 +1,10 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from 'primereact/button'
 import { TabView, TabPanel } from 'primereact/tabview'
-import { InputText } from 'primereact/inputtext'
 import { Avatar } from 'primereact/avatar'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Toast } from 'primereact/toast'
+import { subscribeFriendRequests } from '../services/friendEvents'
 
 interface Friend {
   id: number
@@ -37,53 +37,51 @@ const INITIAL_PENDING_REQUESTS: PendingRequest[] = [
   { id: 13, name: 'alopez', email: 'alopez@student.42', avatar: 'https://via.placeholder.com/40?text=AL', requestedAt: '2025-04-21' },
 ]
 
-const SEARCH_USERS: Friend[] = [
-  { id: 100, name: 'nuevousuario1', email: 'nuevousuario1@student.42', avatar: 'https://via.placeholder.com/40?text=NU', online: false },
-  { id: 101, name: 'testuser', email: 'testuser@student.42', avatar: 'https://via.placeholder.com/40?text=TU', online: true },
-]
-
 function Friends() {
   const toast = useRef<Toast>(null)
   
   const [friendsList, setFriendsList] = useState<Friend[]>(INITIAL_FRIENDS)
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>(INITIAL_PENDING_REQUESTS)
 
-  const [searchInput, setSearchInput] = useState('')
+  useEffect(() => {
+    const unsubscribe = subscribeFriendRequests(({ nickname }) => {
+      const normalizedNickname = nickname.trim().toLowerCase()
+      if (!normalizedNickname) {
+        return
+      }
 
-  const handleSearchFriend = (value: string) => {
-    setSearchInput(value)
-  }
+      setPendingRequests((currentRequests) => {
+        const exists = currentRequests.some((request) => request.name.toLowerCase() === normalizedNickname)
+        if (exists) {
+          toast.current?.show({
+            severity: 'info',
+            summary: 'Solicitud existente',
+            detail: `Ya hay una solicitud pendiente para ${nickname}`,
+          })
+          return currentRequests
+        }
 
-  const filteredSearch = useMemo(() => {
-    const query = searchInput.trim().toLowerCase()
-    if (!query) {
-      return []
-    }
+        const capitalized = nickname.trim()
+        toast.current?.show({
+          severity: 'success',
+          summary: 'Solicitud enviada',
+          detail: `Se envió la solicitud a ${capitalized}`,
+        })
 
-    return SEARCH_USERS.filter((user) => user.name.toLowerCase().includes(query))
-  }, [searchInput])
-
-  const handleAddFriend = (friend: Friend) => {
-    confirmDialog({
-      message: `¿Enviar solicitud de amistad a ${friend.name}?`,
-      header: 'Confirmar',
-      icon: 'pi pi-exclamation-triangle',
-      accept: () => {
-        setPendingRequests((currentRequests) => [
-          ...currentRequests,
+        return [
           {
-            id: friend.id,
-            name: friend.name,
-            email: friend.email,
-            avatar: friend.avatar,
+            id: Date.now(),
+            name: capitalized,
+            email: `${normalizedNickname}@student.42`,
             requestedAt: new Date().toISOString().split('T')[0],
           },
-        ])
-        setSearchInput('')
-        toast.current?.show({ severity: 'success', summary: 'Éxito', detail: `Solicitud enviada a ${friend.name}` })
-      }
+          ...currentRequests,
+        ]
+      })
     })
-  }
+
+    return unsubscribe
+  }, [])
 
   const handleAcceptRequest = (request: PendingRequest) => {
     confirmDialog({
@@ -214,47 +212,6 @@ function Friends() {
             )}
           </TabPanel>
 
-          {/* TAB 3: Agregar amigo */}
-          <TabPanel header="Agregar">
-            <div className="add-friend-tab">
-              <div className="search-box mb-3">
-                <InputText 
-                  placeholder="Introduce el nick del usuario" 
-                  value={searchInput}
-                  onChange={(e) => handleSearchFriend(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              {filteredSearch.length > 0 && (
-                <div className="search-results-inline">
-                  {filteredSearch.map((user) => (
-                    <div key={user.id} className="search-result-item">
-                      <div className="flex align-items-center justify-content-between">
-                        <div className="flex align-items-center gap-2">
-                          <Avatar image={user.avatar} label={user.name[0].toUpperCase()} />
-                          <div>
-                            <h4 className="mb-0">{user.name}</h4>
-                            <small className="text-secondary">{user.email}</small>
-                          </div>
-                        </div>
-                        <Button 
-                          icon="pi pi-plus" 
-                          className="p-button-rounded p-button-text p-button-sm"
-                          onClick={() => handleAddFriend(user)}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {searchInput.trim().length === 0 && (
-                <div className="empty-state-search">
-                  <i className="pi pi-search"></i>
-                  <p>Busca un usuario para enviarle una solicitud</p>
-                </div>
-              )}
-            </div>
-          </TabPanel>
         </TabView>
       </div>
     </div>

@@ -11,9 +11,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
-	--bg-deep: #02131b;
-	--bg-mid: #031f2a;
-	--bg-soft: #053142;
+	--bg-deep: #040913;
+	--bg-mid: #09192e;
+	--bg-soft: #122f53;
+	--surface-glass: rgba(18, 39, 66, 0.74);
+	--surface-glass-strong: rgba(26, 61, 102, 0.9);
 }
 
 * {
@@ -26,16 +28,48 @@ body,
 	min-height: 100%;
 }
 
+html {
+	scrollbar-gutter: stable;
+}
+
 body {
 	margin: $spacing-none;
 	font-family: 'Manrope', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 	color: $color-text-write;
 	background:
-		radial-gradient(circle at 8% 12%, rgba($color-5, 0.2) 0%, rgba($color-5, 0) 40%),
-		radial-gradient(circle at 92% 8%, rgba($color-4, 0.18) 0%, rgba($color-4, 0) 38%),
-		linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 46%, var(--bg-soft) 100%);
+		radial-gradient(circle at 9% 14%, rgba(99, 192, 255, 0.26) 0%, rgba(99, 192, 255, 0) 42%),
+		radial-gradient(circle at 94% 9%, rgba(45, 126, 234, 0.24) 0%, rgba(45, 126, 234, 0) 45%),
+		linear-gradient(164deg, var(--bg-deep) 0%, var(--bg-mid) 49%, var(--bg-soft) 100%);
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
+	position: relative;
+	overflow-x: hidden;
+}
+
+body::before,
+body::after {
+	content: '';
+	position: fixed;
+	border-radius: 999px;
+	filter: blur(70px);
+	pointer-events: none;
+	z-index: -1;
+}
+
+body::before {
+	width: 28rem;
+	height: 28rem;
+	top: -8rem;
+	right: -7rem;
+	background: rgba(99, 192, 255, 0.18);
+}
+
+body::after {
+	width: 20rem;
+	height: 20rem;
+	bottom: -6rem;
+	left: -6rem;
+	background: rgba(141, 224, 255, 0.13);
 }
 
 h1,
@@ -78,13 +112,44 @@ textarea {
 
 .ui-surface {
 	border-radius: $radius-md;
-	background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%);
+	background: linear-gradient(160deg, rgba($color-3, 0.9) 0%, rgba($color-2, 0.82) 52%, rgba($color-2, 0.9) 100%);
+	backdrop-filter: blur(8px);
 	box-shadow:
-		0 12px 22px rgba(0, 0, 0, 0.35),
-		0 26px 46px rgba($color-1, 0.5),
-		inset 0 -1px 0 rgba($color-1, 0.25);
+		0 16px 30px rgba(0, 0, 0, 0.34),
+		0 32px 56px rgba($color-1, 0.46),
+		inset 0 1px 0 rgba($color-accent, 0.2),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 	color: $color-text-write;
-	border: 1px solid rgba($color-5, 0.16);
+	border: 1px solid rgba($color-5, 0.22);
+}
+
+.p-inputtext,
+.p-inputtextarea {
+	background: rgba($color-1, 0.28);
+	border: 1px solid rgba($color-5, 0.3);
+	color: $color-text-write;
+}
+
+.p-inputtext:enabled:focus,
+.p-inputtextarea:enabled:focus {
+	box-shadow: 0 0 0 0.2rem rgba($color-4, 0.25);
+	border-color: rgba($color-5, 0.8);
+}
+
+.p-inputtext::placeholder,
+.p-inputtextarea::placeholder {
+	color: rgba($color-text-write, 0.55);
+}
+
+@keyframes riseFade {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 @media (max-width: $bp-lg) {

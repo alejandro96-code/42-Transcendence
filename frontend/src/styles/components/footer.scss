@@ -3,29 +3,33 @@
 .footer-container {
   margin-top: auto;
   border-radius: 0;
-  padding: 0.35rem 0.65rem;
-  background: linear-gradient(150deg, rgba($color-3, 0.96), rgba($color-2, 0.94));
-  box-shadow: 0 -8px 18px rgba(0, 0, 0, 0.3), 0 -14px 30px rgba($color-1, 0.45);
+  padding: 0.4rem 0.7rem;
+  background: linear-gradient(145deg, rgba($color-3, 0.92), rgba($color-2, 0.92));
+  box-shadow: 0 -10px 18px rgba(0, 0, 0, 0.25), 0 -18px 34px rgba($color-1, 0.4);
   color: $color-text-write;
   z-index: 10;
+  border-top: 1px solid rgba($color-5, 0.22);
 
   .surface-card {
     border-radius: $radius-sm;
-    background: rgba($color-2, 0.28);
+    background: rgba($color-2, 0.42);
+    border: 1px solid rgba($color-5, 0.16);
   }
 
   small {
     text-align: center;
     max-width: 92ch;
+    color: rgba($color-text-write, 0.82);
   }
 }
 
 .footer-container a {
-  color: $color-5;
+  color: $color-accent;
 }
 
 .footer-container a:hover {
   color: $color-text-write;
+  text-decoration-thickness: 2px;
 }
 
 @media (max-width: $bp-sm) {

@@ -2,22 +2,30 @@
 
 .personal_data-container {
     height: 100%;
+    animation: riseFade 0.45s ease-out;
 
     .surface-card {
         min-height: clamp(360px, 58vh, 760px);
-        background: linear-gradient(165deg, rgba($color-3, 0.96) 0%, rgba($color-2, 0.94) 100%) !important;
-        box-shadow: 0 12px 22px rgba(0, 0, 0, 0.35), 0 26px 46px rgba($color-1, 0.5), inset 0 -1px 0 rgba($color-1, 0.25);
+        background: linear-gradient(160deg, rgba($color-3, 0.84) 0%, rgba($color-2, 0.8) 58%, rgba($color-2, 0.94) 100%) !important;
+        box-shadow: 0 16px 26px rgba(0, 0, 0, 0.32), 0 30px 52px rgba($color-1, 0.44), inset 0 1px 0 rgba($color-accent, 0.2);
         color: $color-text-write;
         border-radius: $radius-md;
-        border: 1px solid rgba($color-5, 0.15);
+        border: 1px solid rgba($color-5, 0.25);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .surface-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 30px rgba(0, 0, 0, 0.35), 0 34px 58px rgba($color-1, 0.48), inset 0 1px 0 rgba($color-accent, 0.28);
     }
 
     .text-color-secondary {
-        color: rgba($color-text-write, 0.72) !important;
+        color: rgba($color-text-write, 0.74) !important;
     }
 
     .p-divider.p-divider-horizontal {
         margin: 0.65rem 0;
+        border-top-color: rgba($color-accent, 0.32);
     }
 }
 

@@ -10,7 +10,7 @@
   .app-content {
     width: 100%;
     max-width: none;
-    padding: 0.35rem 0.45rem 0.45rem;
+    padding: 0.45rem 0.6rem 0.65rem;
     min-height: 0;
     overflow: hidden;
   }
@@ -22,7 +22,7 @@
   }
 
   .content-grid > [class*='col-'] {
-    padding: 0.4rem;
+    padding: 0.5rem;
     min-height: 0;
   }
 
@@ -35,7 +35,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
+    gap: 0.95rem;
   }
 
   .right-pane-item {
@@ -58,11 +58,13 @@
 .game-main {
   min-height: clamp(320px, 52vh, 600px);
   padding: $space-4;
+  animation: riseFade 0.45s ease-out;
 }
 
 .game-main h1 {
   margin: 0;
   font-size: clamp(1.4rem, 2vw + 0.9rem, 2.4rem);
+  color: $color-accent;
 }
 
 @media (max-width: $bp-lg) {
@@ -74,7 +76,7 @@
 
     .app-content {
       overflow: visible;
-      padding: 0.55rem;
+      padding: 0.6rem;
     }
 
     .content-grid {
