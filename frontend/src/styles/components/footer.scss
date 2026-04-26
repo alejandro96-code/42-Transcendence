@@ -10,12 +10,6 @@
   z-index: 10;
   border-top: 1px solid rgba($color-5, 0.22);
 
-  .surface-card {
-    border-radius: $radius-sm;
-    background: rgba($color-2, 0.42);
-    border: 1px solid rgba($color-5, 0.16);
-  }
-
   small {
     text-align: center;
     max-width: 92ch;
