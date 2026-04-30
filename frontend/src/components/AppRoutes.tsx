@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setUser, clearUser, setLoading } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import Perfil from '../pages/Perfil'
+import PerfilPublico from '../pages/PerfilPublico'
 import Login from '../pages/Login'
 import Game from '../pages/Game'
 import Callback from '../pages/Callback'
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />
       <Route path="/callback" element={<Callback />} />
       <Route path="/" element={isAuthenticated ? <Perfil /> : <Navigate to="/login" />} />
+      <Route path="/perfil-publico" element={isAuthenticated ? <PerfilPublico /> : <Navigate to="/login" />} />
       <Route path="/game" element={isAuthenticated ? <Game /> : <Navigate to="/login" />} />
     </Routes>
   )

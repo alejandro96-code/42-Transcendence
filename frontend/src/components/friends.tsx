@@ -21,6 +21,11 @@ interface PendingRequest {
   requestedAt: string
 }
 
+interface FriendsProps {
+  readOnly?: boolean
+  initialFriends?: Friend[]
+}
+
 const INITIAL_FRIENDS: Friend[] = [
   { id: 1, name: 'alejanr2', online: true },
   { id: 2, name: 'Andefern', online: false },
@@ -47,10 +52,10 @@ const INITIAL_PENDING_REQUESTS: PendingRequest[] = [
   { id: 13, name: 'alopez', email: 'alopez@student.42', avatar: 'https://via.placeholder.com/40?text=AL', requestedAt: '2025-04-21' },
 ]
 
-function Friends() {
+function Friends({ readOnly = false, initialFriends }: FriendsProps) {
   const toast = useRef<Toast>(null)
   
-  const [friendsList, setFriendsList] = useState<Friend[]>(INITIAL_FRIENDS)
+  const [friendsList, setFriendsList] = useState<Friend[]>(initialFriends ?? INITIAL_FRIENDS)
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>(INITIAL_PENDING_REQUESTS)
   const [activeSection, setActiveSection] = useState<'friends' | 'requests'>('friends')
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false)
@@ -67,6 +72,10 @@ function Friends() {
   ), [friendsList])
 
   useEffect(() => {
+    if (readOnly) {
+      return
+    }
+
     const unsubscribe = subscribeFriendRequests(({ nickname }) => {
       const normalizedNickname = nickname.trim().toLowerCase()
       if (!normalizedNickname) {
@@ -104,13 +113,17 @@ function Friends() {
     })
 
     return unsubscribe
-  }, [])
+  }, [readOnly])
 
   useEffect(() => {
+    if (readOnly) {
+      return
+    }
+
     if (pendingRequests.length === 0 && activeSection !== 'friends') {
       setActiveSection('friends')
     }
-  }, [pendingRequests.length, activeSection])
+  }, [pendingRequests.length, activeSection, readOnly])
 
   const handleAcceptRequest = (request: PendingRequest) => {
     confirmDialog({
@@ -174,50 +187,58 @@ function Friends() {
 
   return (
     <div className='friends-container'>
-      <Toast ref={toast} />
-      <ConfirmDialog />
+      {!readOnly && <Toast ref={toast} />}
+      {!readOnly && <ConfirmDialog />}
       
       <div className="surface-card border-round-sm p-3">
-        <div className="friends-tabs">
-          <button
-            type="button"
-            className={`friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`}
-            onClick={() => setActiveSection('friends')}
-          >
-            <span>Amigos ({friendsList.length})</span>
-            <span
-              className="friends-tab-add"
-              role="button"
-              tabIndex={0}
-              onClick={(event) => {
-                event.stopPropagation()
-                setIsAddFriendOpen(true)
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  setIsAddFriendOpen(true)
-                }
-              }}
-              aria-label="Agregar amigo"
-            >
-              +
-            </span>
-          </button>
-          {pendingRequests.length > 0 && (
+        {!readOnly && (
+          <div className="friends-tabs">
             <button
               type="button"
-              className={`friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`}
-              onClick={() => setActiveSection('requests')}
+              className={`friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`}
+              onClick={() => setActiveSection('friends')}
             >
-              Solicitudes ({pendingRequests.length})
+              <span>Amigos ({friendsList.length})</span>
+              <span
+                className="friends-tab-add"
+                role="button"
+                tabIndex={0}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setIsAddFriendOpen(true)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setIsAddFriendOpen(true)
+                  }
+                }}
+                aria-label="Agregar amigo"
+              >
+                +
+              </span>
             </button>
-          )}
-        </div>
+            {pendingRequests.length > 0 && (
+              <button
+                type="button"
+                className={`friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`}
+                onClick={() => setActiveSection('requests')}
+              >
+                Solicitudes ({pendingRequests.length})
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="friends-panel">
-          {activeSection === 'friends' && (
+          {(readOnly || activeSection === 'friends') && (
             <section className="friends-section">
+              {!readOnly && (
+                <div className="section-header">
+                  <h4>Amigos</h4>
+                  <span className="section-meta">{friendsList.length}</span>
+                </div>
+              )}
               {friendsList.length > 0 ? (
                 <div className="friends-list">
                   {sortedFriends.map((friend) => (
@@ -233,14 +254,16 @@ function Friends() {
                           </small>
                         </div>
                       </div>
-                      <div className="friend-actions">
-                        <Button
-                          icon="pi pi-times"
-                          className="p-button-rounded p-button-danger p-button-text p-button-sm"
-                          tooltip="Eliminar"
-                          onClick={() => handleRemoveFriend(friend)}
-                        />
-                      </div>
+                      {!readOnly && (
+                        <div className="friend-actions">
+                          <Button
+                            icon="pi pi-times"
+                            className="p-button-rounded p-button-danger p-button-text p-button-sm"
+                            tooltip="Eliminar"
+                            onClick={() => handleRemoveFriend(friend)}
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -253,8 +276,12 @@ function Friends() {
             </section>
           )}
 
-          {activeSection === 'requests' && pendingRequests.length > 0 && (
+          {!readOnly && activeSection === 'requests' && pendingRequests.length > 0 && (
             <section className="friends-section">
+              <div className="section-header">
+                <h4>Solicitudes</h4>
+                <span className="section-meta">{pendingRequests.length}</span>
+              </div>
               <div className="requests-list">
                 {pendingRequests.map((request) => (
                   <div key={request.id} className="request-card">

@@ -15,9 +15,14 @@ interface Post {
 
 type FilterType = 'all' | 'my_posts' | 'friends_posts'
 
-function PostFeed() {
+interface PostFeedProps {
+  readOnly?: boolean
+  initialPosts?: Post[]
+}
+
+function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [posts, setPosts] = useState<Post[]>([])
+  const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [text, setText] = useState<string>('')
   const [filter, setFilter] = useState<FilterType>('all')
   const [image, setImage] = useState<string | null>(null)
@@ -67,6 +72,7 @@ function PostFeed() {
   }
 
   const filteredPosts = posts.filter((post) => {
+    if (readOnly) return true
     if (filter === 'my_posts') return !post.isFromFriend
     if (filter === 'friends_posts') return post.isFromFriend
     return true
@@ -75,75 +81,74 @@ function PostFeed() {
   return (
     <div className='posts-container'>
       <div className="surface-card border-round-sm p-3">
-        {/* Sección de publicar - altura auto */}
-        <div className="posts-form">
-          <h3>Publicar</h3>
-          <div className="post-comment">
-            <InputTextarea
-              value={text}
-              onChange={(e) => setText(e.target.value.slice(0, 200))}
-              rows={3}
-              placeholder="¿Qué quieres compartir?"
-              className={`w-full post-comment-textarea ${image ? 'with-image' : ''}`}
-              autoResize
-              maxLength={200}
-            />
-            
-            <small className="character-counter">
-              {text.length}/200
-            </small>
-            
-            {image && (
-              <div className="preview-image-container">
-                <img
-                  src={image}
-                  alt="Preview"
-                  className="preview-image"
-                />
-              </div>
-            )}
-
-            {/* Input file oculto */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageSelect}
-              className="hidden-file-input"
-            />
-
-            {/* Botones de acción */}
-            <div className="post-actions">
-              <Button
-                type="button"
-                label={image ? "Imagen seleccionada ✓" : "Añadir imagen"}
-                icon="pi pi-image"
-                severity={image ? 'success' : 'secondary'}
-                text
-                className="cursor-pointer"
-                onClick={() => fileInputRef.current?.click()}
+        {!readOnly && (
+          <div className="posts-form">
+            <h3>Publicar</h3>
+            <div className="post-comment">
+              <InputTextarea
+                value={text}
+                onChange={(e) => setText(e.target.value.slice(0, 200))}
+                rows={3}
+                placeholder="¿Qué quieres compartir?"
+                className={`w-full post-comment-textarea ${image ? 'with-image' : ''}`}
+                autoResize
+                maxLength={200}
               />
-              <Button label="Publicar" icon="pi pi-send" onClick={handlePost} disabled={!text.trim()} />
-            </div>
+              
+              <small className="character-counter">
+                {text.length}/200
+              </small>
+              
+              {image && (
+                <div className="preview-image-container">
+                  <img
+                    src={image}
+                    alt="Preview"
+                    className="preview-image"
+                  />
+                </div>
+              )}
 
-            {imageError && <small className="image-error">{imageError}</small>}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden-file-input"
+              />
+
+              <div className="post-actions">
+                <Button
+                  type="button"
+                  label={image ? "Imagen seleccionada ✓" : "Añadir imagen"}
+                  icon="pi pi-image"
+                  severity={image ? 'success' : 'secondary'}
+                  text
+                  className="cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                />
+                <Button label="Publicar" icon="pi pi-send" onClick={handlePost} disabled={!text.trim()} />
+              </div>
+
+              {imageError && <small className="image-error">{imageError}</small>}
+            </div>
+            
+            <div className="flex gap-2 mt-4 mb-4">
+              <Button
+                label="Tus posts"
+                onClick={() => setFilter('my_posts')}
+                severity={filter === 'my_posts' ? 'info' : 'secondary'}
+                text={filter !== 'my_posts'}
+              />
+              <Button
+                label="Posts de amigos"
+                onClick={() => setFilter('friends_posts')}
+                severity={filter === 'friends_posts' ? 'info' : 'secondary'}
+                text={filter !== 'friends_posts'}
+              />
+            </div>
           </div>
-          
-          <div className="flex gap-2 mt-4 mb-4">
-            <Button
-              label="Tus posts"
-              onClick={() => setFilter('my_posts')}
-              severity={filter === 'my_posts' ? 'info' : 'secondary'}
-              text={filter !== 'my_posts'}
-            />
-            <Button
-              label="Posts de amigos"
-              onClick={() => setFilter('friends_posts')}
-              severity={filter === 'friends_posts' ? 'info' : 'secondary'}
-              text={filter !== 'friends_posts'}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Sección de posts - ocupa espacio restante con scroll */}
         <div className="posts-list">
