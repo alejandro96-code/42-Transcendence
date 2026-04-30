@@ -17,96 +17,103 @@
     border-radius: $radius-md;
   }
 
-  .p-tabview {
+  .friends-tabs {
+    background: linear-gradient(92deg, rgba($color-2, 0) 0%, rgba($color-3, 0) 100%);
+    border-color: rgba($color-5, 0.22);
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 0.35rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .friends-tab {
+    color: rgba($color-text-write, 0.75);
+    border-color: rgba($color-5, 0.25);
+    width: 100%;
+    justify-content: center;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    transition: all 0.25s ease;
+    border-radius: $radius-xs;
+    background: rgba($color-1, 0.2);
+    border: 1px solid rgba($color-5, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    padding-inline: 0.6rem;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba($color-5, 0.2);
+      border-color: rgba($color-accent, 0.52);
+      color: $color-text-write;
+    }
+  }
+
+  .friends-tab.is-active {
+    background: linear-gradient(135deg, rgba($color-4, 0.75) 0%, rgba($color-5, 0.6) 100%);
+    color: $color-text-write;
+    box-shadow: 0 6px 12px rgba($color-4, 0.28), inset 0 1px 0 rgba($color-accent, 0.25);
+    border-color: rgba($color-accent, 0.8);
+  }
+
+  .friends-tab-add {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: $color-text-write;
+    background: rgba($color-1, 0.2);
+    border: 1px solid rgba($color-5, 0.25);
+    transition: background 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+      background: rgba($color-5, 0.2);
+      border-color: rgba($color-accent, 0.52);
+    }
+  }
+
+  .friends-panel {
     display: flex;
     flex-direction: column;
+    gap: 0.9rem;
     flex: 1;
     min-height: 0;
+  }
 
-    .p-tabview-nav {
-      background: linear-gradient(92deg, rgba($color-2, 0) 0%, rgba($color-3, 0) 100%);
-      border-color: rgba($color-5, 0.22);
-      border-bottom: 1px solid rgba($color-5, 0.26);
-      flex-shrink: 0;
-      padding: 0.2rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-      gap: 0.35rem;
+  .friends-section {
+    background: rgba($color-1, 0.2);
+    border-radius: $radius-sm;
+    border: 1px solid rgba($color-5, 0.18);
+    padding: 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    min-height: 0;
+  }
 
-      li {
-        margin: 0;
-        flex: 1 1 0;
-      }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
 
-      .p-tabview-nav-link {
-        color: rgba($color-text-write, 0.78);
-        border-color: transparent;
-        width: 100%;
-        justify-content: center;
-        padding: 0.7rem 0.5rem;
-        font-size: 0.88rem;
-        font-weight: 700;
-        letter-spacing: 0.2px;
-        transition: all 0.25s ease;
-        border-radius: $radius-xs;
-        background: rgba($color-1, 0.22);
-        border: 1px solid rgba($color-5, 0.22);
-
-        .friends-tab-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 0.25rem;
-          width: 100%;
-          padding-inline: 0.5rem;
-        }
-
-        .friends-tab-add {
-          width: 22px;
-          height: 22px;
-          padding: 0;
-          border-radius: 999px;
-          color: $color-text-write;
-
-          &:hover {
-            background: rgba($color-5, 0.2);
-          }
-        }
-
-        &:hover {
-          background: rgba($color-5, 0.2);
-          border-color: rgba($color-accent, 0.52);
-          color: $color-text-write;
-        }
-      }
-
-      .p-highlight {
-        .p-tabview-nav-link {
-          background: linear-gradient(135deg, rgba($color-4, 0.8) 0%, rgba($color-5, 0.62) 100%);
-          color: $color-text-write;
-          box-shadow: 0 4px 10px rgba($color-4, 0.35), inset 0 1px 0 rgba($color-accent, 0.3);
-          border-color: rgba($color-accent, 0.78);
-        }
-      }
-    }
-
-    .p-tabview-panels {
-      background: transparent !important;
-      padding: 0 !important;
-      flex: 1;
-      min-height: 0;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .p-tabview-panel {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
+  .section-meta {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: rgba($color-5, 0.18);
+    color: rgba($color-text-write, 0.75);
   }
 
   .friends-list,
@@ -116,7 +123,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    padding: 0.4rem;
     border-radius: $radius-sm;
 
     &::-webkit-scrollbar {
@@ -139,15 +145,15 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: start;
     gap: 0.55rem;
+    padding-right: 0.5rem;
   }
 
   .friend-card,
   .request-card {
-    padding: 0.4rem;
-    background: linear-gradient(140deg, rgba($color-2, 0.85) 0%, rgba($color-2, 0.62) 100%);
-    border-radius: $radius-sm;
-    border: 1px solid rgba($color-5, 0.24);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+    padding: 0.6rem 0.7rem;
+    background: rgba($color-2, 0.55);
+    border-radius: $radius-xs;
+    border: 1px solid rgba($color-5, 0.18);
     transition: all 0.25s ease;
     display: flex;
     align-items: center;
@@ -155,10 +161,8 @@
     gap: 0.4rem;
 
     &:hover {
-      background: linear-gradient(135deg, rgba($color-5, 0.22) 0%, rgba($color-4, 0.12) 100%);
-      border-color: rgba($color-5, 0.7);
-      box-shadow: 0 6px 12px rgba($color-4, 0.26);
-      transform: translateY(-1px);
+      background: rgba($color-2, 0.62);
+      border-color: rgba($color-5, 0.35);
     }
   }
 
@@ -178,7 +182,7 @@
     h4 {
       margin: 0;
       color: $color-text-write;
-      font-size: 0.82rem;
+      font-size: 0.7rem;
       font-weight: 700;
       display: flex;
       align-items: center;
@@ -298,8 +302,8 @@
     }
 
     &.p-button-rounded {
-      width: 15px !important;
-      height: 15px !important;
+      width: 24px !important;
+      height: 24px !important;
       padding: 0 !important;
 
       &:hover {
@@ -332,13 +336,10 @@
       max-height: 62vh;
     }
 
-    .p-tabview {
-      .p-tabview-nav {
-        .p-tabview-nav-link {
-          padding: 0.62rem 0.4rem;
-          font-size: 0.8rem;
-        }
-      }
+    .friends-tab {
+      padding: 0.5rem 0.4rem;
+      font-size: 0.78rem;
+      padding-inline: 0.45rem;
     }
 
     .friend-card,

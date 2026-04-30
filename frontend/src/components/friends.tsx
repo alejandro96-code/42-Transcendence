@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from 'primereact/button'
-import { TabView, TabPanel } from 'primereact/tabview'
 import { Avatar } from 'primereact/avatar'
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
@@ -53,7 +52,7 @@ function Friends() {
   
   const [friendsList, setFriendsList] = useState<Friend[]>(INITIAL_FRIENDS)
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>(INITIAL_PENDING_REQUESTS)
-  const [activeTabIndex, setActiveTabIndex] = useState(0)
+  const [activeSection, setActiveSection] = useState<'friends' | 'requests'>('friends')
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false)
   const [friendNick, setFriendNick] = useState('')
 
@@ -108,10 +107,10 @@ function Friends() {
   }, [])
 
   useEffect(() => {
-    if (pendingRequests.length === 0 && activeTabIndex !== 0) {
-      setActiveTabIndex(0)
+    if (pendingRequests.length === 0 && activeSection !== 'friends') {
+      setActiveSection('friends')
     }
-  }, [pendingRequests.length, activeTabIndex])
+  }, [pendingRequests.length, activeSection])
 
   const handleAcceptRequest = (request: PendingRequest) => {
     confirmDialog({
@@ -178,62 +177,84 @@ function Friends() {
       <Toast ref={toast} />
       <ConfirmDialog />
       
-      <div className="surface-card border-round-sm p-4">
-        <TabView activeIndex={activeTabIndex} onTabChange={(e) => setActiveTabIndex(e.index)}>
-          {/* TAB 1: Amigos */}
-          <TabPanel
-            header={
-              <div className="friends-tab-header">
-                <span>Amigos ({friendsList.length})</span>
-                <Button
-                  icon="pi pi-plus"
-                  className="friends-tab-add p-button-rounded p-button-text"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    setIsAddFriendOpen(true)
-                  }}
-                  tooltip="Agregar amigo"
-                />
-              </div>
-            }
+      <div className="surface-card border-round-sm p-3">
+        <div className="friends-tabs">
+          <button
+            type="button"
+            className={`friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`}
+            onClick={() => setActiveSection('friends')}
           >
-            {friendsList.length > 0 ? (
-              <div className="friends-list">
-                {sortedFriends.map((friend) => (
-                  <div key={friend.id} className="friend-card">
-                    <div className="friend-info">
-                      <div className="friend-details">
-                        <h4 className="mb-0">
-                          <span className={`status-dot ${friend.online ? 'online' : 'offline'}`} />
-                          {friend.name}
-                        </h4>
-                        <small className="text-secondary">
-                          {friend.online ? 'Online' : 'Offline'}
-                        </small>
+            <span>Amigos ({friendsList.length})</span>
+            <span
+              className="friends-tab-add"
+              role="button"
+              tabIndex={0}
+              onClick={(event) => {
+                event.stopPropagation()
+                setIsAddFriendOpen(true)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  setIsAddFriendOpen(true)
+                }
+              }}
+              aria-label="Agregar amigo"
+            >
+              +
+            </span>
+          </button>
+          {pendingRequests.length > 0 && (
+            <button
+              type="button"
+              className={`friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`}
+              onClick={() => setActiveSection('requests')}
+            >
+              Solicitudes ({pendingRequests.length})
+            </button>
+          )}
+        </div>
+
+        <div className="friends-panel">
+          {activeSection === 'friends' && (
+            <section className="friends-section">
+              {friendsList.length > 0 ? (
+                <div className="friends-list">
+                  {sortedFriends.map((friend) => (
+                    <div key={friend.id} className="friend-card">
+                      <div className="friend-info">
+                        <div className="friend-details">
+                          <h4 className="mb-0">
+                            <span className={`status-dot ${friend.online ? 'online' : 'offline'}`} />
+                            {friend.name}
+                          </h4>
+                          <small className="text-secondary">
+                            {friend.online ? 'Online' : 'Offline'}
+                          </small>
+                        </div>
+                      </div>
+                      <div className="friend-actions">
+                        <Button
+                          icon="pi pi-times"
+                          className="p-button-rounded p-button-danger p-button-text p-button-sm"
+                          tooltip="Eliminar"
+                          onClick={() => handleRemoveFriend(friend)}
+                        />
                       </div>
                     </div>
-                    <div className="friend-actions">
-                      <Button 
-                        icon="pi pi-times" 
-                        className="p-button-rounded p-button-danger p-button-text p-button-sm"
-                        tooltip="Eliminar"
-                        onClick={() => handleRemoveFriend(friend)}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <i className="pi pi-heart-fill"></i>
-                <p>No tienes amigos aún</p>
-              </div>
-            )}
-          </TabPanel>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <i className="pi pi-heart-fill"></i>
+                  <p>No tienes amigos aún</p>
+                </div>
+              )}
+            </section>
+          )}
 
-          {/* TAB 2: Solicitudes pendientes */}
-          {pendingRequests.length > 0 && (
-            <TabPanel header={`Solicitudes (${pendingRequests.length})`}>
+          {activeSection === 'requests' && pendingRequests.length > 0 && (
+            <section className="friends-section">
               <div className="requests-list">
                 {pendingRequests.map((request) => (
                   <div key={request.id} className="request-card">
@@ -245,14 +266,14 @@ function Friends() {
                       </div>
                     </div>
                     <div className="request-actions">
-                      <Button 
-                        icon="pi pi-check" 
+                      <Button
+                        icon="pi pi-check"
                         className="p-button-rounded p-button-success p-button-text p-button-sm"
                         tooltip="Aceptar"
                         onClick={() => handleAcceptRequest(request)}
                       />
-                      <Button 
-                        icon="pi pi-times" 
+                      <Button
+                        icon="pi pi-times"
                         className="p-button-rounded p-button-danger p-button-text p-button-sm"
                         tooltip="Rechazar"
                         onClick={() => handleRejectRequest(request)}
@@ -261,10 +282,9 @@ function Friends() {
                   </div>
                 ))}
               </div>
-            </TabPanel>
+            </section>
           )}
-
-        </TabView>
+        </div>
       </div>
 
       <Dialog
