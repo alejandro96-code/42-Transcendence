@@ -9,7 +9,8 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     open: false, // No abrir navegador automáticamente en Docker
-    allowedHosts: ['c4r8s6'],
+    allowedHosts: ['localhost'],
+    //allowedHosts: ['c4r8s6'],
     watch: {
       usePolling: true // Necesario para hot-reload en algunos sistemas
     }
