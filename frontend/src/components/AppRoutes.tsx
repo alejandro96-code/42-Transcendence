@@ -6,7 +6,6 @@ import { authAPI } from '../services/authAPI'
 import Perfil from '../pages/Perfil'
 import PerfilPublico from '../pages/PerfilPublico'
 import Login from '../pages/Login'
-import Game from '../pages/Game'
 import Callback from '../pages/Callback'
 import { ProgressSpinner } from 'primereact/progressspinner'
 
@@ -52,7 +51,6 @@ function AppRoutes() {
       <Route path="/callback" element={<Callback />} />
       <Route path="/" element={isAuthenticated ? <Perfil /> : <Navigate to="/login" />} />
       <Route path="/perfil-publico" element={isAuthenticated ? <PerfilPublico /> : <Navigate to="/login" />} />
-      <Route path="/game" element={isAuthenticated ? <Game /> : <Navigate to="/login" />} />
     </Routes>
   )
 }
