@@ -241,7 +241,7 @@
 
   .friend-avatar .p-avatar,
   .request-info .p-avatar {
-    background: linear-gradient(135deg, $color-4 0%, $color-5 100%);
+    background: $color-4;
     color: $color-text-write;
     width: 40px;
     height: 40px;
