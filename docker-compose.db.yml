@@ -36,4 +36,5 @@ volumes:
 
 networks:
   transcendence-network:
+    external: true
     name: transcendence-network
