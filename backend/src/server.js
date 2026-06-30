@@ -13,12 +13,26 @@ function start_server() {
     const app = express();
     const PORT = process.env.PORT || 4000;
 
+    console.log("Server start")
+    
     // Middleware
     app.use(cors({
         origin: process.env.FRONTEND_URL || 'http://localhost:3000',
         credentials: true
     }));
     app.use(express.json());
+
+    // JSONSCHEMA ERROR HANDLER
+    app.use((error, request, response, next) => {
+        if (error instanceof ValidationError) {
+            response.status(400).json(formatErrorJson(400, "Bad request",
+                error.name + " " + error.validationErrors));
+            return;
+        }
+
+        next(error);
+    });
+
 
     // Configuración de sesión
     app.use(session({
@@ -150,6 +164,8 @@ function start_server() {
     });
 
     app.get('/api/health', async (req, res) => {
+        console.log("After all this time, it's still you")
+
         try {
             await pool.query('SELECT 1');
             res.json({ status: 'ok', database: 'connected' });
@@ -158,7 +174,8 @@ function start_server() {
         }
     });
 
-    posts_endpoints(app, pool);
+    // Initialize endpoint routers
+    app.use("/api/posts", posts_endpoints);
 
     // Iniciar servidor
     app.listen(PORT, '0.0.0.0', () => {

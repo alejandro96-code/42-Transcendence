@@ -1,4 +1,5 @@
 import express, { response } from 'express';
+import { Validator } from "express-json-validator-middleware";
 
 // Middleware para verificar autenticación
 export const isAuthenticated = (req, res, next) => {
@@ -17,3 +18,5 @@ export function formatErrorJson(code, error, description) {
 
     return errorBody;
 }
+
+export const { validate } = new Validator({ allErrors: true });
