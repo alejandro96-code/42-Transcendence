@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS posts (
     author_username VARCHAR(50),
     content VARCHAR(240),
     likes INT DEFAULT 0,
-    media TEXT[]
+    media TEXT[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     parent BIGINT DEFAULT 0

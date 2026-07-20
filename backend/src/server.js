@@ -5,8 +5,10 @@ import pg from 'pg';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as FortyTwoStrategy } from 'passport-42';
+import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import { isAuthenticated } from "./utils.js"
+
 
 function start_server() {
     dotenv.config();
