@@ -18,11 +18,11 @@ function Login() {
 
           <div className="flex flex-column gap-4">
             <Button
-              label="SIGN IN WITH 42"
               className="w-full"
               size="large"
               onClick={handleOAuthLogin}
-            />
+            > SIGN IN WITH 42
+            </Button>
           </div>
         </Card>
       </div>

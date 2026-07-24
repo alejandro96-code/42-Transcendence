@@ -20,9 +20,11 @@ function Header() {
     <div className="header-container">
       <div className="header-bar">
         <div className="header-nav">
-              <Link to="/" className="header-brand" aria-label="Ir al perfil principal de Transcendence">
+              <Link to="/" className="header-brand">
                 <img src={logo42} alt="Logo de Transcendence" style={{ height: '36px' }} className="header-brand__logo" />
               </Link>
+              {/*
+              Solo visualizar para tener como ejemplo
               <Link to="/" className="header-nav__link">
                 <i className="pi pi-user mr-2"/>
                 <span>Perfil personal</span>
@@ -31,6 +33,7 @@ function Header() {
                 <i className="pi pi-users mr-2"/>
                 <span>Perfil público</span>
               </Link>
+              */}
         </div>
 
         <div className="header-actions">
@@ -42,14 +45,13 @@ function Header() {
           />
           <Button
             type="button"
-            label="Cerrar sesión"
             icon="pi pi-sign-out"
             severity="danger"
             outlined
             size="small"
-            aria-label="Cerrar sesión"
             onClick={handleLogout}
-          />
+          > Cerrar sesión
+          </Button>
         </div>
       </div>
     </div>

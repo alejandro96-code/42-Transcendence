@@ -131,7 +131,12 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
                   className="cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 />
-                <Button label="Publicar" icon="pi pi-send" onClick={handlePost} disabled={!text.trim()} />
+                <Button
+                icon="pi pi-send"
+                onClick={handlePost}
+                disabled={!text.trim()}
+                > Publicar
+                </Button>
               </div>
 
               {imageError && <small className="image-error">{imageError}</small>}
@@ -139,17 +144,17 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
             
             <div className="flex gap-2 mt-4 mb-4">
               <Button
-                label="Tus posts"
                 onClick={() => setFilter('my_posts')}
                 severity={filter === 'my_posts' ? 'info' : 'secondary'}
                 text={filter !== 'my_posts'}
-              />
+              > Tus posts
+              </Button>
               <Button
-                label="Posts de amigos"
                 onClick={() => setFilter('friends_posts')}
                 severity={filter === 'friends_posts' ? 'info' : 'secondary'}
                 text={filter !== 'friends_posts'}
-              />
+              > Posts de amigos
+              </Button>
             </div>
           </div>
         )}

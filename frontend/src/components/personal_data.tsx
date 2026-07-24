@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Divider } from 'primereact/divider'
 import { Avatar } from 'primereact/avatar'
 import { Button } from 'primereact/button'
 import { Dialog } from 'primereact/dialog'
@@ -97,25 +96,10 @@ function PersonalData({ profileUser, profileDetails, readOnly = false }: Persona
           />
         )}
         <div className="text-center">
-          <p className="font-bold text-xl m-0">{activeUser.full_name}</p>
-          <p className="text-color-secondary m-0">@{activeUser.username}</p>
+          <h2 className="text-xl m-0">{activeUser.full_name}</h2>
+          <h3 className="text-color-secondary m-0">@{activeUser.username}</h3>
+          <h3 className="text-color-secondary m-0">@{activeUser.email}</h3>
         </div>
-        <Divider className="my-1" />
-        <div className="w-full flex flex-column gap-2">
-          <div className="flex align-items-center gap-2">
-            <i className="pi pi-user text-color-secondary" />
-            <span className="text-sm">{activeUser.full_name}</span>
-          </div>
-          <div className="flex align-items-center gap-2">
-            <i className="pi pi-at text-color-secondary" />
-            <span className="text-sm">{activeUser.username}</span>
-          </div>
-          <div className="flex align-items-center gap-2">
-            <i className="pi pi-envelope text-color-secondary" />
-            <span className="text-sm">{activeUser.email}</span>
-          </div>
-        </div>
-        <Divider className="my-2" />
         <div className="w-full profile-details">
           <div className="profile-details__header">
             <div>
@@ -124,11 +108,11 @@ function PersonalData({ profileUser, profileDetails, readOnly = false }: Persona
             </div>
             {!readOnly && (
               <Button
-                label="Editar datos"
                 icon="pi pi-pencil"
                 className="p-button-sm p-button-outlined profile-details__edit"
                 onClick={() => setIsEditOpen(true)}
-              />
+              > Editar datos
+              </Button>
             )}
           </div>
           <div className="profile-details__grid">
@@ -186,15 +170,15 @@ function PersonalData({ profileUser, profileDetails, readOnly = false }: Persona
             </small>
             <div className="profile-details__actions">
               <Button
-                label="Cancelar"
                 className="p-button-text"
                 onClick={() => setIsEditOpen(false)}
-              />
+              > Cancelar
+              </Button>
               <Button
-                label="Guardar"
                 icon="pi pi-check"
                 onClick={handleSave}
-              />
+              > Guardar
+              </Button>
             </div>
           </div>
         </Dialog>

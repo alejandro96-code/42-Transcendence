@@ -201,9 +201,6 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
               <span>Amigos ({friendsList.length})</span>
               <span
                 className="friends-tab-add"
-                role="button"
-                tabIndex={0}
-                aria-label="Agregar amigo"
                 onClick={(event) => {
                   event.stopPropagation()
                   setIsAddFriendOpen(true)
@@ -262,7 +259,8 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
                             className="p-button-rounded p-button-danger p-button-text p-button-sm"
                             tooltip="Eliminar"
                             onClick={() => handleRemoveFriend(friend)}
-                          />
+                          > Eliminar Amigos
+                          </Button>
                         </div>
                       )}
                     </div>

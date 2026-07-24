@@ -51,29 +51,25 @@ function Discover() {
       <div className="surface-card border-round-sm p-3">
         <div className="discover-tabs">
           <Button
-            label="Comunidades"
             className={`discover-tab ${activeSection === 'communities' ? 'is-active' : ''}`}
             onClick={() => setActiveSection('communities')}
-          />
+          >Comunidades
+          </Button>
           <Button
-            label="Tendencias"
             className={`discover-tab ${activeSection === 'trends' ? 'is-active' : ''}`}
             onClick={() => setActiveSection('trends')}
-          />
+          > Tendencias
+          </Button>
           <Button
-            label="Eventos"
             className={`discover-tab ${activeSection === 'events' ? 'is-active' : ''}`}
             onClick={() => setActiveSection('events')}
-          />
+          > Eventos
+          </Button>
         </div>
 
         <div className="discover-panel">
           {activeSection === 'communities' && (
             <section className="discover-section communities">
-              <div className="section-header">
-                <h4>Comunidades y temas</h4>
-                <span className="section-meta">Sugeridos</span>
-              </div>
               <div className="topic-grid">
                 {communityTopics.map((topic) => (
                   <div key={topic.id} className="topic-card" style={{ borderColor: topic.color }}>
@@ -91,10 +87,6 @@ function Discover() {
 
           {activeSection === 'trends' && (
             <section className="discover-section trends">
-              <div className="section-header">
-                <h4>Tendencias</h4>
-                <span className="section-meta">Esta semana</span>
-              </div>
               <div className="trend-list">
                 {trends.map((trend) => (
                   <div key={trend.id} className="trend-item">
@@ -108,22 +100,17 @@ function Discover() {
 
           {activeSection === 'events' && (
             <section className="discover-section events">
-              <div className="section-header">
-                <h4>Eventos sociales</h4>
-                <span className="section-meta">Proximos</span>
-              </div>
               <div className="event-list">
                 {socialEvents.map((event) => (
                   <div key={event.id} className="event-card">
                     <div className="event-date">
                       <span>{event.date}</span>
-                      <span className="event-tag">{event.tag}</span>
                     </div>
                     <div>
                       <h5>{event.title}</h5>
                       <p>{event.location}</p>
                     </div>
-                    <Button label="Ver" className="event-action" />
+                    <Button className="event-action"> Ver </Button>
                   </div>
                 ))}
               </div>
