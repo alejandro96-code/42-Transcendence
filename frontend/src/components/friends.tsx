@@ -201,8 +201,6 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
               <span>Amigos ({friendsList.length})</span>
               <span
                 className="friends-tab-add"
-                role="button"
-                tabIndex={0}
                 onClick={(event) => {
                   event.stopPropagation()
                   setIsAddFriendOpen(true)
@@ -213,7 +211,6 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
                     setIsAddFriendOpen(true)
                   }
                 }}
-                aria-label="Agregar amigo"
               >
                 +
               </span>

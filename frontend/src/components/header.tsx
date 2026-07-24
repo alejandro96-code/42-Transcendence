@@ -1,15 +1,12 @@
-import { useNavigate } from 'react-router-dom'
-import { Menubar } from 'primereact/menubar'
+import { Link, useNavigate } from 'react-router-dom'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
-import type { MenuItem } from 'primereact/menuitem'
 import { useAppDispatch } from '../store/hooks'
 import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import logo42 from '../img/42.png'
 
 function Header() {
-
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
@@ -19,60 +16,41 @@ function Header() {
     navigate('/login')
   }
 
-  const items: MenuItem[] = [
-    { label: 'Perfil', icon: 'pi pi-user', command: () => navigate('/') },
-    { label: 'Perfil publico', icon: 'pi pi-users', command: () => navigate('/perfil-publico') },
-    { separator: true, className: 'lg:hidden' },
-    {
-      className: 'lg:hidden',
-      template: () => (
-        <div className="px-3 py-2">
-          <InputText
-            placeholder="Buscar..."
-            className="w-full"
-          />
+  return (
+    <div className="header-container">
+      <div className="header-bar">
+        <div className="header-nav">
+              <Link to="/" className="header-brand">
+                <img src={logo42} alt="imagen de 42" style={{ height: '36px' }} className="header-brand__logo" />
+              </Link>
+              <Link to="/" className="header-nav__link">
+                <i className="pi pi-user mr-2"/>
+                <span>Perfil personal</span>
+              </Link>
+              <Link to="/perfil-publico" className="header-nav__link">
+                <i className="pi pi-users mr-2"/>
+                <span>Perfil público</span>
+              </Link>
         </div>
-      ),
-    },
-    {
-      className: 'lg:hidden',
-      template: () => (
-        <div className="px-3 py-2">
+
+        <div className="header-actions">
+          <label htmlFor="header-search" className="sr-only">Buscar contenido en Transcendence</label>
+          <InputText
+            id="header-search"
+            placeholder="Buscar..."
+            className="p-inputtext-sm"
+          />
           <Button
+            type="button"
             label="Logout"
             icon="pi pi-sign-out"
             severity="danger"
             outlined
-            className="w-full"
+            size="small"
             onClick={handleLogout}
           />
         </div>
-      ),
-    },
-  ]
-
-  const start = <img src={logo42} alt="42 logo" style={{ height: '36px' }} className="mr-3"/>
-
-  const end = (
-    <div className="hidden lg:flex align-items-center gap-2" >
-      <InputText
-        placeholder="Buscar..."
-        className="p-inputtext-sm"
-      />
-      <Button
-        label="Logout"
-        icon="pi pi-sign-out"
-        severity="danger"
-        outlined
-        size="small"
-        onClick={handleLogout}
-      />
-    </div>
-  )
-
-  return (
-    <div className="header-container">
-      <Menubar model={items} start={start} end={end} className="mb-3" />
+      </div>
     </div>
   )
 }

@@ -8,7 +8,7 @@ function Login() {
   };
 
   return (
-    <div className='container-login'>
+    <main className='container-login'>
       <div className="login-shell">
         <Card className="shadow-8">
           <div className="text-center mb-5">
@@ -26,7 +26,7 @@ function Login() {
           </div>
         </Card>
       </div>
-    </div>
+    </main>
   )
 }
 

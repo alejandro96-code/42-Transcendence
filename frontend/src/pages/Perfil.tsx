@@ -10,6 +10,7 @@ function Perfil() {
     <div className="app-shell perfil-layout">
       <Header />
       <main className="app-content">
+        <h1 className="sr-only">Perfil de Transcendence</h1>
         <div className="grid content-grid">
           <div className="col-12 lg:col-3 left-pane">
             <PersonalData />
