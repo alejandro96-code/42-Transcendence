@@ -78,7 +78,7 @@ function Discover() {
                       <h5>{topic.name}</h5>
                       <span>{topic.members} miembros</span>
                     </div>
-                    <Button label="Seguir" className="topic-action" />
+                    <Button className="topic-action">Seguir</Button>
                   </div>
                 ))}
               </div>
@@ -110,7 +110,7 @@ function Discover() {
                       <h5>{event.title}</h5>
                       <p>{event.location}</p>
                     </div>
-                    <Button className="event-action"> Ver </Button>
+                    <Button className="event-action">Ver</Button>
                   </div>
                 ))}
               </div>

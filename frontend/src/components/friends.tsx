@@ -230,12 +230,6 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
         <div className="friends-panel">
           {(readOnly || activeSection === 'friends') && (
             <section className="friends-section">
-              {!readOnly && (
-                <div className="section-header">
-                  <h4>Amigos</h4>
-                  <span className="section-meta">{friendsList.length}</span>
-                </div>
-              )}
               {friendsList.length > 0 ? (
                 <div className="friends-list">
                   {sortedFriends.map((friend) => (
@@ -277,10 +271,6 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
 
           {!readOnly && activeSection === 'requests' && pendingRequests.length > 0 && (
             <section className="friends-section">
-              <div className="section-header">
-                <h4>Solicitudes</h4>
-                <span className="section-meta">{pendingRequests.length}</span>
-              </div>
               <div className="requests-list">
                 {pendingRequests.map((request) => (
                   <div key={request.id} className="request-card">

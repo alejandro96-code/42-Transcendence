@@ -123,16 +123,13 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
 
               <div className="post-actions">
                 <Button
-                  type="button"
-                  label={image ? "Imagen seleccionada ✓" : "Añadir imagen"}
-                  icon="pi pi-image"
                   severity={image ? 'success' : 'secondary'}
                   text
                   className="cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
-                />
+                > {image ? "Imagen seleccionada ✓" : "Añadir imagen"}
+                </Button>
                 <Button
-                icon="pi pi-send"
                 onClick={handlePost}
                 disabled={!text.trim()}
                 > Publicar
