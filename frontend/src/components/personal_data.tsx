@@ -81,7 +81,7 @@ function PersonalData({ profileUser, profileDetails, readOnly = false }: Persona
         {activeUser.avatar_url ? (
           <img
             src={activeUser.avatar_url}
-            alt="Foto de perfil"
+            alt={`Foto de perfil de ${activeUser.full_name || activeUser.username}`}
             style={{ width: '140px', height: '140px', borderRadius: '50%', objectFit: 'cover' }}
             onError={(e) => {
               // Si la imagen falla al cargar, mostrar avatar con iniciales

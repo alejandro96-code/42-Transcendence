@@ -85,7 +85,9 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
           <div className="posts-form">
             <h3>Publicar</h3>
             <div className="post-comment">
+              <label htmlFor="post-content" className="sr-only">Contenido de la publicación</label>
               <InputTextarea
+                id="post-content"
                 value={text}
                 onChange={(e) => setText(e.target.value.slice(0, 200))}
                 rows={3}
@@ -109,7 +111,9 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
                 </div>
               )}
 
+              <label htmlFor="post-image-upload" className="sr-only">Añadir imagen a la publicación</label>
               <input
+                id="post-image-upload"
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
