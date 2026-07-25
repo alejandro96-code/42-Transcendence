@@ -19,12 +19,13 @@ function Header() {
   return (
     <div className="header-container">
       <div className="header-bar">
+
+        {/* 42 icon and mocks profile)*/}
         <div className="header-nav">
               <Link to="/" className="header-brand">
                 <img src={logo42} alt="Logo de Transcendence" style={{ height: '36px' }} className="header-brand__logo" />
               </Link>
-              {/*
-              Solo visualizar para tener como ejemplo
+              {/* Solo visualizar para tener como ejemplo
               <Link to="/" className="header-nav__link">
                 <i className="pi pi-user mr-2"/>
                 <span>Perfil personal</span>
@@ -35,24 +36,25 @@ function Header() {
               </Link>
               */}
         </div>
-
+        
+        {/* Search Label and Logout Label (Añadir Dropdown de lenguajes)*/}
         <div className="header-actions">
           <label htmlFor="header-search" className="sr-only">Buscar contenido en Transcendence</label>
           <InputText
             id="header-search"
-            placeholder="Buscar..."
+            placeholder="Search..."
             className="p-inputtext-sm"
           />
           <Button
             type="button"
-            icon="pi pi-sign-out"
             severity="danger"
             outlined
             size="small"
             onClick={handleLogout}
-          > Cerrar sesión
+          > Logout
           </Button>
         </div>
+
       </div>
     </div>
   )
