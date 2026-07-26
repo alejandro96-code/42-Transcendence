@@ -7,6 +7,7 @@
   backdrop-filter: blur(10px);
 
   .header-bar {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -16,7 +17,6 @@
     padding: 0.6rem 0.95rem;
     background: linear-gradient(152deg, rgba($color-3, 0.94), rgba($color-2, 0.9));
     box-shadow: 0 14px 22px rgba(0, 0, 0, 0.3), 0 26px 44px rgba($color-1, 0.42);
-    flex-wrap: wrap;
   }
 
   .header-brand {
@@ -28,39 +28,9 @@
     font-weight: 700;
   }
 
-  .header-brand__logo {
+  .header-brand-logo {
     height: 36px;
     width: auto;
-  }
-
-  .header-brand__name {
-    font-size: 0.95rem;
-    letter-spacing: 0.02em;
-  }
-
-  .header-nav__list {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .header-nav__link {
-    display: inline-flex;
-    align-items: center;
-    border-radius: $radius-xs;
-    padding: 0.55rem 0.7rem;
-    color: $color-text-write;
-    text-decoration: none;
-    transition: all 0.22s ease;
-
-    &:hover {
-      background: rgba($color-5, 0.28);
-      transform: translateY(-1px);
-      color: $color-text-black;
-    }
   }
 
   .header-actions {
@@ -69,49 +39,66 @@
     gap: 0.5rem;
   }
 
-  .p-button {
-    background: $color-logout;
-    border-color: rgba($color-accent, 0.7);
+  .header-menu-toggle {
+    display: none;
     color: $color-text-write;
-    font-weight: 700;
     border-radius: $radius-xs;
-    padding: 0.50rem 1.00rem;
-    font-size: 0.75rem;
+
+    &:hover {
+      background: rgba($color-5, 0.12);
+      color: $color-text-write;
+    }
+  }
+
+  .header-mobile-menu {
+    display: none;
+  }
+
+  .header-logout {
+    background: $color-logout;
+    color: $color-text-write;
+    border-radius: $radius-xs;
+    border-color: $color-logout;
 
     &:hover {
       background: $color-logout-hover;
-      border-color: rgba($color-accent, 0.95);
       color: $color-text-write;
-      transform: translateY(-1px);
+      border-color: $color-text-write;
     }
   }
 
-  .p-inputtext {
-    border-radius: $radius-xs;
-    min-width: 170px;
-    background: rgba($color-1, 0.24);
-    border: 1px solid rgba($color-5, 0.32);
+  .header-search--mobile,
+  .header-logout--mobile {
+    width: 100%;
   }
-}
 
-@media (max-width: $bp-md) {
-  .header-container {
+  @media (max-width: ($bp-md - 1px)) {
     .header-bar {
-      padding: 0.45rem 0.6rem;
-      border-radius: 0;
-      border-inline: 0;
+      flex-wrap: wrap;
+      align-items: flex-start;
     }
 
-    .header-nav__list {
-      width: 100%;
-      justify-content: space-between;
-      margin-top: 0.2rem;
+    .header-menu-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: auto;
     }
 
     .header-actions {
-      width: 100%;
-      justify-content: space-between;
-      margin-top: 0.2rem;
+      display: none;
+    }
+
+    .header-mobile-menu {
+      display: none;
+      flex-basis: 100%;
+      flex-direction: column;
+      gap: 0.7rem;
+      padding: 0.85rem 0 0.2rem;
+
+      &.is-open {
+        display: flex;
+      }
     }
   }
 }
