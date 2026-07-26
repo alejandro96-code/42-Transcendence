@@ -29,7 +29,7 @@
   }
 
   .header-brand-logo {
-    height: 36px;
+    height: 40px;
     width: auto;
   }
 
@@ -72,10 +72,9 @@
     width: 100%;
   }
 
-  @media (max-width: ($bp-md - 1px)) {
+  @media (max-width: ($bp-md)) {
     .header-bar {
       flex-wrap: wrap;
-      align-items: flex-start;
     }
 
     .header-menu-toggle {
