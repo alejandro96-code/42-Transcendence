@@ -15,12 +15,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
-    author_id BIGINT,
+    author_id INT,
     author_username VARCHAR(50),
     content VARCHAR(240),
-    likes INT DEFAULT 0,
+    likes INT[],
     media TEXT[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    parent BIGINT DEFAULT 0
+    parent INT DEFAULT 0
 );
