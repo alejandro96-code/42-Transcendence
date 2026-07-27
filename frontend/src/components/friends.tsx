@@ -313,7 +313,6 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
           setFriendNick('')
         }}
         className="add-friend-dialog"
-        style={{ width: 'min(92vw, 28rem)' }}
       >
         <div className="flex flex-column gap-3">
           <span>Escribe el nick del usuario al que quieres enviar la solicitud.</span>

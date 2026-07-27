@@ -2,29 +2,22 @@
 
 .posts-container {
     height: 100%;
-    animation: riseFade 0.5s ease-out;
 
     .surface-card {
-        min-height: clamp(480px, 58vh, 860px);
         display: flex;
         flex-direction: column;
-        background: linear-gradient(158deg, rgba($color-3, 0.88) 0%, rgba($color-2, 0.84) 52%, rgba($color-2, 0.95) 100%) !important;
-        box-shadow: 0 18px 28px rgba(0, 0, 0, 0.34), 0 34px 56px rgba($color-1, 0.45), inset 0 1px 0 rgba($color-accent, 0.2);
-        color: $color-text-write;
-        border-radius: $radius-md;
-        border: 1px solid rgba($color-5, 0.25);
+        background: $background-box;
+        border: $border-box;
     }
 
     .surface-card {
         h3 {
             margin: 0 0 0.95rem 0;
-            font-size: clamp(1rem, 1.2vw, 1.3rem);
         }
     }
 
     .posts-form {
         .post-comment {
-            border: 1px solid rgba($color-5, 0.3);
             border-radius: $radius-sm;
             padding: 0.8rem;
             position: relative;
@@ -117,20 +110,17 @@
     }
 
     .p-button {
-        background: $color-4;
-        border-color: rgba($color-accent, 0.7);
+        background: $color-button;
         color: $color-text-write;
-        font-weight: 700;
         border-radius: $radius-xs;
+        border-color: $color-button;
         padding: 0.50rem 1.00rem;
-        font-size: 0.75rem
-    }
+        font-size: 0.75rem;
 
-    .p-button {
         &:hover {
-            background: $color-3;
-            border-color: rgba($color-accent, 0.9);
+            background: $color-button-hover;
             color: $color-text-write;
+            border-color: $color-text-write;
         }
     }
 
@@ -173,7 +163,6 @@
 @media (min-width: #{$bp-lg + 1}) {
     .posts-container {
         .surface-card {
-            min-height: 0;
             height: 100%;
         }
 
