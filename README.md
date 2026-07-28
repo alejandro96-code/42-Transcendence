@@ -17,16 +17,14 @@ Esto levanta:
 Comandos disponibles
 
 Primera vez todo desde la raiz del proyecto
-make install          # Instalar todas las dependencias (monorepo)
 
-y (
-    make dev              # Iniciar frontend
-    make dev-backend      # Iniciar backend
-)
-o
-(
-    make docker-up        # Levantar frontend + backend (levanta BD automáticamente)
-)
+docker compose build --no-cache backend
+docker compose up -d --force-recreate backend
+docker compose logs -f backend
+
+make install  # Instalar todas las dependencias (monorepo)
+
+make docker-up        # Levantar frontend + backend (levanta BD automáticamente)
 
 
 Las demas:
