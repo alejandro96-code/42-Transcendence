@@ -14,13 +14,23 @@ Esto levanta:
     3.4 Contraseña: postgres
     3.5 Base de datos: transcendence
 
-Comandos disponibles
 
-Primera vez todo desde la raiz del proyecto
+
+Solucion error por version de paquetes con backend
 
 docker compose build --no-cache backend
 docker compose up -d --force-recreate backend
 docker compose logs -f backend
+
+si persiste el error:
+
+docker compose stop backend
+docker rm transcendence-backend
+docker compose up -d --build backend
+
+Comandos disponibles
+
+Primera vez todo desde la raiz del proyecto
 
 make install  # Instalar todas las dependencias (monorepo)
 
