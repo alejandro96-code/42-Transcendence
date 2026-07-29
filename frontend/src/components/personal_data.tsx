@@ -96,9 +96,9 @@ function PersonalData({ profileUser, profileDetails, readOnly = false }: Persona
           />
         )}
         <div className="text-center">
-          <h2 className="text-xl m-0">{activeUser.full_name}</h2>
-          <h3 className="text-color-secondary m-0">@{activeUser.username}</h3>
-          <h3 className="text-color-secondary m-0">@{activeUser.email}</h3>
+          <h2 className="full-name m-1">{activeUser.full_name}</h2>
+          <h3 className="user-name m-1">{activeUser.username}</h3>
+          <h3 className="user-email m-1">{activeUser.email}</h3>
         </div>
         <div className="w-full profile-details">
           <div className="profile-details__header">

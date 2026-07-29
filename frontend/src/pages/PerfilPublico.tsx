@@ -3,7 +3,7 @@ import Footer from '../components/footer'
 import PersonalData from '../components/personal_data'
 import PostFeed from '../components/posts'
 import Friends from '../components/friends'
-import Discover from '../components/discover'
+import Chat from '../components/chat'
 
 const PUBLIC_USER = {
   full_name: 'Asier Galeán Ullíbarri',
@@ -73,7 +73,7 @@ function PerfilPublico() {
               <Friends readOnly initialFriends={PUBLIC_FRIENDS} />
             </div>
             <div className="right-pane-item">
-              <Discover />
+              <Chat />
             </div>
           </div>
         </div>

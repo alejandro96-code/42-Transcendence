@@ -3,7 +3,7 @@ import Footer from '../components/footer'
 import PersonalData from '../components/personal_data'
 import PostFeed from '../components/posts'
 import Friends from '../components/friends'
-import Discover from '../components/discover'
+import Chat from '../components/chat'
 
 function Perfil() {
   return (
@@ -23,7 +23,7 @@ function Perfil() {
               <Friends />
             </div>
             <div className="right-pane-item">
-              <Discover />
+              <Chat />
             </div>
           </div>
         </div>

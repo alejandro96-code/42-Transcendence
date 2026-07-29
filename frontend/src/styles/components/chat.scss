@@ -1,0 +1,89 @@
+@use '../variables' as *;
+
+.chat-container {
+    height: 100%;
+    animation: riseFade 0.52s ease-out;
+
+    .surface-card {
+        height: 100%;
+        min-height: clamp(240px, 30vh, 420px);
+        box-shadow: 0 14px 24px rgba(0, 0, 0, 0.32), 0 28px 50px rgba($color-1, 0.42), inset 0 1px 0 rgba($color-accent, 0.2);
+        color: $color-text-write;
+        border-radius: $radius-md;
+        border: 1px solid rgba($color-5, 0.24);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .chat-friend-name{
+        padding-bottom:0.5rem;
+    }
+    .chat-panel{
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .chat-section{
+        background: rgba(6, 13, 26, 0.2);
+        border-top-left-radius : 10px;
+        border-top-right-radius : 10px;
+        border: 1px solid rgba(99, 192, 255, 0.18);
+        padding: 0.7rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        min-height: 0;
+    }
+
+    .chat-list{
+        overflow-y: auto;
+        display: block;
+        align-items: start;
+        padding-right: 0.5rem;
+
+        .personal-comment{
+            border-radius: 5px;
+            margin: 0.25rem 0rem;
+            text-align: start;
+            background-color: $color-4;
+            padding: 0.5rem;
+        }
+
+        .friend-comment{
+            border-radius: 5px;
+            margin: 0.25rem 0rem;
+            text-align: end;
+            background-color: $color-3;
+            padding: 0.5rem;
+        }
+            &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: rgba($color-1, 0.2);
+            border-radius: 3px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: rgba($color-5, 0.5);
+            border-radius: 3px;
+
+            &:hover {
+                background: rgba($color-5, 0.8);
+            }
+        }
+    }
+
+    .send-text{
+        border-top-left-radius : 0px;
+        border-top-right-radius : 0px;
+        border-bottom-left-radius : 10px;
+        border-bottom-right-radius : 10px;
+    }
+}

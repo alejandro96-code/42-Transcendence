@@ -13,6 +13,10 @@
         transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
 
+    .full-name, .user-name, .user-email{
+        font-size: 1em;
+        padding: 0.25rem;
+    }
 
     .text-color-secondary {
         color: rgba($color-text-write, 0.74) !important;

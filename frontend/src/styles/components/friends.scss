@@ -138,19 +138,23 @@
     gap: 0.75rem;
     border-radius: $radius-sm;
 
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
 
-    &::-webkit-scrollbar-track {
-      background: rgba($color-4, 0.06);
-      border-radius: 999px;
-    }
+        &::-webkit-scrollbar-track {
+            background: rgba($color-1, 0.2);
+            border-radius: 3px;
+        }
 
-    &::-webkit-scrollbar-thumb {
-      background: rgba($color-4, 0.45);
-      border-radius: 999px;
-    }
+        &::-webkit-scrollbar-thumb {
+            background: rgba($color-5, 0.5);
+            border-radius: 3px;
+
+            &:hover {
+                background: rgba($color-5, 0.8);
+            }
+        }
   }
 
   .friends-list {
