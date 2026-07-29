@@ -2,7 +2,6 @@
 
 .chat-container {
     height: 100%;
-    animation: riseFade 0.52s ease-out;
 
     .surface-card {
         height: 100%;
@@ -50,7 +49,7 @@
             border-radius: 5px;
             margin: 0.25rem 0rem;
             text-align: start;
-            background-color: $color-4;
+            background-color: $color-button;
             padding: 0.5rem;
         }
 

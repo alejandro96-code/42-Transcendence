@@ -83,7 +83,6 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
       <div className="surface-card border-round-sm p-3">
         {!readOnly && (
           <div className="posts-form">
-            <h3>Publicar</h3>
             <div className="post-comment">
               <label htmlFor="post-content" className="sr-only">Contenido de la publicación</label>
               <InputTextarea

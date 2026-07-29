@@ -3,7 +3,6 @@
 .friends-container {
   margin-bottom: 0;
   height: 100%;
-  animation: riseFade 0.56s ease-out;
 
   .surface-card {
     min-height: clamp(280px, 34vh, 520px);
@@ -27,22 +26,6 @@
     margin-bottom: 0.9rem;
   }
 
-  /*
-    .p-button {
-      background: $color-button;
-      color: $color-text-write;
-      border-radius: $radius-xs;
-      border-color: $color-button;
-      padding: 0.50rem 1.00rem;
-      font-size: 0.75rem;
-
-      &:hover {
-        background: $color-button-hover;
-        color: $color-text-write;
-        border-color: $color-text-write;
-      }
-    }
-  */
   .friends-tab {
     color: rgba($color-text-write, 0.75);
     border-color: rgba($color-5, 0.25);
@@ -159,7 +142,7 @@
 
   .friends-list {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: start;
     gap: 0.55rem;
     padding-right: 0.5rem;

@@ -11,6 +11,7 @@ interface Friend {
   id: number
   name: string
   online: boolean
+  chat: boolean
 }
 
 interface PendingRequest {
@@ -27,22 +28,13 @@ interface FriendsProps {
 }
 
 const INITIAL_FRIENDS: Friend[] = [
-  { id: 1, name: 'alejanr2', online: true },
-  { id: 2, name: 'Andefern', online: false },
-  { id: 3, name: 'fcasaubo', online: true },
-  { id: 4, name: 'xortega', online: false },
-  { id: 5, name: 'alejanr2', online: true },
-  { id: 6, name: 'Andefern', online: false },
-  { id: 7, name: 'fcasaubo', online: true },
-  { id: 8, name: 'xortega', online: false },
-  { id: 9, name: 'alejanr2', online: true },
-  { id: 10, name: 'Andefern', online: false },
-  { id: 11, name: 'fcasaubo', online: true },
-  { id: 12, name: 'xortega', online: false },
-  { id: 13, name: 'alejanr2', online: true },
-  { id: 14, name: 'Andefern', online: false },
-  { id: 15, name: 'fcasaubo', online: true },
-  { id: 16, name: 'xortega', online: false },
+  { id: 1, name: 'alejanr2', online: true, chat: false},
+  { id: 2, name: 'Andefern', online: false, chat: false },
+  { id: 3, name: 'fcasaubo', online: true, chat: false },
+  { id: 4, name: 'xortega', online: false, chat: false },
+  { id: 5, name: 'alejanr2', online: true, chat: false },
+  { id: 6, name: 'Andefern', online: false, chat: false },
+  { id: 7, name: 'fcasaubo', online: true, chat: false },
 ]
 
 const INITIAL_PENDING_REQUESTS: PendingRequest[] = [
@@ -137,6 +129,7 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
             id: request.id,
             name: request.name,
             online: false,
+            chat: false
           },
         ])
         setPendingRequests((currentRequests) => currentRequests.filter((r) => r.id !== request.id))
