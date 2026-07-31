@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
+import { Paginator, type PaginatorPageChangeEvent } from 'primereact/paginator';
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
 
@@ -27,8 +28,14 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
   const [filter, setFilter] = useState<FilterType>('all')
   const [image, setImage] = useState<string | null>(null)
   const [imageError, setImageError] = useState<string>('')
+  const [first, setFirst] = useState(0);
+
+  const onPageChange = (event: PaginatorPageChangeEvent) => {
+    setFirst(event.first);
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -149,7 +156,7 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
                 onClick={() => setFilter('friends_posts')}
                 severity={filter === 'friends_posts' ? 'info' : 'secondary'}
                 text={filter !== 'friends_posts'}
-              > Posts de amigos
+              > Menciones
               </Button>
             </div>
           </div>
@@ -173,6 +180,16 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
               <p className="fecha text-color-secondary">{post.date}</p>
             </Card>
           ))}
+        </div>
+        <div className="card">
+            <Paginator
+              first={first}
+              rows={10}
+              totalRecords={50}
+              onPageChange={onPageChange}
+              template={{ layout: 'PrevPageLink CurrentPageReport NextPageLink' }}
+              className="post-paginator"
+              />
         </div>
       </div>
     </div>
