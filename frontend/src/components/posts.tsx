@@ -14,7 +14,7 @@ interface Post {
   image?: string | null
 }
 
-type FilterType = 'all' | 'my_posts' | 'friends_posts'
+type FilterType = 'all' | 'my_posts' | 'friends_posts' | 'data_posts'
 
 interface PostFeedProps {
   readOnly?: boolean
@@ -82,6 +82,7 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
     if (readOnly) return true
     if (filter === 'my_posts') return !post.isFromFriend
     if (filter === 'friends_posts') return post.isFromFriend
+    if (filter === 'data_posts') return post.isFromFriend
     return true
   })
 
@@ -157,6 +158,10 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
                 severity={filter === 'friends_posts' ? 'info' : 'secondary'}
                 text={filter !== 'friends_posts'}
               > Menciones
+              </Button>
+              <Button
+                onClick={() => setFilter('data_posts')}
+              > ordenar por fecha
               </Button>
             </div>
           </div>

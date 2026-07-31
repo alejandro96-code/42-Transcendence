@@ -67,7 +67,7 @@ function Header() {
           </Button>
         </div>
 
-        <div id="header-mobile-menu" className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
+        <div className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
           <label htmlFor="header-search-mobile" className="sr-only">Buscar contenido en Transcendence</label>
           <InputText
             id="header-search-mobile"

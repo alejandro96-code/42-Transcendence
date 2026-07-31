@@ -27,10 +27,7 @@
             }
 
             .character-counter {
-                position: absolute;
                 font-style: italic;
-                top: 5.0rem;
-                right: 1.5rem;
                 color: rgba($color-text-write, 0.7);
                 font-size: 0.82rem;
                 z-index: 10;
@@ -159,15 +156,15 @@
 
     }
 
-        .p-paginator .p-paginator-first,
-        .p-paginator .p-paginator-prev,
-        .p-paginator .p-paginator-next,
-        .p-paginator .p-paginator-last,
-        .p-paginator .p-paginator-current 
-        {
-            height: 1rem;
-            margin-top: 1rem;
-        }
+    .p-paginator .p-paginator-first,
+    .p-paginator .p-paginator-prev,
+    .p-paginator .p-paginator-next,
+    .p-paginator .p-paginator-last,
+    .p-paginator .p-paginator-current 
+    {
+        height: 1rem;
+        margin-top: 1rem;
+    }
 
 }
 

@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import { Avatar } from 'primereact/avatar'
 import { Button } from 'primereact/button'
-import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
-import { Chips } from 'primereact/chips'
 import { useAppSelector } from '../store/hooks'
 
 interface ProfileUser {
@@ -16,7 +14,6 @@ interface ProfileUser {
 
 interface ProfileDetails {
   headline: string
-  interests: string[]
   about: string
 }
 
@@ -25,17 +22,15 @@ interface PersonalDataProps {
   profileDetails?: ProfileDetails
   readOnly?: boolean
 }
-function PersonalData({ profileUser, profileDetails, readOnly = false }: PersonalDataProps) {
+function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
   const { user } = useAppSelector((state) => state.auth)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [localProfileDetails, setLocalProfileDetails] = useState({
     headline: 'Front-end enjoyer',
-    interests: ['Pong', 'eSports', 'UI', 'musica'],
     about: 'Me gusta competir, aprender cosas nuevas y construir experiencias que se sientan fluidas.',
   })
 
   const activeUser = profileUser ?? user
-  const activeDetails = profileDetails ?? localProfileDetails
 
   if (!activeUser) {
     return null
@@ -97,11 +92,10 @@ function PersonalData({ profileUser, profileDetails, readOnly = false }: Persona
         <div className="profile-details">
           <section className="profile-header-section">
             <div className="profile-details-title">
-              <label className="profile-title text-sm" htmlFor="headline">Titular</label>
+              <label className="profile-title text-sm">Titular</label>
               <InputText
                 className="profile-input w-full"
-                id="headline"
-                value={localProfileDetails.headline}
+                placeholder="Profesion"
                 onChange={(e) => handleFieldChange('headline', e.target.value)}
               />
             </div>
@@ -110,7 +104,7 @@ function PersonalData({ profileUser, profileDetails, readOnly = false }: Persona
               <InputTextarea
                 className="profile-input-textarea w-full"
                 id="about"
-                value={localProfileDetails.about}
+                placeholder="Describete en 6 lineas"
                 onChange={(e) => handleFieldChange('about', e.target.value.slice(0, 140))}
                 rows={6}
                 maxLength={140}
