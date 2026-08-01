@@ -11,7 +11,6 @@ interface Friend {
   id: number
   name: string
   online: boolean
-  chat: boolean
 }
 
 interface PendingRequest {
@@ -25,16 +24,18 @@ interface PendingRequest {
 interface FriendsProps {
   readOnly?: boolean
   initialFriends?: Friend[]
+  selectedFriendId?: number | null
+  onOpenChat?: (friend: Friend) => void
 }
 
 const INITIAL_FRIENDS: Friend[] = [
-  { id: 1, name: 'alejanr2', online: true, chat: false},
-  { id: 2, name: 'Andefern', online: false, chat: false },
-  { id: 3, name: 'fcasaubo', online: true, chat: false },
-  { id: 4, name: 'xortega', online: false, chat: false },
-  { id: 5, name: 'alejanr2', online: true, chat: false },
-  { id: 6, name: 'Andefern', online: false, chat: false },
-  { id: 7, name: 'fcasaubo', online: true, chat: false },
+  { id: 1, name: 'alejanr2', online: true },
+  { id: 2, name: 'Andefern', online: false },
+  { id: 3, name: 'fcasaubo', online: true },
+  { id: 4, name: 'xortega', online: false },
+  { id: 5, name: 'alejanr2', online: true },
+  { id: 6, name: 'Andefern', online: false },
+  { id: 7, name: 'fcasaubo', online: true },
 ]
 
 const INITIAL_PENDING_REQUESTS: PendingRequest[] = [
@@ -44,7 +45,7 @@ const INITIAL_PENDING_REQUESTS: PendingRequest[] = [
   { id: 13, name: 'alopez', email: 'alopez@student.42', avatar: 'https://via.placeholder.com/40?text=AL', requestedAt: '2025-04-21' },
 ]
 
-function Friends({ readOnly = false, initialFriends }: FriendsProps) {
+function Friends({ readOnly = false, initialFriends, selectedFriendId = null, onOpenChat }: FriendsProps) {
   const toast = useRef<Toast>(null)
   
   const [friendsList, setFriendsList] = useState<Friend[]>(initialFriends ?? INITIAL_FRIENDS)
@@ -129,7 +130,6 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
             id: request.id,
             name: request.name,
             online: false,
-            chat: false
           },
         ])
         setPendingRequests((currentRequests) => currentRequests.filter((r) => r.id !== request.id))
@@ -233,13 +233,17 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
                             <span className={`status-dot ${friend.online ? 'online' : 'offline'}`} />
                             {friend.name}
                           </h4>
-                          <small className="text-secondary">
-                            {friend.online ? 'Online' : 'Offline'}
-                          </small>
                         </div>
                       </div>
-                      {!readOnly && (
-                        <div className="friend-actions">
+                      <div className="friend-actions">
+                        <Button
+                          icon="pi pi-eye"
+                          aria-label={`Abrir chat con ${friend.name}`}
+                          className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`}
+                          tooltip={`Abrir chat con ${friend.name}`}
+                          onClick={() => onOpenChat?.(friend)}
+                        />
+                        {!readOnly && (
                           <Button
                             icon="pi pi-times"
                             label="Eliminar amigo"
@@ -248,8 +252,8 @@ function Friends({ readOnly = false, initialFriends }: FriendsProps) {
                             onClick={() => handleRemoveFriend(friend)}
                           > Eliminar Amigos
                           </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

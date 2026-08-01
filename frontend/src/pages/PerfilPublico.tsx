@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import Header from '../components/header'
 import Footer from '../components/footer'
 import PersonalData from '../components/personal_data'
@@ -52,6 +53,8 @@ const PUBLIC_FRIENDS = [
 ]
 
 function PerfilPublico() {
+  const [activeChatFriend, setActiveChatFriend] = useState<{ id: number; name: string } | null>(null)
+
   return (
     <div className="app-shell perfil-layout">
       <Header />
@@ -70,10 +73,15 @@ function PerfilPublico() {
           </div>
           <div className="col-12 lg:col-3 right-pane">
             <div className="right-pane-item">
-              <Friends readOnly initialFriends={PUBLIC_FRIENDS} />
+              <Friends
+                readOnly
+                initialFriends={PUBLIC_FRIENDS}
+                selectedFriendId={activeChatFriend?.id ?? null}
+                onOpenChat={(friend) => setActiveChatFriend({ id: friend.id, name: friend.name })}
+              />
             </div>
             <div className="right-pane-item">
-              <Chat />
+              <Chat activeFriendName={activeChatFriend?.name ?? null} />
             </div>
           </div>
         </div>

@@ -1,10 +1,14 @@
-function Chat() {
+interface ChatProps {
+  activeFriendName?: string | null
+}
+
+function Chat({ activeFriendName = null }: ChatProps) {
 
   return (
     <div className='chat-container'>
       <div className="surface-card border-round-sm p-3">
         <div className="chat-friend-name border-round-sm">
-          Chateando con: alejanr2
+          {activeFriendName ? `Chateando con: ${activeFriendName}` : 'Selecciona un amigo para abrir el chat'}
         </div>
         <div className="chat-panel">
           <section className="chat-section">
