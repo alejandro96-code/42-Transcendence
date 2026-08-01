@@ -20,11 +20,77 @@
       color: $color-text-write;
       margin-bottom: 0.25rem;
       letter-spacing: 0.02em;
+      margin-top: 0px;
     }
 
     .login-subtitle {
       color: rgba($color-text-write, 0.82);
     }
+
+    .login-mode-toggle {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+
+      .mode-button {
+        min-height: 2.6rem;
+      }
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .login-label {
+      color: rgba($color-text-write, 0.9);
+      font-size: 0.875rem;
+      margin-top: 0.15rem;
+    }
+
+    .p-inputtext,
+    .p-password,
+    .p-password input {
+      width: 100%;
+    }
+
+    .p-inputtext,
+    .p-password input {
+      background: rgba($color-2, 0.6);
+      border: 1px solid rgba($color-text-write, 0.22);
+      color: $color-text-write;
+      border-radius: $radius-sm;
+    }
+
+    .login-error {
+      color: #ffd1d1;
+      min-height: 1rem;
+    }
+
+    .login-divider {
+      position: relative;
+      text-align: center;
+      color: rgba($color-text-write, 0.75);
+      margin: 0.2rem 0;
+
+      span {
+        position: relative;
+        z-index: 1;
+        background: rgba($color-2, 0.95);
+        padding: 0 0.55rem;
+      }
+    }
+
+    .login-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 1px solid rgba($color-text-write, 0.25);
+    }
+
     .p-button {
       display: block;
       background: $color-button;
@@ -41,6 +107,20 @@
       border-color: $color-text-write;
       transform: translateY(-1px);
     }
+
+    .inputPassword{
+      display: block;
+    }
+    .button-login{
+      padding: 0rem;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    .button-line{
+      justify-content: center;
+      gap: 3rem;
+    }
   }
 }
 
@@ -53,4 +133,3 @@
     }
   }
 }
-

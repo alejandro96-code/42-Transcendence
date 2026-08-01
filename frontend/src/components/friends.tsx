@@ -30,12 +30,12 @@ interface FriendsProps {
 
 const INITIAL_FRIENDS: Friend[] = [
   { id: 1, name: 'alejanr2', online: true },
-  { id: 2, name: 'Andefern', online: false },
+  { id: 2, name: 'andefern', online: false },
   { id: 3, name: 'fcasaubo', online: true },
   { id: 4, name: 'xortega', online: false },
-  { id: 5, name: 'alejanr2', online: true },
-  { id: 6, name: 'Andefern', online: false },
-  { id: 7, name: 'fcasaubo', online: true },
+  { id: 5, name: 'juetxeba', online: true },
+  { id: 6, name: 'martimar', online: false },
+  { id: 7, name: 'asgalean', online: true },
 ]
 
 const INITIAL_PENDING_REQUESTS: PendingRequest[] = [

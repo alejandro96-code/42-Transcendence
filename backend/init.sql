@@ -4,11 +4,12 @@
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    intra_id VARCHAR(50) UNIQUE NOT NULL,
+    intra_id VARCHAR(50) UNIQUE,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100),
     full_name VARCHAR(100),
     avatar_url TEXT,
+    password_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

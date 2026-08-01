@@ -5,10 +5,74 @@ import pg from 'pg';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as FortyTwoStrategy } from 'passport-42';
+import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import { isAuthenticated } from "./utils.js"
 
+const MIN_PASSWORD_LENGTH = 6;
+const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function normalizeUsername(value) {
+    return String(value ?? '').trim();
+}
+
+function normalizeText(value) {
+    return String(value ?? '').trim();
+}
+
+function hashPassword(password) {
+    const salt = randomBytes(16).toString('hex');
+    const hash = scryptSync(password, salt, 64).toString('hex');
+    return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, passwordHash) {
+    if (!passwordHash || !passwordHash.includes(':')) {
+        return false;
+    }
+
+    try {
+        const [salt, hash] = passwordHash.split(':');
+        const storedBuffer = Buffer.from(hash, 'hex');
+        const computedBuffer = Buffer.from(scryptSync(password, salt, 64).toString('hex'), 'hex');
+
+        if (storedBuffer.length !== computedBuffer.length) {
+            return false;
+        }
+
+        return timingSafeEqual(storedBuffer, computedBuffer);
+    } catch {
+        return false;
+    }
+}
+
+function toPublicUser(user) {
+    if (!user) {
+        return null;
+    }
+
+    const { password_hash, ...rest } = user;
+    return {
+        ...rest,
+        intra_id: rest.intra_id ?? null,
+        email: rest.email ?? '',
+        full_name: rest.full_name ?? rest.username ?? '',
+        avatar_url: rest.avatar_url ?? '',
+    };
+}
+
+async function ensureAuthSchema(pool) {
+    await pool.query(`
+        ALTER TABLE users
+        ALTER COLUMN intra_id DROP NOT NULL
+    `);
+    await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS password_hash TEXT
+    `);
+}
 
 function start_server() {
     dotenv.config();
@@ -138,7 +202,88 @@ function start_server() {
     );
 
     app.get('/api/auth/me', isAuthenticated, (req, res) => {
-        res.json(req.user);
+        res.json(toPublicUser(req.user));
+    });
+
+    app.post('/api/auth/register', async (req, res) => {
+        const username = normalizeUsername(req.body?.username);
+        const password = String(req.body?.password ?? '');
+        const fullName = normalizeText(req.body?.fullName);
+        const email = normalizeText(req.body?.email).toLowerCase();
+
+        if (!USERNAME_REGEX.test(username)) {
+            return res.status(400).json({ error: 'El usuario debe tener entre 3 y 30 caracteres (letras, números, . _ -).' });
+        }
+        if (!fullName || fullName.length > 100) {
+            return res.status(400).json({ error: 'El nombre completo es obligatorio y debe tener máximo 100 caracteres.' });
+        }
+        if (!EMAIL_REGEX.test(email) || email.length > 100) {
+            return res.status(400).json({ error: 'Debes indicar un correo electrónico válido.' });
+        }
+        if (password.length < MIN_PASSWORD_LENGTH) {
+            return res.status(400).json({ error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.` });
+        }
+
+        try {
+            const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
+            if (existingUser.rows.length > 0) {
+                return res.status(409).json({ error: 'Ese nombre de usuario ya existe.' });
+            }
+            const existingEmail = await pool.query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email]);
+            if (existingEmail.rows.length > 0) {
+                return res.status(409).json({ error: 'Ese correo electrónico ya está en uso.' });
+            }
+
+            const passwordHash = hashPassword(password);
+            const avatarInitials = username.slice(0, 2).toUpperCase() || 'US';
+            const avatarUrl = `https://via.placeholder.com/96?text=${encodeURIComponent(avatarInitials)}`;
+
+            const result = await pool.query(
+                `INSERT INTO users (intra_id, username, email, full_name, avatar_url, password_hash)
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING *`,
+                [null, username, email, fullName, avatarUrl, passwordHash]
+            );
+
+            const user = result.rows[0];
+            req.login(user, (error) => {
+                if (error) {
+                    return res.status(500).json({ error: 'No se pudo iniciar sesión tras el registro.' });
+                }
+                return res.status(201).json(toPublicUser(user));
+            });
+        } catch (error) {
+            console.error('Error en registro local:', error);
+            return res.status(500).json({ error: 'Error al registrar usuario' });
+        }
+    });
+
+    app.post('/api/auth/login', async (req, res) => {
+        const username = normalizeUsername(req.body?.username);
+        const password = String(req.body?.password ?? '');
+
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Usuario y contraseña son obligatorios.' });
+        }
+
+        try {
+            const result = await pool.query('SELECT * FROM users WHERE username = $1 LIMIT 1', [username]);
+            const user = result.rows[0];
+
+            if (!user || !verifyPassword(password, user.password_hash)) {
+                return res.status(401).json({ error: 'Credenciales inválidas.' });
+            }
+
+            req.login(user, (error) => {
+                if (error) {
+                    return res.status(500).json({ error: 'Error al iniciar sesión' });
+                }
+                return res.json(toPublicUser(user));
+            });
+        } catch (error) {
+            console.error('Error en login local:', error);
+            return res.status(500).json({ error: 'Error al iniciar sesión' });
+        }
     });
 
     app.post('/api/auth/logout', (req, res) => {
@@ -150,7 +295,6 @@ function start_server() {
         });
     });
 
-    // Rutas de ejemplo
     app.get('/', (req, res) => {
         res.json({ message: 'API de Transcendence funcionando!' });
     });
@@ -158,7 +302,7 @@ function start_server() {
     app.get('/api/users', async (req, res) => {
         try {
             const result = await pool.query('SELECT * FROM users');
-            res.json(result.rows);
+            res.json(result.rows.map(toPublicUser));
         } catch (error) {
             console.error('Error al obtener usuarios:', error);
             res.status(500).json({ error: 'Error al obtener usuarios' });
@@ -176,13 +320,18 @@ function start_server() {
         }
     });
 
-    // Initialize endpoint routers
     app.use("/api/posts", posts_endpoints);
 
-    // Iniciar servidor
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-    });
+    ensureAuthSchema(pool)
+        .then(() => {
+            app.listen(PORT, '0.0.0.0', () => {
+                console.log(`Servidor corriendo en http://localhost:${PORT}`);
+            });
+        })
+        .catch((error) => {
+            console.error('Error preparando el esquema de autenticación:', error);
+            process.exit(1);
+        });
 }
 
 export default start_server

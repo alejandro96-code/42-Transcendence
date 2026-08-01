@@ -1,6 +1,6 @@
 export interface User {
   id: number
-  intra_id: string
+  intra_id: string | null
   username: string
   email: string
   full_name: string
