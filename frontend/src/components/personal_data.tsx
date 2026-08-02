@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Avatar } from 'primereact/avatar'
 import { Button } from 'primereact/button'
 import { InputText } from 'primereact/inputtext'
@@ -25,6 +25,7 @@ interface PersonalDataProps {
 function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
   const { user } = useAppSelector((state) => state.auth)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [avatarLoadError, setAvatarLoadError] = useState(false)
   const [localProfileDetails, setLocalProfileDetails] = useState({
     headline: 'Front-end enjoyer',
     about: 'Me gusta competir, aprender cosas nuevas y construir experiencias que se sientan fluidas.',
@@ -36,15 +37,11 @@ function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
     return null
   }
 
-  // Obtener iniciales del usuario
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
+  useEffect(() => {
+    setAvatarLoadError(false)
+  }, [activeUser.avatar_url])
+
+  const hasValidAvatar = Boolean(activeUser.avatar_url?.trim()) && !avatarLoadError
 
   const handleFieldChange = <K extends keyof typeof localProfileDetails>(
     key: K,
@@ -63,18 +60,16 @@ function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
         
         <div className='profile-header'>
           <div className='profile-img'>
-            {activeUser.avatar_url ? (
+            {hasValidAvatar ? (
             <img
               src={activeUser.avatar_url}
               alt={`Foto de perfil de ${activeUser.full_name || activeUser.username}`}
               style={{ width: '140px', height: '140px', borderRadius: '50%', objectFit: 'cover' }}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-              }}
+              onError={() => setAvatarLoadError(true)}
             />
             ) : (
             <Avatar
-              label={getInitials(activeUser.full_name || activeUser.username)}
+              icon="pi pi-user"
               size="xlarge"
               shape="circle"
               style={{ width: '140px', height: '140px', fontSize: '3rem', backgroundColor: '#2196F3', color: 'white' }}
@@ -92,30 +87,23 @@ function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
         <div className="profile-details">
           <section className="profile-header-section">
             <div className="profile-details-title">
-              <label className="profile-title text-sm">Titular</label>
+              <label className="profile-title text-sm">Profesión</label>
               <InputText
                 className="profile-input w-full"
-                placeholder="Profesion"
+                placeholder="Indica tu profesion..."
                 onChange={(e) => handleFieldChange('headline', e.target.value)}
               />
             </div>
             <div className="profile-details-free-text">
-              <label className="profile-free-text text-sm" htmlFor="about">Texto libre</label>
+              <label className="profile-free-text text-sm" htmlFor="about">Descripción</label>
               <InputTextarea
                 className="profile-input-textarea w-full"
                 id="about"
-                placeholder="Describete en 6 lineas"
+                placeholder="Describete en unas pocas lineas..."
                 onChange={(e) => handleFieldChange('about', e.target.value.slice(0, 140))}
                 rows={6}
                 maxLength={140}
               />
-            </div>
-            <div className="profile-button">
-              <Button
-                className="p-button-sm p-button-outlined profile-details__edit"
-                onClick={() => setIsEditOpen(true)}
-              > Editar datos
-              </Button>
             </div>
           </section>   
         </div>

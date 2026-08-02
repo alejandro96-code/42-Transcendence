@@ -72,6 +72,11 @@
     width: 100%;
   }
 
+  .header-search::placeholder{
+    font-style: italic;
+    font-size: 14px;
+  }
+
   @media (max-width: ($bp-md)) {
     .header-bar {
       flex-wrap: wrap;

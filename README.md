@@ -58,3 +58,16 @@ docker exec transcendence-postgres psql -U postgres -d transcendence -f /docker-
 
 Jira: https://transcendence-42-network.atlassian.net
 Drive modulos: https://docs.google.com/spreadsheets/d/1tWkKrj_4rcdVpjzi3vXjxSJlyZc2YZTWs9tetwJPIOQ/edit?gid=0#gid=0
+
+informacion que guardar para cada usuario en la bbdd:
+
+nombre completo
+nombre de usuario
+correo electronico
+profesion
+texto libre
+numero de post
+info de post
+amigos agregados
+solicitudes de amigos
+chat individual con cada amigo

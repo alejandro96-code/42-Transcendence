@@ -26,6 +26,11 @@
                 }
             }
 
+            .post-comment-textarea::placeholder {
+                font-style: italic;
+                font-size: 14px;
+            }
+
             .character-counter {
                 font-style: italic;
                 color: rgba($color-text-write, 0.7);

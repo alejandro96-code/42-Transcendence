@@ -85,4 +85,9 @@
         border-bottom-left-radius : 10px;
         border-bottom-right-radius : 10px;
     }
+
+    .send-text::placeholder{
+        font-style: italic;
+        font-size: 14px;
+    }
 }

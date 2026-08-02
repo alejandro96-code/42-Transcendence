@@ -33,11 +33,21 @@
         margin-bottom: 0.5rem;
     }
 
+    .profile-input::placeholder{
+        font-style: italic;
+        font-size: 14px;
+    }
+
     .profile-details-title,
     .profile-details-free-text
     {
         display: grid;
         margin-bottom: 1rem;
+    }
+
+    .profile-input-textarea::placeholder{
+        font-style: italic;
+        font-size: 14px;
     }
 
 }
