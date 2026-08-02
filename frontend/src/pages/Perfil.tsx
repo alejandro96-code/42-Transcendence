@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import Header from '../components/header'
-import Footer from '../components/footer'
-import PersonalData from '../components/personal_data'
-import PostFeed from '../components/posts'
-import Friends from '../components/friends'
-import Chat from '../components/chat'
+import { Header } from '../components/header'
+import { Footer } from '../components/footer'
+import { PersonalData } from '../components/personal_data'
+import { PostFeed } from '../components/posts'
+import { Friends } from '../components/friends'
+import { Chat } from '../components/chat'
 
-function Perfil() {
+export function Perfil() {
   const [activeChatFriend, setActiveChatFriend] = useState<{ id: number; name: string } | null>(null)
 
   return (
@@ -38,5 +38,3 @@ function Perfil() {
     </div>
   )
 }
-
-export default Perfil

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Avatar } from 'primereact/avatar'
-import { Button } from 'primereact/button'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { useAppSelector } from '../store/hooks'
@@ -22,9 +21,8 @@ interface PersonalDataProps {
   profileDetails?: ProfileDetails
   readOnly?: boolean
 }
-function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
+export function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
   const { user } = useAppSelector((state) => state.auth)
-  const [isEditOpen, setIsEditOpen] = useState(false)
   const [avatarLoadError, setAvatarLoadError] = useState(false)
   const [localProfileDetails, setLocalProfileDetails] = useState({
     headline: 'Front-end enjoyer',
@@ -111,5 +109,3 @@ function PersonalData({ profileUser, readOnly = false }: PersonalDataProps) {
     </div>
   )
 }
-
-export default PersonalData

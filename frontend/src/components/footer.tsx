@@ -1,4 +1,4 @@
-function Footer() {
+export function Footer() {
   return (
     <div className="footer-container">
       <div className="surface-card px-4 py-3 flex flex-column align-items-center gap-1">
@@ -21,5 +21,3 @@ function Footer() {
     </div>
   )
 }
-
-export default Footer

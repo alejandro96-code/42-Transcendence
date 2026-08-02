@@ -2,7 +2,7 @@ import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
 import { InputText } from 'primereact/inputtext'
 import { Password } from 'primereact/password'
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/authAPI'
 import { useAppDispatch } from '../store/hooks'
@@ -10,7 +10,8 @@ import { setUser } from '../store/authSlice'
 
 type AuthMode = 'login' | 'register'
 
-function Login() {
+export function Login() {
+
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [mode, setMode] = useState<AuthMode>('login')
@@ -179,5 +180,3 @@ function Login() {
     </main>
   )
 }
-
-export default Login

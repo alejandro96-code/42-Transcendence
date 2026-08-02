@@ -45,7 +45,7 @@ const INITIAL_PENDING_REQUESTS: PendingRequest[] = [
   { id: 13, name: 'alopez', email: 'alopez@student.42', avatar: 'https://via.placeholder.com/40?text=AL', requestedAt: '2025-04-21' },
 ]
 
-function Friends({ readOnly = false, initialFriends, selectedFriendId = null, onOpenChat }: FriendsProps) {
+export function Friends({ readOnly = false, initialFriends, selectedFriendId = null, onOpenChat }: FriendsProps) {
   const toast = useRef<Toast>(null)
   
   const [friendsList, setFriendsList] = useState<Friend[]>(initialFriends ?? INITIAL_FRIENDS)
@@ -340,5 +340,3 @@ function Friends({ readOnly = false, initialFriends, selectedFriendId = null, on
     </div>
   )
 }
-
-export default Friends

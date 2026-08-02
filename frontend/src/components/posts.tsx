@@ -22,7 +22,7 @@ interface PostFeedProps {
   initialPosts?: Post[]
 }
 
-function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
+export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
   const POSTS_PER_PAGE = 4
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [posts, setPosts] = useState<Post[]>(initialPosts)
@@ -217,5 +217,3 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
     </div>
   )
 }
-
-export default PostFeed

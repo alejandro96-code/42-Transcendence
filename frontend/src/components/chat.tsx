@@ -2,7 +2,7 @@ interface ChatProps {
   activeFriendName?: string | null
 }
 
-function Chat({ activeFriendName = null }: ChatProps) {
+export function Chat({ activeFriendName = null }: ChatProps) {
 
   return (
     <div className='chat-container'>
@@ -36,5 +36,3 @@ function Chat({ activeFriendName = null }: ChatProps) {
     </div>
   )
 }
-
-export default Chat

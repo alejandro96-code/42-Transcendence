@@ -3,13 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setUser, clearUser, setLoading } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
-import Perfil from '../pages/Perfil'
-import PerfilPublico from '../pages/PerfilPublico'
-import Login from '../pages/Login'
-import Callback from '../pages/Callback'
+import { Perfil } from '../pages/Perfil'
+import { Login } from '../pages/Login'
+import { Callback } from '../pages/Callback'
 import { ProgressSpinner } from 'primereact/progressspinner'
 
-function AppRoutes() {
+export function AppRoutes() {
   const dispatch = useAppDispatch()
   const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth)
 
@@ -50,9 +49,6 @@ function AppRoutes() {
       <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />
       <Route path="/callback" element={<Callback />} />
       <Route path="/" element={isAuthenticated ? <Perfil /> : <Navigate to="/login" />} />
-      <Route path="/perfil-publico" element={isAuthenticated ? <PerfilPublico /> : <Navigate to="/login" />} />
     </Routes>
   )
 }
-
-export default AppRoutes
