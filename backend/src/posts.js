@@ -5,8 +5,6 @@ import { pool } from "./db.js"
 
 async function remove_likes(req, res) {
 
-    const media = [] // parse_media() TODO
-
     const likes = await pool.query(
             'SELECT likes FROM posts WHERE id = $1',
             [
@@ -48,13 +46,12 @@ async function remove_likes(req, res) {
         res.status(500).json(responseBody);
     } else {
         res.json({"post": req.body.id, "likes": likes_array});
+        res.status(202);
     }
 
 }
 
 async function update_likes(req, res) {
-
-    const media = [] // parse_media() TODO
 
     const likes = await pool.query(
             'SELECT likes FROM posts WHERE id = $1',
@@ -101,6 +98,7 @@ async function update_likes(req, res) {
         res.status(500).json(responseBody);
     } else {
         res.json({"post": req.body.id, "likes": likes_array});
+        res.status(202);
     }
 }
 
@@ -178,6 +176,25 @@ async function create_post(req, res) {
         res.status(500).json(responseBody);
     } else {
         res.json(new_post.rows);
+        res.status(201);
+    }
+    
+}
+
+async function delete_post(req, res) {
+
+    const deleted_post = await pool.query(
+            `DELETE FROM posts where id = $1`,
+            [
+                req.body.id
+            ]
+        );
+
+    if (!deleted_post || deleted_post.rows.length === 0) {
+        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
+        res.status(500).json(responseBody);
+    } else {
+        res.status(204);
     }
     
 }
@@ -189,6 +206,8 @@ router.use(express.json());
 router.delete("/likes", remove_likes);
 
 router.patch("/likes", update_likes);
+
+router.delete("/", delete_post);
 
 router.get("/", read_posts);
 
