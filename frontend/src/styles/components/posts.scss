@@ -10,12 +10,6 @@
         border: $border-box;
     }
 
-    .surface-card {
-        h3 {
-            margin: 0 0 0.95rem 0;
-        }
-    }
-
     .posts-form {
         .post-comment {
             border-radius: $radius-sm;
@@ -32,11 +26,13 @@
                 }
             }
 
-            .character-counter {
-                position: absolute;
+            .post-comment-textarea::placeholder {
                 font-style: italic;
-                top: 5.0rem;
-                right: 1.5rem;
+                font-size: 14px;
+            }
+
+            .character-counter {
+                font-style: italic;
                 color: rgba($color-text-write, 0.7);
                 font-size: 0.82rem;
                 z-index: 10;
@@ -158,6 +154,23 @@
             }
         }
     }
+
+    .post-paginator{
+        padding: 0px;
+        background-color: transparent;
+
+    }
+
+    .p-paginator .p-paginator-first,
+    .p-paginator .p-paginator-prev,
+    .p-paginator .p-paginator-next,
+    .p-paginator .p-paginator-last,
+    .p-paginator .p-paginator-current 
+    {
+        height: 1rem;
+        margin-top: 1rem;
+    }
+
 }
 
 @media (min-width: #{$bp-lg + 1}) {

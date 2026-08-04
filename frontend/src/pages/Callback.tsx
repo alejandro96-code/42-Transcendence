@@ -5,7 +5,7 @@ import { setUser, setLoading } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { ProgressSpinner } from 'primereact/progressspinner'
 
-function Callback() {
+export function Callback() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
 
@@ -53,5 +53,3 @@ function Callback() {
     </div>
   )
 }
-
-export default Callback

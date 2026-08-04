@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
+import { Paginator, type PaginatorPageChangeEvent } from 'primereact/paginator'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
 
@@ -14,21 +15,30 @@ interface Post {
 }
 
 type FilterType = 'all' | 'my_posts' | 'friends_posts'
+type SortOrder = 'desc' | 'asc'
 
 interface PostFeedProps {
   readOnly?: boolean
   initialPosts?: Post[]
 }
 
-function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
+export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
+  const POSTS_PER_PAGE = 4
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [text, setText] = useState<string>('')
   const [filter, setFilter] = useState<FilterType>('all')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [image, setImage] = useState<string | null>(null)
   const [imageError, setImageError] = useState<string>('')
+  const [first, setFirst] = useState(0)
+
+  const onPageChange = (event: PaginatorPageChangeEvent) => {
+    setFirst(event.first)
+  }
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -69,6 +79,7 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
     setText('')
     setImage(null)
     setImageError('')
+    setFirst(0)
   }
 
   const filteredPosts = posts.filter((post) => {
@@ -77,13 +88,21 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
     if (filter === 'friends_posts') return post.isFromFriend
     return true
   })
+  const orderedPosts = sortOrder === 'asc' ? [...filteredPosts].reverse() : filteredPosts
+  const paginatedPosts = orderedPosts.slice(first, first + POSTS_PER_PAGE)
+
+  useEffect(() => {
+    const lastValidFirst = Math.max(0, Math.floor((Math.max(filteredPosts.length - 1, 0)) / POSTS_PER_PAGE) * POSTS_PER_PAGE)
+    if (first > lastValidFirst) {
+      setFirst(lastValidFirst)
+    }
+  }, [filteredPosts.length, first, POSTS_PER_PAGE])
 
   return (
     <div className='posts-container'>
       <div className="surface-card border-round-sm p-3">
         {!readOnly && (
           <div className="posts-form">
-            <h3>Publicar</h3>
             <div className="post-comment">
               <label htmlFor="post-content" className="sr-only">Contenido de la publicación</label>
               <InputTextarea
@@ -150,7 +169,14 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
                 onClick={() => setFilter('friends_posts')}
                 severity={filter === 'friends_posts' ? 'info' : 'secondary'}
                 text={filter !== 'friends_posts'}
-              > Posts de amigos
+              > Menciones
+              </Button>
+              <Button
+                onClick={() => {
+                  setSortOrder((currentOrder) => (currentOrder === 'desc' ? 'asc' : 'desc'))
+                  setFirst(0)
+                }}
+              > {sortOrder === 'desc' ? '+ antiguo primero' : '+ reciente primero'}
               </Button>
             </div>
           </div>
@@ -161,7 +187,7 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
           {filteredPosts.length === 0 && (
             <p className="text-color-secondary text-center">Aún no hay publicaciones.</p>
           )}
-          {filteredPosts.map((post) => (
+          {paginatedPosts.map((post) => (
             <Card key={post.id} className="w-full">
               <p className="texto mt-0 mb-5">{post.content}</p>
               {post.image && (
@@ -175,9 +201,19 @@ function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
             </Card>
           ))}
         </div>
+        {filteredPosts.length > POSTS_PER_PAGE && (
+          <div className="card">
+            <Paginator
+              first={first}
+              rows={POSTS_PER_PAGE}
+              totalRecords={filteredPosts.length}
+              onPageChange={onPageChange}
+              template={{ layout: 'PrevPageLink CurrentPageReport NextPageLink' }}
+              className="post-paginator"
+              />
+          </div>
+        )}
       </div>
     </div>
   )
 }
-
-export default PostFeed

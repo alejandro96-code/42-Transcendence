@@ -3,7 +3,12 @@ import { formatErrorJson, isAuthenticated, validate } from './utils.js';
 import { postsCreateSchema } from "./classes.js"
 import { pool } from "./db.js"
 
-async function update_messages(req, res) {
+function getRecipientId(value) {
+    const recipientId = Number.parseInt(value, 10);
+    return Number.isInteger(recipientId) && recipientId > 0 ? recipientId : null;
+}
+
+async function update_message(req, res) {
 
     const original_message = await pool.query(
         'SELECT * FROM chat_messages WHERE id = $1',
@@ -28,11 +33,22 @@ async function update_messages(req, res) {
 }
 
 async function read_messages(req, res) {
+    const recipientId = getRecipientId(req.params.recipientId);
+    if (!recipientId || recipientId === req.user.id) {
+        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
+        res.status(400).json(responseBody);
+        return;
+    }
 
     const messages_lists = await pool.query(
-            'SELECT * FROM chat_messages WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1) FETCH FIRST $3 ROWS ONLY',
+            `SELECT * 
+             FROM chat_messages
+             WHERE (sender_id = $1 AND receiver_id = $2) 
+                OR (sender_id = $2 AND receiver_id = $1)
+                ORDER BY created_at ASC, id ASC
+                FETCH FIRST $3 ROWS ONLY`,
             [
-                req.body.sender, req.body.receiver, req.body.amount || 20
+                req.user.id, recipientId, req.body.amount || 20
             ]
         );
 
@@ -46,27 +62,36 @@ async function read_messages(req, res) {
 }
 
 async function create_message(req, res) {
+    const recipientId = getRecipientId(req.params.recipientId);
+    const content = String(req.body?.content ?? '').trim();
+    if (!recipientId || recipientId === req.user.id) {
+        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
+        res.status(400).json(responseBody);
+        return;
+    } else if (!content || content.length > 1000) {
+        let responseBody = formatErrorJson(413, "Content Too Large", "Content must be between 1 and 1000 characters long");
+        res.status(413).json(responseBody);
+    }
 
-    const sender = await pool.query(
+    const chat_users = await pool.query(
             'SELECT id FROM users WHERE (id = $1) OR (id = $2)',
             [
                 req.body.sender, req.body.receiver
             ]
         );
 
-    if (!sender || sender.rows.length === 0) {
-        let responseBody = formatErrorJson(404, "Not found", "Message sender not found in Database");
+    if (!chat_users || chat_users.rows.length < 2) {
+        let responseBody = formatErrorJson(404, "Not found", "Message sender or receiver not found in Database");
         res.status(404).json(responseBody);
         return;
     }
 
     const new_post = await pool.query(
-            `INSERT INTO posts (author_id, author_username, content, media, parent)
-            VALUES($1, $2, $3, $4, $5) RETURNING *
+            `INSERT INTO posts (sender_id, recipient_id, content)
+            VALUES($1, $2, $3) RETURNING *
             `,
             [
-                req.body.author_id, author_username.rows[0].username,
-                req.body.content, media, parent
+                chat_users, chat_users.rows[0].username, content
             ]
         );
 
@@ -96,7 +121,6 @@ async function delete_message(req, res) {
     }
     
 }
-
 
 const router = express.Router();
 

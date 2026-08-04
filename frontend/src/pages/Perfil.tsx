@@ -1,11 +1,14 @@
-import Header from '../components/header'
-import Footer from '../components/footer'
-import PersonalData from '../components/personal_data'
-import PostFeed from '../components/posts'
-import Friends from '../components/friends'
-import Discover from '../components/discover'
+import { useState } from 'react'
+import { Header } from '../components/header'
+import { Footer } from '../components/footer'
+import { PersonalData } from '../components/personal_data'
+import { PostFeed } from '../components/posts'
+import { Friends } from '../components/friends'
+import { Chat } from '../components/chat'
 
-function Perfil() {
+export function Perfil() {
+  const [activeChatFriend, setActiveChatFriend] = useState<{ id: number; name: string } | null>(null)
+
   return (
     <div className="app-shell perfil-layout">
       <Header />
@@ -20,10 +23,16 @@ function Perfil() {
           </div>
           <div className="col-12 lg:col-3 right-pane">
             <div className="right-pane-item">
-              <Friends />
+              <Friends
+                selectedFriendId={activeChatFriend?.id ?? null}
+                onOpenChat={(friend) => setActiveChatFriend({ id: friend.id, name: friend.name })}
+                onFriendRemoved={(friendId) => {
+                  if (activeChatFriend?.id === friendId) setActiveChatFriend(null)
+                }}
+              />
             </div>
             <div className="right-pane-item">
-              <Discover />
+              <Chat activeFriend={activeChatFriend} />
             </div>
           </div>
         </div>
@@ -32,5 +41,3 @@ function Perfil() {
     </div>
   )
 }
-
-export default Perfil

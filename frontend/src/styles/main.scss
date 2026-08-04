@@ -4,7 +4,7 @@
 @use 'components/header';
 @use 'components/personal_data';
 @use 'components/friends';
-@use 'components/discover';
+@use 'components/chat';
 @use 'components/posts';
 @use 'components/footer';
 
@@ -79,15 +79,6 @@ h4,
 h5,
 h6 {
 	font-family: 'Space Grotesk', 'Manrope', sans-serif;
-}
-
-p,
-span,
-small,
-button,
-input,
-textarea {
-	line-height: 1.45;
 }
 
 .sr-only {

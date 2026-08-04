@@ -14,19 +14,27 @@ Esto levanta:
     3.4 Contraseña: postgres
     3.5 Base de datos: transcendence
 
+
+
+Solucion error por version de paquetes con backend
+
+docker compose build --no-cache backend
+docker compose up -d --force-recreate backend
+docker compose logs -f backend
+
+si persiste el error:
+
+docker compose stop backend
+docker rm transcendence-backend
+docker compose up -d --build backend
+
 Comandos disponibles
 
 Primera vez todo desde la raiz del proyecto
-make install          # Instalar todas las dependencias (monorepo)
 
-y (
-    make dev              # Iniciar frontend
-    make dev-backend      # Iniciar backend
-)
-o
-(
-    make docker-up        # Levantar frontend + backend (levanta BD automáticamente)
-)
+make install  # Instalar todas las dependencias (monorepo)
+
+make docker-up        # Levantar frontend + backend (levanta BD automáticamente)
 
 
 Las demas:
@@ -50,3 +58,16 @@ docker exec transcendence-postgres psql -U postgres -d transcendence -f /docker-
 
 Jira: https://transcendence-42-network.atlassian.net
 Drive modulos: https://docs.google.com/spreadsheets/d/1tWkKrj_4rcdVpjzi3vXjxSJlyZc2YZTWs9tetwJPIOQ/edit?gid=0#gid=0
+
+informacion que guardar para cada usuario en la bbdd:
+
+nombre completo
+nombre de usuario
+correo electronico
+profesion
+texto libre
+numero de post
+info de post
+amigos agregados
+solicitudes de amigos
+chat individual con cada amigo

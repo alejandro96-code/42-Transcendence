@@ -7,7 +7,9 @@ import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import logo42 from '../img/42.png'
 
-function Header() {
+
+export function Header() {
+  
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -23,19 +25,10 @@ function Header() {
     <div className="header-container">
       <div className="header-bar">
 
-        {/* 42 icon and mocks profile)*/}
         <div className="header-nav">
               <Link to="/" className="header-brand">
                 <img src={logo42} alt="Logo de Transcendence" className="header-brand-logo" />
               </Link>
-              {/* Solo visualizar para tener como ejemplo
-              <Link to="/" className="header-nav__link">
-                <span>Perfil personal</span>
-              </Link>
-              <Link to="/perfil-publico" className="header-nav__link">
-                <span>Perfil público</span>
-              </Link>
-              */}
         </div>
 
         <Button
@@ -67,7 +60,7 @@ function Header() {
           </Button>
         </div>
 
-        <div id="header-mobile-menu" className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
+        <div className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
           <label htmlFor="header-search-mobile" className="sr-only">Buscar contenido en Transcendence</label>
           <InputText
             id="header-search-mobile"
@@ -89,5 +82,3 @@ function Header() {
     </div>
   )
 }
-
-export default Header
