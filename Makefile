@@ -8,6 +8,7 @@ NC = \033[0m # No Color
 
 # Prefer Docker Compose v2 when available; override like `make DOCKER_COMPOSE=docker-compose docker-up`
 DOCKER_COMPOSE ?= $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+SERVER_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '{print $$7; exit}')
 
 install:
 	@echo "$(GREEN)Instalando dependencias del monorepo...$(NC)"
@@ -38,13 +39,18 @@ docker-db: docker-env docker-network
 	@$(DOCKER_COMPOSE) -f docker-compose.db.yml ps -q postgres >/dev/null 2>&1 || (echo "$(YELLOW)PostgreSQL no se pudo iniciar$(NC)" && exit 1)
 
 docker-up: docker-db
+	@if [ -z "$(SERVER_IP)" ]; then \
+		echo "$(YELLOW)No se pudo detectar SERVER_IP automaticamente. Define SERVER_IP manualmente.$(NC)"; \
+		exit 1; \
+	fi
 	@echo "$(BLUE)Esperando a PostgreSQL...$(NC)"
 	@until docker exec transcendence-postgres pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
 	@echo "$(BLUE)Levantando frontend y backend...$(NC)"
-	@echo "$(BLUE)Frontend: http://localhost:3000$(NC)"
-	@echo "$(BLUE)Backend: http://localhost:4000$(NC)"
+	@echo "$(BLUE)SERVER_IP: $(SERVER_IP)$(NC)"
+	@echo "$(BLUE)Frontend: http://$(SERVER_IP):3000$(NC)"
+	@echo "$(BLUE)Backend: http://$(SERVER_IP):4000$(NC)"
 	@sleep 2
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.db.yml up -d --remove-orphans
+	SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.db.yml up -d --remove-orphans
 	@echo "$(BLUE)Inicializando base de datos...$(NC)"
 	@sleep 3
 	@docker exec transcendence-postgres psql -U postgres -d transcendence -f /docker-entrypoint-initdb.d/init.sql 2>/dev/null || true

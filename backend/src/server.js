@@ -110,12 +110,16 @@ function start_server() {
     dotenv.config();
     const app = express();
     const PORT = process.env.PORT || 4000;
+    const SERVER_IP = process.env.SERVER_IP || 'localhost';
+    const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
+    const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
+    const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
 
     console.log("Server start")
     
     // Middleware
     app.use(cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: FRONTEND_URL,
         credentials: true
     }));
     app.use(express.json());
@@ -160,7 +164,7 @@ function start_server() {
     passport.use(new FortyTwoStrategy({
         clientID: process.env.FORTYTWO_CLIENT_ID,
         clientSecret: process.env.FORTYTWO_CLIENT_SECRET,
-        callbackURL: process.env.FORTYTWO_CALLBACK_URL
+        callbackURL: FORTYTWO_CALLBACK_URL
     },
 
     async (accessToken, refreshToken, profile, done) => {
@@ -226,10 +230,10 @@ function start_server() {
     app.get('/api/auth/42', passport.authenticate('42'));
 
     app.get('/api/auth/42/callback',
-        passport.authenticate('42', { failureRedirect: `${process.env.FRONTEND_URL}/login` }),
+        passport.authenticate('42', { failureRedirect: `${FRONTEND_URL}/login` }),
         (req, res) => {
             // Autenticación exitosa, redirigir al frontend
-            res.redirect(`${process.env.FRONTEND_URL}/callback?success=true`);
+            res.redirect(`${FRONTEND_URL}/callback?success=true`);
         }
     );
 
@@ -359,7 +363,7 @@ function start_server() {
     ensureAuthSchema(pool)
         .then(() => {
             app.listen(PORT, '0.0.0.0', () => {
-                console.log(`Servidor corriendo en http://localhost:${PORT}`);
+                console.log(`Servidor corriendo en ${BACKEND_URL}`);
             });
         })
         .catch((error) => {

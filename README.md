@@ -14,6 +14,26 @@ Esto levanta:
     3.4 Contraseña: postgres
     3.5 Base de datos: transcendence
 
+Servidor pivote (`SERVER_IP`)
+
+`SERVER_IP` debe ser la IP real del ordenador donde levantas Docker (no `localhost`).
+
+`make docker-up` intenta detectarla automaticamente con `ip route`.
+
+Si quieres forzar una IP concreta:
+
+```bash
+export SERVER_IP=192.168.1.50
+make docker-up
+```
+
+`docker-compose.yml` usará esa IP para:
+- Frontend `VITE_API_URL`
+- Backend `FRONTEND_URL`
+- Backend `FORTYTWO_CALLBACK_URL`
+
+Si la deteccion automatica falla, `make docker-up` se detendra y te pedira definir `SERVER_IP` manualmente.
+
 
 
 Solucion error por version de paquetes con backend
