@@ -25,3 +25,29 @@ CREATE TABLE IF NOT EXISTS posts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     parent INT DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
+    sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    content VARCHAR(1000) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT messages_different_users CHECK (sender_id <> recipient_id)
+);
+
+CREATE INDEX IF NOT EXISTS messages_conversation_idx
+    ON messages (sender_id, recipient_id, created_at);
+
+CREATE TABLE IF NOT EXISTS friend_requests (
+    id SERIAL PRIMARY KEY,
+    requester_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT friend_requests_different_users CHECK (requester_id <> recipient_id),
+    CONSTRAINT friend_requests_unique_pair UNIQUE (requester_id, recipient_id)
+);
+
+CREATE INDEX IF NOT EXISTS friend_requests_recipient_idx
+    ON friend_requests (recipient_id, status, created_at DESC);

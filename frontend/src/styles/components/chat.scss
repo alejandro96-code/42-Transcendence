@@ -60,6 +60,17 @@
             background-color: $color-3;
             padding: 0.5rem;
         }
+
+        .chat-status,
+        .chat-error {
+            margin: 0.5rem 0;
+            text-align: center;
+            color: rgba($color-text-write, 0.75);
+        }
+
+        .chat-error {
+            color: #ff9a9a;
+        }
             &::-webkit-scrollbar {
             width: 6px;
         }
@@ -80,6 +91,7 @@
     }
 
     .send-text{
+        width: 100%;
         border-top-left-radius : 0px;
         border-top-right-radius : 0px;
         border-bottom-left-radius : 10px;

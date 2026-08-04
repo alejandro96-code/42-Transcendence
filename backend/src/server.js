@@ -8,6 +8,8 @@ import { Strategy as FortyTwoStrategy } from 'passport-42';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
+import chat_endpoints from "./chat.js"
+import friends_endpoints from "./friends.js"
 import { isAuthenticated } from "./utils.js"
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -71,6 +73,36 @@ async function ensureAuthSchema(pool) {
     await pool.query(`
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS password_hash TEXT
+    `);
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            content VARCHAR(1000) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT messages_different_users CHECK (sender_id <> recipient_id)
+        )
+    `);
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS messages_conversation_idx
+        ON messages (sender_id, recipient_id, created_at)
+    `);
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS friend_requests (
+            id SERIAL PRIMARY KEY,
+            requester_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT friend_requests_different_users CHECK (requester_id <> recipient_id),
+            CONSTRAINT friend_requests_unique_pair UNIQUE (requester_id, recipient_id)
+        )
+    `);
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS friend_requests_recipient_idx
+        ON friend_requests (recipient_id, status, created_at DESC)
     `);
 }
 
@@ -321,6 +353,8 @@ function start_server() {
     });
 
     app.use("/api/posts", posts_endpoints);
+    app.use("/api/messages", chat_endpoints);
+    app.use("/api/friends", friends_endpoints);
 
     ensureAuthSchema(pool)
         .then(() => {
