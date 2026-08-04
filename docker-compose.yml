@@ -14,7 +14,9 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:4000
+      - SERVER_IP=${SERVER_IP:?SERVER_IP is required}
+      - VITE_SERVER_IP=${SERVER_IP:?SERVER_IP is required}
+      - VITE_API_URL=http://${SERVER_IP:?SERVER_IP is required}:4000
     stdin_open: true
     tty: true
     networks:
@@ -34,6 +36,9 @@ services:
       - ./backend/.env
     environment:
       - NODE_ENV=development
+      - SERVER_IP=${SERVER_IP:?SERVER_IP is required}
+      - FRONTEND_URL=http://${SERVER_IP:?SERVER_IP is required}:3000
+      - FORTYTWO_CALLBACK_URL=http://${SERVER_IP:?SERVER_IP is required}:4000/api/auth/42/callback
       - DB_HOST=postgres
     stdin_open: true
     tty: true
