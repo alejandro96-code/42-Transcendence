@@ -1,14 +1,15 @@
+import { useTranslation } from 'react-i18next'//importar libreria de idiomas
 interface ChatProps {
   activeFriendName?: string | null
 }
 
 export function Chat({ activeFriendName = null }: ChatProps) {
-
+  const { t } = useTranslation()
   return (
     <div className='chat-container'>
       <div className="surface-card border-round-sm p-3">
         <div className="chat-friend-name border-round-sm">
-          {activeFriendName ? `Chateando con: ${activeFriendName}` : 'Selecciona un amigo para abrir el chat'}
+          {activeFriendName ? t('chat_active_friend', { name: activeFriendName }) : t('chat_select_friend')}
         </div>
         <div className="chat-panel">
           <section className="chat-section">
@@ -24,13 +25,13 @@ export function Chat({ activeFriendName = null }: ChatProps) {
             </div>
           </section>
         </div>
-        <label htmlFor="send-message" className="sr-only">Envia un mensaje</label>
+        <label htmlFor="send-message" className="sr-only">{t('chat_label_send_message')}</label>
         <input
           id="send-message"
           type="input"
           accept="text"
           className="send-text p-inputtext"
-          placeholder="Escribe algo..."
+          placeholder={t('chat_input_placeholder')}
         />
       </div>
     </div>
