@@ -15,6 +15,8 @@ import { isAuthenticated } from "./utils.js"
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PROFILE_PROFESSION_MAX_LENGTH = 80;
+const PROFILE_DESCRIPTION_MAX_LENGTH = 200;
 
 function normalizeUsername(value) {
     return String(value ?? '').trim();
@@ -62,6 +64,8 @@ function toPublicUser(user) {
         email: rest.email ?? '',
         full_name: rest.full_name ?? rest.username ?? '',
         avatar_url: rest.avatar_url ?? '',
+        profession: rest.profession ?? '',
+        description: rest.description ?? '',
     };
 }
 
@@ -73,6 +77,14 @@ async function ensureAuthSchema(pool) {
     await pool.query(`
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS password_hash TEXT
+    `);
+    await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS profession TEXT
+    `);
+    await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS description TEXT
     `);
     await pool.query(`
         CREATE TABLE IF NOT EXISTS messages (
@@ -185,14 +197,16 @@ function start_server() {
             if (result.rows.length === 0) {
             // Crear nuevo usuario
             const insertResult = await pool.query(
-                `INSERT INTO users (intra_id, username, email, full_name, avatar_url) 
-                VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+                `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
                 [
                     profile.id,
                     profile.username,
                     profile.emails?.[0]?.value || '',
                     profile.displayName || profile.username,
                     avatarUrl
+                    ,null,
+                    null,
                 ]
             );
             user = insertResult.rows[0];
@@ -275,10 +289,10 @@ function start_server() {
             const avatarUrl = `https://via.placeholder.com/96?text=${encodeURIComponent(avatarInitials)}`;
 
             const result = await pool.query(
-                `INSERT INTO users (intra_id, username, email, full_name, avatar_url, password_hash)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, password_hash)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *`,
-                [null, username, email, fullName, avatarUrl, passwordHash]
+                [null, username, email, fullName, avatarUrl, null, null, passwordHash]
             );
 
             const user = result.rows[0];
@@ -329,6 +343,35 @@ function start_server() {
             }
             res.json({ message: 'Sesión cerrada' });
         });
+    });
+
+    app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
+        const profession = normalizeText(req.body?.profession);
+        const description = normalizeText(req.body?.description);
+
+        if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
+            return res.status(400).json({ error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.` });
+        }
+        if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
+            return res.status(400).json({ error: `La descripción no puede superar ${PROFILE_DESCRIPTION_MAX_LENGTH} caracteres.` });
+        }
+
+        try {
+            const result = await pool.query(
+                `UPDATE users
+                 SET profession = $1,
+                     description = $2,
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $3
+                 RETURNING *`,
+                [profession || null, description || null, req.user.id]
+            );
+
+            return res.json(toPublicUser(result.rows[0]));
+        } catch (error) {
+            console.error('Error al actualizar el perfil:', error);
+            return res.status(500).json({ error: 'Error al actualizar el perfil.' });
+        }
     });
 
     app.get('/', (req, res) => {

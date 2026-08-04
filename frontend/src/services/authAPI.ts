@@ -76,6 +76,24 @@ export const authAPI = {
     return await response.json()
   },
 
+  async updateMyProfile(profile: { profession: string; description: string }): Promise<User> {
+    const response = await fetch(`${API_URL}/api/auth/me`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(profile),
+    })
+
+    if (!response.ok) {
+      const message = await readErrorMessage(response, 'No se pudo guardar el perfil.')
+      throw new Error(message)
+    }
+
+    return await response.json()
+  },
+
   // Iniciar login con 42
   initiateLogin() {
     window.location.href = `${API_URL}/api/auth/42`

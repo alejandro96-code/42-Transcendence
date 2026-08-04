@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100),
     full_name VARCHAR(100),
     avatar_url TEXT,
+    profession TEXT,
+    description TEXT,
     password_hash TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
