@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from 'primereact/button'
-import { Avatar } from 'primereact/avatar'
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
@@ -17,7 +16,6 @@ interface PendingRequest {
   id: number
   name: string
   email: string
-  avatar?: string
   requestedAt: string
 }
 
@@ -39,10 +37,10 @@ const INITIAL_FRIENDS: Friend[] = [
 ]
 
 const INITIAL_PENDING_REQUESTS: PendingRequest[] = [
-  { id: 10, name: 'varysito', email: 'varysito@student.42', avatar: 'https://via.placeholder.com/40?text=VY', requestedAt: '2025-04-24' },
-  { id: 11, name: 'mgarcia', email: 'mgarcia@student.42', avatar: 'https://via.placeholder.com/40?text=MG', requestedAt: '2025-04-23' },
-  { id: 12, name: 'jperez', email: 'jperez@student.42', avatar: 'https://via.placeholder.com/40?text=JP', requestedAt: '2025-04-22' },
-  { id: 13, name: 'alopez', email: 'alopez@student.42', avatar: 'https://via.placeholder.com/40?text=AL', requestedAt: '2025-04-21' },
+  { id: 10, name: 'varysito', email: 'varysito@student.42', requestedAt: '2025-04-24' },
+  { id: 11, name: 'mgarcia', email: 'mgarcia@student.42', requestedAt: '2025-04-23' },
+  { id: 12, name: 'jperez', email: 'jperez@student.42', requestedAt: '2025-04-22' },
+  { id: 13, name: 'alopez', email: 'alopez@student.42', requestedAt: '2025-04-21' },
 ]
 
 export function Friends({ readOnly = false, initialFriends, selectedFriendId = null, onOpenChat }: FriendsProps) {
@@ -272,7 +270,6 @@ export function Friends({ readOnly = false, initialFriends, selectedFriendId = n
                 {pendingRequests.map((request) => (
                   <div key={request.id} className="request-card">
                     <div className="request-info">
-                      <Avatar image={request.avatar} label={request.name[0].toUpperCase()} />
                       <div className="request-details">
                         <h4 className="mb-0">{request.name}</h4>
                         <small className="text-secondary">{request.requestedAt}</small>
