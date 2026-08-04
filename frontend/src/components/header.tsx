@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
+import { Dropdown } from 'primereact/dropdown' //añadido el import de dropdowm
 import { useAppDispatch } from '../store/hooks'
 import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
@@ -13,6 +14,18 @@ export function Header() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  
+  //añadido const de opciones de lenguaje
+
+  const languageOptions = [
+  { label: 'ES', value: 'es' },
+  { label: 'EU', value: 'eu' },
+  { label: 'EN', value: 'en' }
+  ]
+
+  //es como idioma default
+
+  const [selectedLanguage, setSelectedLanguage] = useState('es')
 
   const handleLogout = async () => {
     await authAPI.logout()
@@ -43,12 +56,21 @@ export function Header() {
         
         {/* Search Label and Logout Label (Añadir Dropdown de lenguajes)*/}
         <div className="header-actions">
+
+		  <Dropdown
+            value={selectedLanguage}
+            options={languageOptions}
+            onChange={(e) => setSelectedLanguage(e.value)} //e es el valor de la opción elegida(es, eu o en)
+            className="p-inputtext-sm"
+          />
+
           <label htmlFor="header-search" className="sr-only">Buscar contenido en Transcendence</label>
           <InputText
             id="header-search"
             placeholder="Search..."
             className="header-search p-inputtext-sm"
           />
+
           <Button
             type="button"
             severity="danger"
@@ -58,6 +80,7 @@ export function Header() {
             onClick={handleLogout}
           > Logout
           </Button>
+
         </div>
 
         <div className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
