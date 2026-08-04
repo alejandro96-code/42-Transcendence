@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', isAuthenticated, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT users.id, users.username
+            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description
              FROM friend_requests
              JOIN users ON users.id = CASE
                  WHEN friend_requests.requester_id = $1 THEN friend_requests.recipient_id
@@ -22,6 +22,119 @@ router.get('/', isAuthenticated, async (req, res) => {
     } catch (error) {
         console.error('Error al obtener amigos:', error);
         return res.status(500).json({ error: 'No se pudieron obtener los amigos.' });
+    }
+});
+
+router.get('/user/:userId', isAuthenticated, async (req, res) => {
+    const userId = Number.parseInt(req.params.userId, 10);
+
+    if (!Number.isInteger(userId)) {
+        return res.status(400).json({ error: 'Usuario inválido.' });
+    }
+
+    try {
+        if (userId !== req.user.id) {
+            const allowedResult = await pool.query(
+                `SELECT 1
+                 FROM friend_requests
+                 WHERE status = 'accepted'
+                   AND ((requester_id = $1 AND recipient_id = $2) OR (requester_id = $2 AND recipient_id = $1))
+                 LIMIT 1`,
+                [req.user.id, userId],
+            );
+
+            if (allowedResult.rows.length === 0) {
+                return res.status(403).json({ error: 'No puedes ver los amigos de este usuario.' });
+            }
+        }
+
+        const result = await pool.query(
+            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description
+             FROM friend_requests
+             JOIN users ON users.id = CASE
+                 WHEN friend_requests.requester_id = $1 THEN friend_requests.recipient_id
+                 ELSE friend_requests.requester_id
+             END
+             WHERE friend_requests.status = 'accepted'
+               AND (friend_requests.requester_id = $1 OR friend_requests.recipient_id = $1)
+             ORDER BY LOWER(users.username)`,
+            [userId],
+        );
+
+        return res.json(result.rows);
+    } catch (error) {
+        console.error('Error al obtener los amigos del usuario:', error);
+        return res.status(500).json({ error: 'No se pudieron obtener los amigos del usuario.' });
+    }
+});
+
+router.get('/search', isAuthenticated, async (req, res) => {
+    const query = String(req.query?.q ?? '').trim();
+
+    if (!query) {
+        return res.json([]);
+    }
+
+    try {
+        const result = await pool.query(
+            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description
+             FROM friend_requests
+             JOIN users ON users.id = CASE
+                 WHEN friend_requests.requester_id = $1 THEN friend_requests.recipient_id
+                 ELSE friend_requests.requester_id
+             END
+             WHERE friend_requests.status = 'accepted'
+               AND (friend_requests.requester_id = $1 OR friend_requests.recipient_id = $1)
+               AND (
+                 LOWER(users.username) LIKE LOWER($2)
+                 OR LOWER(users.full_name) LIKE LOWER($2)
+               )
+             ORDER BY LOWER(users.username)
+             LIMIT 8`,
+            [req.user.id, `%${query}%`],
+        );
+
+        return res.json(result.rows);
+    } catch (error) {
+        console.error('Error al buscar amigos:', error);
+        return res.status(500).json({ error: 'No se pudo buscar entre tus amigos.' });
+    }
+});
+
+router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
+    const friendId = Number.parseInt(req.params.friendId, 10);
+
+    if (!Number.isInteger(friendId)) {
+        return res.status(400).json({ error: 'Amigo inválido.' });
+    }
+
+    try {
+        const result = await pool.query(
+            `SELECT users.id, users.username, users.email, users.full_name, users.avatar_url, users.profession, users.description
+             FROM users
+             WHERE users.id = $1
+               AND (
+                 users.id = $2
+                 OR EXISTS (
+                     SELECT 1
+                     FROM friend_requests
+                     WHERE friend_requests.status = 'accepted'
+                       AND ((friend_requests.requester_id = $2 AND friend_requests.recipient_id = users.id)
+                         OR (friend_requests.requester_id = users.id AND friend_requests.recipient_id = $2))
+                 )
+               )
+             LIMIT 1`,
+            [friendId, req.user.id],
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Perfil no encontrado.' });
+        }
+
+        return res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error al obtener el perfil del amigo:', error);
+        return res.status(500).json({ error: 'No se pudo obtener el perfil.' });
     }
 });
 

@@ -10,9 +10,17 @@ interface FriendsProps {
   selectedFriendId?: number | null
   onOpenChat?: (friend: { id: number; name: string }) => void
   onFriendRemoved?: (friendId: number) => void
+  readOnly?: boolean
+  ownerUserId?: number | null
 }
 
-export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }: FriendsProps) {
+export function Friends({
+  selectedFriendId = null,
+  onOpenChat,
+  onFriendRemoved,
+  readOnly = false,
+  ownerUserId = null,
+}: FriendsProps) {
   const toast = useRef<Toast>(null)
   const [friendsList, setFriendsList] = useState<Friend[]>([])
   const [pendingRequests, setPendingRequests] = useState<PendingFriendRequest[]>([])
@@ -22,7 +30,7 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
 
   const loadFriends = async () => {
     try {
-      setFriendsList(await friendsAPI.getFriends())
+      setFriendsList(ownerUserId ? await friendsAPI.getUserFriends(ownerUserId) : await friendsAPI.getFriends())
     } catch (error) {
       toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudieron cargar los amigos.' })
     }
@@ -38,8 +46,10 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
 
   useEffect(() => {
     void loadFriends()
-    void loadRequests()
-  }, [])
+    if (!readOnly && !ownerUserId) {
+      void loadRequests()
+    }
+  }, [ownerUserId, readOnly])
 
   const sortedFriends = useMemo(() => (
     [...friendsList].sort((a, b) => a.username.localeCompare(b.username, 'es', { sensitivity: 'base' }))
@@ -111,9 +121,11 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
         <div className="friends-tabs">
           <button type="button" className={`friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
             <span>Amigos ({friendsList.length})</span>
-            <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
+            {!readOnly && (
+              <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
+            )}
           </button>
-          {pendingRequests.length > 0 && (
+          {!readOnly && !ownerUserId && pendingRequests.length > 0 && (
             <button type="button" className={`friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
               Solicitudes ({pendingRequests.length})
             </button>
@@ -126,14 +138,18 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
                 <div key={friend.id} className="friend-card">
                   <div className="friend-info"><div className="friend-details"><h4 className="mb-0"><span className="status-dot offline" />{friend.username}</h4></div></div>
                   <div className="friend-actions">
-                    <Button icon="pi pi-eye" aria-label={`Abrir chat con ${friend.username}`} className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`} tooltip={`Abrir chat con ${friend.username}`} onClick={() => onOpenChat?.({ id: friend.id, name: friend.username })} />
-                    <Button icon="pi pi-times" label="Eliminar amigo" className="p-button-rounded p-button-danger p-button-text p-button-sm" tooltip="Eliminar" onClick={() => handleRemoveFriend(friend)}>Eliminar amigos</Button>
+                    {!readOnly && !ownerUserId && (
+                      <>
+                        <Button icon="pi pi-eye" aria-label={`Abrir chat con ${friend.username}`} className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`} tooltip={`Abrir chat con ${friend.username}`} onClick={() => onOpenChat?.({ id: friend.id, name: friend.username })} />
+                        <Button icon="pi pi-times" label="Eliminar amigo" className="p-button-rounded p-button-danger p-button-text p-button-sm" tooltip="Eliminar" onClick={() => handleRemoveFriend(friend)}>Eliminar amigos</Button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}</div> : <div className="empty-state"><i className="pi pi-heart-fill" /><p>No tienes amigos aún</p></div>}
             </section>
           )}
-          {activeSection === 'requests' && pendingRequests.length > 0 && (
+          {!readOnly && !ownerUserId && activeSection === 'requests' && pendingRequests.length > 0 && (
             <section className="friends-section"><div className="requests-list">{pendingRequests.map((request) => (
               <div key={request.id} className="request-card">
                 <div className="request-info"><div className="request-details"><h4 className="mb-0">{request.username}</h4><small className="text-secondary">{new Date(request.created_at).toLocaleDateString('es-ES')}</small></div></div>
@@ -146,7 +162,8 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
           )}
         </div>
       </div>
-      <Dialog header="Nueva solicitud de amistad" visible={isAddFriendOpen} onHide={() => { setIsAddFriendOpen(false); setFriendNick('') }} className="add-friend-dialog">
+      {!readOnly && !ownerUserId && (
+        <Dialog header="Nueva solicitud de amistad" visible={isAddFriendOpen} onHide={() => { setIsAddFriendOpen(false); setFriendNick('') }} className="add-friend-dialog">
         <div className="flex flex-column gap-3">
           <span>Escribe el nick del usuario al que quieres enviar la solicitud.</span>
           <InputText value={friendNick} onChange={(event) => setFriendNick(event.target.value)} placeholder="ejemplo: alejanr2" autoFocus onKeyDown={(event) => { if (event.key === 'Enter') void handleSendFriendRequest() }} />
@@ -155,7 +172,8 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
             <Button label="Enviar solicitud" icon="pi pi-send" onClick={() => void handleSendFriendRequest()} />
           </div>
         </div>
-      </Dialog>
+        </Dialog>
+      )}
     </div>
   )
 }

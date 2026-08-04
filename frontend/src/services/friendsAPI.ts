@@ -4,6 +4,10 @@ const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 export interface Friend {
   id: number
   username: string
+  full_name?: string
+  avatar_url?: string | null
+  profession?: string | null
+  description?: string | null
 }
 
 export interface PendingFriendRequest {
@@ -11,6 +15,16 @@ export interface PendingFriendRequest {
   username: string
   email: string
   created_at: string
+}
+
+export interface FriendProfile {
+  id: number
+  username: string
+  email: string
+  full_name: string
+  avatar_url: string | null
+  profession?: string | null
+  description?: string | null
 }
 
 async function getError(response: Response, fallback: string) {
@@ -37,6 +51,18 @@ export const friendsAPI = {
     return (await request('/')).json()
   },
 
+  async getUserFriends(userId: number): Promise<Friend[]> {
+    const response = await fetch(`${API_URL}/api/friends/user/${userId}`, {
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error(await getError(response, 'No se pudieron cargar los amigos.'))
+    }
+
+    return response.json()
+  },
+
   async getPendingRequests(): Promise<PendingFriendRequest[]> {
     return (await request('/requests')).json()
   },
@@ -59,5 +85,29 @@ export const friendsAPI = {
 
   async removeFriend(friendId: number): Promise<void> {
     await request(`/${friendId}`, { method: 'DELETE' })
+  },
+
+  async searchFriends(query: string): Promise<Friend[]> {
+    const response = await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(query)}`, {
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error(await getError(response, 'No se pudo buscar amigos.'))
+    }
+
+    return response.json()
+  },
+
+  async getFriendProfile(friendId: number): Promise<FriendProfile> {
+    const response = await fetch(`${API_URL}/api/friends/${friendId}/profile`, {
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw new Error(await getError(response, 'No se pudo obtener el perfil.'))
+    }
+
+    return response.json()
   },
 }
