@@ -8,6 +8,8 @@ import { Strategy as FortyTwoStrategy } from 'passport-42';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
+import chat_endpoints from "./chat.js"
+import friends_endpoints from "./friends.js"
 import { isAuthenticated } from "./utils.js"
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -72,18 +74,52 @@ async function ensureAuthSchema(pool) {
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS password_hash TEXT
     `);
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            content VARCHAR(1000) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT messages_different_users CHECK (sender_id <> recipient_id)
+        )
+    `);
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS messages_conversation_idx
+        ON messages (sender_id, recipient_id, created_at)
+    `);
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS friend_requests (
+            id SERIAL PRIMARY KEY,
+            requester_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT friend_requests_different_users CHECK (requester_id <> recipient_id),
+            CONSTRAINT friend_requests_unique_pair UNIQUE (requester_id, recipient_id)
+        )
+    `);
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS friend_requests_recipient_idx
+        ON friend_requests (recipient_id, status, created_at DESC)
+    `);
 }
 
 function start_server() {
     dotenv.config();
     const app = express();
     const PORT = process.env.PORT || 4000;
+    const SERVER_IP = process.env.SERVER_IP || 'localhost';
+    const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
+    const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
+    const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
 
     console.log("Server start")
     
     // Middleware
     app.use(cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: FRONTEND_URL,
         credentials: true
     }));
     app.use(express.json());
@@ -128,7 +164,7 @@ function start_server() {
     passport.use(new FortyTwoStrategy({
         clientID: process.env.FORTYTWO_CLIENT_ID,
         clientSecret: process.env.FORTYTWO_CLIENT_SECRET,
-        callbackURL: process.env.FORTYTWO_CALLBACK_URL
+        callbackURL: FORTYTWO_CALLBACK_URL
     },
 
     async (accessToken, refreshToken, profile, done) => {
@@ -194,10 +230,10 @@ function start_server() {
     app.get('/api/auth/42', passport.authenticate('42'));
 
     app.get('/api/auth/42/callback',
-        passport.authenticate('42', { failureRedirect: `${process.env.FRONTEND_URL}/login` }),
+        passport.authenticate('42', { failureRedirect: `${FRONTEND_URL}/login` }),
         (req, res) => {
             // Autenticación exitosa, redirigir al frontend
-            res.redirect(`${process.env.FRONTEND_URL}/callback?success=true`);
+            res.redirect(`${FRONTEND_URL}/callback?success=true`);
         }
     );
 
@@ -321,11 +357,13 @@ function start_server() {
     });
 
     app.use("/api/posts", posts_endpoints);
+    app.use("/api/messages", chat_endpoints);
+    app.use("/api/friends", friends_endpoints);
 
     ensureAuthSchema(pool)
         .then(() => {
             app.listen(PORT, '0.0.0.0', () => {
-                console.log(`Servidor corriendo en http://localhost:${PORT}`);
+                console.log(`Servidor corriendo en ${BACKEND_URL}`);
             });
         })
         .catch((error) => {

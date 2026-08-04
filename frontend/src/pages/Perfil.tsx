@@ -26,10 +26,13 @@ export function Perfil() {
               <Friends
                 selectedFriendId={activeChatFriend?.id ?? null}
                 onOpenChat={(friend) => setActiveChatFriend({ id: friend.id, name: friend.name })}
+                onFriendRemoved={(friendId) => {
+                  if (activeChatFriend?.id === friendId) setActiveChatFriend(null)
+                }}
               />
             </div>
             <div className="right-pane-item">
-              <Chat activeFriendName={activeChatFriend?.name ?? null} />
+              <Chat activeFriend={activeChatFriend} />
             </div>
           </div>
         </div>
