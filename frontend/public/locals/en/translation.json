@@ -8,6 +8,9 @@
   "chat_select_friend": "Select a friend to open the chat",
   "chat_input_aria_label": "Send a message",
   "chat_input_placeholder": "Type something...",
+  "chat_loading_placeholder": "Loading messages…",
+  "chat_no_message_placeholder": "There are no messages yet.",
+  "chat_error_message": "Message could be send",
 
   "footer_rights": "© 2026 Transcendence. All rights reserved.",
   "footer_license_prefix": "Distributed under the",

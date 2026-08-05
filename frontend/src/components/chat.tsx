@@ -1,14 +1,15 @@
-import { useTranslation } from 'react-i18next'//importar libreria de idiomas
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAppSelector } from '../store/hooks'
 import { chatAPI, type ChatMessage } from '../services/chatAPI'
+import { useI18n } from '../hooks/useI18n'
 
 interface ChatProps {
   activeFriend?: { id: number; name: string } | null
 }
  
 export function Chat({ activeFriend = null }: ChatProps) {
+  const { t } = useI18n()
   const currentUser = useAppSelector((state) => state.auth.user)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [messageText, setMessageText] = useState('')
@@ -16,7 +17,7 @@ export function Chat({ activeFriend = null }: ChatProps) {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
-  const { t } = useTranslation()
+
 
   useEffect(() => {
     if (!activeFriend) {
@@ -58,7 +59,7 @@ export function Chat({ activeFriend = null }: ChatProps) {
       setMessages((current) => [...current, message])
       setMessageText('')
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'No se pudo enviar el mensaje.')
+      setError(requestError instanceof Error ? requestError.message : t('chat_error_message'))
     } finally {
       setIsSending(false)
     }
@@ -73,8 +74,8 @@ export function Chat({ activeFriend = null }: ChatProps) {
         <div className="chat-panel">
           <section className="chat-section">
             <div className="chat-list" ref={listRef} aria-live="polite">
-              {isLoading && <p className="chat-status">Cargando mensajes…</p>}
-              {!isLoading && activeFriend && messages.length === 0 && !error && <p className="chat-status">Aún no hay mensajes.</p>}
+              {isLoading && <p className="chat-status">{t('chat_loading_placeholder')}</p>}
+              {!isLoading && activeFriend && messages.length === 0 && !error && <p className="chat-status">{t('chat_no_message_placeholder')}</p>}
               {messages.map((message) => (
                 <p key={message.id} className={message.sender_id === currentUser?.id ? 'personal-comment' : 'friend-comment'}>
                   {message.content}
@@ -85,7 +86,7 @@ export function Chat({ activeFriend = null }: ChatProps) {
           </section>
         </div>
         <form onSubmit={handleSubmit}>
-          <label htmlFor="send-message" className="sr-only">Envía un mensaje</label>
+          <label htmlFor="send-message" className="sr-only">{t('chat_input_aria_label   ')}</label>
           <input
             id="send-message"
             type="text"

@@ -8,6 +8,9 @@
   "chat_select_friend": "Selecciona un amigo para abrir el chat",
   "chat_input_aria_label": "Envia un mensaje",
   "chat_input_placeholder": "Escribe algo...",
+  "chat_loading_placeholder": "Cargando mensajes…",
+  "chat_no_message_placeholder": "Aún no hay mensajes.",
+  "chat_error_message": "No se pudo enviar el mensaje.",
 
   "footer_rights": "© 2026 Transcendence. Todos los derechos reservados.",
   "footer_license_prefix": "Distribuido bajo la licencia",

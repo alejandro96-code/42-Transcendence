@@ -8,6 +8,9 @@
   "chat_select_friend": "Hautatu lagun bat txata irekitzeko",
   "chat_input_aria_label": "Bidali mezu bat",
   "chat_input_placeholder": "Idatzi zerbait...",
+  "chat_loading_placeholder": "Mezuak kargatzen...",
+  "chat_no_message_placeholder": "Oraindik ez daude mezurik.",
+  "chat_error_message": "Ezin izan da mezua bidali",
 
   "footer_rights": "© 2026 Transcendence. Eskubide guztiak erreserbatuta.",
   "footer_license_prefix": "Lizentzia honekin banatua:",
