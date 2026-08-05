@@ -1,4 +1,4 @@
-.PHONY: install dev dev-backend clean docker-env docker-network docker-db docker-up docker-down docker-down-all docker-clean
+.PHONY: install dev dev-backend clean docker-env docker-network docker-db docker-up docker-down docker-down-all docker-clean mock-user
 
 # Colors
 GREEN = \033[0;32m
@@ -55,6 +55,13 @@ docker-up: docker-db
 	@sleep 3
 	@docker exec transcendence-postgres psql -U postgres -d transcendence -f /docker-entrypoint-initdb.d/init.sql 2>/dev/null || true
 	@echo "$(GREEN)✓ Base de datos lista$(NC)"
+
+mock-user: docker-db
+	@echo "$(BLUE)Esperando a PostgreSQL...$(NC)"
+	@until docker exec transcendence-postgres pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
+	@echo "$(BLUE)Insertando usuario de prueba...$(NC)"
+	@docker exec -i transcendence-postgres psql -v ON_ERROR_STOP=1 -U postgres -d transcendence < backend/mock-user.sql
+	@echo "$(GREEN)✓ Usuario mock creado o actualizado$(NC)"
 
 docker-down:
 	@echo "$(YELLOW)Deteniendo frontend y backend (PostgreSQL sigue corriendo)...$(NC)"

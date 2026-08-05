@@ -1,6 +1,12 @@
 # Transcendence
 
-Proyecto fullstack con React + Vite (frontend) y Node.js + Express (backend) + PostgreSQL (BBDD)
+Proyecto fullstack con React + Node.js + JS + PostgreSQL
+
+# How to build
+
+1º Logeate en la intra de 42
+2º Vete a la Api
+3º Create una app
 
 Inicio rápido
 
@@ -59,10 +65,18 @@ make docker-up        # Levantar frontend + backend (levanta BD automáticamente
 
 Las demas:
 make docker-db        # Levantar solo PostgreSQL (se mantiene corriendo)
+make mock-user        # Crear/actualizar el usuario local de prueba
 make docker-down      # Detener frontend + backend (BD sigue corriendo)
 make docker-down-all  # Detener TODO incluyendo PostgreSQL
-make docker-clean     # ⚠️  Eliminar TODO (incluyendo datos de BD)
+make docker-clean     # Eliminar TODO (incluyendo datos de BD)
 make clean            # Limpiar node_modules y lock files
+```
+
+El usuario de prueba creado por `make mock-user` tiene estas credenciales:
+
+```
+Usuario: mockuser
+Contraseña: mockpass123
 ```
 
 ## ⚠️ Base de datos: tabla users no existe
