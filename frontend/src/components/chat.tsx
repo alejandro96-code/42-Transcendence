@@ -69,7 +69,6 @@ export function Chat({ activeFriend = null }: ChatProps) {
       <div className="surface-card border-round-sm p-3">
         <div className="chat-friend-name border-round-sm">
           {activeFriend ? t('chat_active_friend', { name: activeFriend.name }) : t('chat_select_friend')}
-          {activeFriend ? `Chateando con: ${activeFriend.name}` : 'Selecciona un usuario para abrir el chat'}
         </div>
         <div className="chat-panel">
           <section className="chat-section">

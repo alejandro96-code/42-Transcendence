@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "i18next": "^26.3.6",
+    "i18next-http-backend": "^4.0.1",
     "react-i18next": "^17.0.11"
   }
 }

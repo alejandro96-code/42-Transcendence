@@ -2,30 +2,32 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
-import { Dropdown } from 'primereact/dropdown' //añadido el import de dropdowm
+import { Dropdown } from 'primereact/dropdown'
+import { useTranslation } from 'react-i18next'
 import { useAppDispatch } from '../store/hooks'
 import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import logo42 from '../img/42.png'
 
-
 export function Header() {
-  
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const { t, i18n } = useTranslation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  
-  //añadido const de opciones de lenguaje
 
   const languageOptions = [
-  { label: 'ES', value: 'es' },
-  { label: 'EU', value: 'eu' },
-  { label: 'EN', value: 'en' }
+    { label: 'ES', value: 'es' },
+    { label: 'EU', value: 'eu' },
+    { label: 'EN', value: 'en' }
   ]
 
-  //es como idioma default
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || 'es')
 
-  const [selectedLanguage, setSelectedLanguage] = useState('es')
+  const handleLanguageChange = (e: { value: string }) => {
+    const newLang = e.value
+    setSelectedLanguage(newLang)
+    i18n.changeLanguage(newLang)
+  }
 
   const handleLogout = async () => {
     await authAPI.logout()
@@ -39,35 +41,35 @@ export function Header() {
       <div className="header-bar">
 
         <div className="header-nav">
-              <Link to="/" className="header-brand">
-                <img src={logo42} alt="Logo de Transcendence" className="header-brand-logo" />
-              </Link>
+          <Link to="/" className="header-brand">
+            <img src={logo42} alt="Logo de Transcendence" className="header-brand-logo" />
+          </Link>
         </div>
 
         <Button
           type="button"
           className="header-menu-toggle p-button-text"
           icon="pi pi-bars"
-          aria-label="Abrir menú"
+          aria-label={t('header_menu_aria_label')}
           aria-expanded={isMenuOpen}
           aria-controls="header-mobile-menu"
           onClick={() => setIsMenuOpen((currentValue) => !currentValue)}
         />
         
-        {/* Search Label and Logout Label (Añadir Dropdown de lenguajes)*/}
         <div className="header-actions">
-
-		  <Dropdown
+          <Dropdown
             value={selectedLanguage}
             options={languageOptions}
-            onChange={(e) => setSelectedLanguage(e.value)} //e es el valor de la opción elegida(es, eu o en)
+            onChange={handleLanguageChange}
             className="p-inputtext-sm"
           />
 
-          <label htmlFor="header-search" className="sr-only">Buscar contenido en Transcendence</label>
+          <label htmlFor="header-search" className="sr-only">
+            {t('header_search_aria_label')}
+          </label>
           <InputText
             id="header-search"
-            placeholder="Search..."
+            placeholder={t('header_search_placeholder')}
             className="header-search p-inputtext-sm"
           />
 
@@ -78,16 +80,18 @@ export function Header() {
             outlined
             size="small"
             onClick={handleLogout}
-          > Logout
+          > 
+            {t('header_logout')}
           </Button>
-
         </div>
 
         <div className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
-          <label htmlFor="header-search-mobile" className="sr-only">Buscar contenido en Transcendence</label>
+          <label htmlFor="header-search-mobile" className="sr-only">
+            {t('header_search_aria_label')}
+          </label>
           <InputText
             id="header-search-mobile"
-            placeholder="Search..."
+            placeholder={t('header_search_placeholder')}
             className="header-search header-search--mobile p-inputtext-sm"
           />
           <Button
@@ -97,7 +101,8 @@ export function Header() {
             outlined
             size="small"
             onClick={handleLogout}
-          > Logout
+          > 
+            {t('header_logout')}
           </Button>
         </div>
 
