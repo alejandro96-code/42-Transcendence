@@ -18,7 +18,7 @@
   "footer_license_disclaimer": ". Software hau \"dagoen bezala\" eskaintzen da, inolako bermerik gabe.",
 
   "friends_tab_friends": "Lagunak ({{count}})",
-  "friends_tab_requests": "Eskaerak ({{count}})",
+  "friends_tooltip": "Lagunak",
   "friends_chat_aria_label": "Ireki txata {{name}}-(rekin)",
   "friends_chat_tooltip": "Ireki txata {{name}}-(rekin)",
   "friends_remove_button": "Ezabatu lagunak",

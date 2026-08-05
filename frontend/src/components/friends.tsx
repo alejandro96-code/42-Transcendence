@@ -112,7 +112,7 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
       <div className="surface-card border-round-sm p-3">
         <div className="friends-tabs">
           <button type="button" className={`friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
-            <span>Amigos ({friendsList.length})</span>
+            <span>{t('friends_tooltip')} ({friendsList.length})</span>
             <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
           </button>
           {pendingRequests.length > 0 && (

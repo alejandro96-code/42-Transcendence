@@ -18,6 +18,7 @@
   "footer_license_disclaimer": ". Este software se proporciona \"tal cual\", sin garantía de ningún tipo.",
 
   "friends_tab_friends": "Amigos ({{count}})",
+  "friends_tooltip": "Amigos",
   "friends_tab_requests": "Solicitudes ({{count}})",
   "friends_chat_aria_label": "Abrir chat con {{name}}",
   "friends_chat_tooltip": "Abrir chat con {{name}}",
