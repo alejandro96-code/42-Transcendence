@@ -68,7 +68,7 @@ export function Chat({ activeFriend = null }: ChatProps) {
     <div className='chat-container'>
       <div className="surface-card border-round-sm p-3">
         <div className="chat-friend-name border-round-sm">
-          {activeFriendName ? t('chat_active_friend', { name: activeFriendName }) : t('chat_select_friend')}
+          {activeFriend ? t('chat_active_friend', { name: activeFriend.name }) : t('chat_select_friend')}
           {activeFriend ? `Chateando con: ${activeFriend.name}` : 'Selecciona un usuario para abrir el chat'}
         </div>
         <div className="chat-panel">
@@ -85,14 +85,6 @@ export function Chat({ activeFriend = null }: ChatProps) {
             </div>
           </section>
         </div>
-        <label htmlFor="send-message" className="sr-only">{t('chat_label_send_message')}</label>
-        <input
-          id="send-message"
-          type="input"
-          accept="text"
-          className="send-text p-inputtext"
-          placeholder={t('chat_input_placeholder')}
-        />
         <form onSubmit={handleSubmit}>
           <label htmlFor="send-message" className="sr-only">Envía un mensaje</label>
           <input
