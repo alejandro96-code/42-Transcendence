@@ -91,7 +91,7 @@ export function Chat({ activeFriend = null }: ChatProps) {
             id="send-message"
             type="text"
             className="send-text p-inputtext"
-            placeholder={activeFriend ? 'Escribe algo…' : 'Selecciona un usuario…'}
+            placeholder={activeFriend ? t('chat_active_friend') : t('chat_select_friend')}
             value={messageText}
             onChange={(event) => setMessageText(event.target.value)}
             disabled={!activeFriend || isSending}

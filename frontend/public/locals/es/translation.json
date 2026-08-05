@@ -4,7 +4,7 @@
   "header_search_placeholder": "Buscar...",
   "header_logout": "Cerrar sesión",
 
-  "chat_active_friend": "Chateando con: {{name}}",
+  "chat_active_friend": "Escribe algo…",
   "chat_select_friend": "Selecciona un amigo para abrir el chat",
   "chat_input_aria_label": "Envia un mensaje",
   "chat_input_placeholder": "Escribe algo...",
