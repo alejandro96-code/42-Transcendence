@@ -50,13 +50,6 @@
     }
   }
 
-  .friends-tab.is-active {
-    background: linear-gradient(135deg, rgba($color-4, 0.75) 0%, rgba($color-5, 0.6) 100%);
-    color: $color-text-write;
-    box-shadow: 0 6px 12px rgba($color-4, 0.28), inset 0 1px 0 rgba($color-accent, 0.25);
-    border-color: rgba($color-accent, 0.8);
-  }
-
   .friends-tab-add {
     width: 22px;
     height: 22px;
@@ -275,6 +268,22 @@
     p {
       margin: 0;
       font-size: 0.9rem;
+    }
+  }
+
+  .p-button-friends {
+    font-weight: 600;
+    background: $color-button;
+    color: $color-text-write;
+    border-radius: $radius-xs;
+    border-color: $color-button;
+    padding: 0.50rem 1.00rem;
+    font-size: 0.75rem;
+
+    &:hover {
+        background: $color-button-hover;
+        color: $color-text-write;
+        border-color: $color-text-write;
     }
   }
 

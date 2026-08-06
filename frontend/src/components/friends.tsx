@@ -119,14 +119,14 @@ export function Friends({
       <ConfirmDialog />
       <div className="surface-card border-round-sm p-3">
         <div className="friends-tabs">
-          <button type="button" className={`friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
+          <button type="button" className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
             <span>Amigos ({friendsList.length})</span>
             {!readOnly && (
               <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
             )}
           </button>
           {!readOnly && !ownerUserId && pendingRequests.length > 0 && (
-            <button type="button" className={`friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
+            <button type="button" className={`p-button-friends friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
               Solicitudes ({pendingRequests.length})
             </button>
           )}

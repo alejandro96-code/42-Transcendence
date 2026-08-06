@@ -87,6 +87,21 @@
         font-style: italic;
         font-size: 14px;
     }
+    
+    .p-button {
+        background: $color-button;
+        color: $color-text-write;
+        border-radius: $radius-xs;
+        border-color: $color-button;
+        padding: 0.50rem 1.00rem;
+        font-size: 0.75rem;
+
+        &:hover {
+            background: $color-button-hover;
+            color: $color-text-write;
+            border-color: $color-text-write;
+        }
+    }
 
 }
 
