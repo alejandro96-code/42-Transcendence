@@ -27,9 +27,14 @@ export function Login() {
     authAPI.initiateLogin()
   }
 
+  const switchAuthMode = (nextMode: AuthMode) => {
+    setMode(nextMode)
+    setErrorMessage('')
+  }
+
   const isRegisterMode = mode === 'register'
 
-  const handleCredentialsSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleCredentialsSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const normalizedUsername = username.trim()
     const normalizedFullName = fullName.trim()
@@ -156,9 +161,9 @@ export function Login() {
                 <Button
                   type="button"
                   className={`button-login ${mode === 'register' ? 'active' : ''}`}
-                  label="Registrarse"
-                  outlined={mode !== 'register'}
-                  onClick={() => setMode('register')}
+                  label={isRegisterMode ? 'Volver a Iniciar sesión' : 'Registrarse'}
+                  outlined={!isRegisterMode}
+                  onClick={() => switchAuthMode(isRegisterMode ? 'login' : 'register' )}
                 />
               </div>
               </div>

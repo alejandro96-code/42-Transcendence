@@ -87,6 +87,10 @@ async function ensureAuthSchema(pool) {
         ADD COLUMN IF NOT EXISTS description TEXT
     `);
     await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS is_intra_user BOOLEAN DEFAULT FALSE
+    `);
+    await pool.query(`
         CREATE TABLE IF NOT EXISTS messages (
             id SERIAL PRIMARY KEY,
             sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -187,7 +191,10 @@ function start_server() {
                             profile.photos?.[0]?.value || 
                             '';
 
-            // Buscar o crear usuario en la base de datos
+            // Definimos el formato de username obligatorio para la Intra
+            const intraUsername = `${profile.username}_42`;
+
+            // 1. Buscamos si ya existe el usuario usando su intra_id único
             const result = await pool.query(
                 'SELECT * FROM users WHERE intra_id = $1',
                 [profile.id]
@@ -195,33 +202,44 @@ function start_server() {
 
             let user;
             if (result.rows.length === 0) {
-            // Crear nuevo usuario
-            const insertResult = await pool.query(
-                `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-                [
-                    profile.id,
-                    profile.username,
-                    profile.emails?.[0]?.value || '',
-                    profile.displayName || profile.username,
-                    avatarUrl
-                    ,null,
-                    null,
-                ]
-            );
-            user = insertResult.rows[0];
+                // REGISTRO: Creamos el usuario de la Intra con el sufijo y el booleano en TRUE
+                console.log(`Registrando nuevo usuario de la Intra: ${intraUsername}`);
+                const insertResult = await pool.query(
+                    `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, is_intra_user) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+                    [
+                        profile.id,
+                        intraUsername, // Guardamos el nombre modificado (ej. "marquez_42")
+                        profile.emails?.[0]?.value || '',
+                        profile.displayName || profile.username,
+                        avatarUrl,
+                        null,
+                        null,
+                        true // Marcamos que SÍ es un usuario registrado por la Intra
+                    ]
+                );
+                user = insertResult.rows[0];
             } else {
-            // Actualizar avatar si cambió
-            const updateResult = await pool.query(
-                `UPDATE users SET avatar_url = $1, full_name = $2, email = $3, updated_at = CURRENT_TIMESTAMP 
-                WHERE id = $4 RETURNING *`,
-                [avatarUrl, profile.displayName || profile.username, profile.emails?.[0]?.value || '', result.rows[0].id]
-            );
-            user = updateResult.rows[0];
+                // LOGEO / ACTUALIZACIÓN: El usuario ya existía en la BD.
+                console.log(`Usuario de la Intra ${intraUsername} encontrado. Actualizando datos...`);
+                const updateResult = await pool.query(
+                    `UPDATE users 
+                    SET avatar_url = $1, full_name = $2, email = $3, updated_at = CURRENT_TIMESTAMP, is_intra_user = $4
+                    WHERE id = $5 RETURNING *`,
+                    [
+                        avatarUrl, 
+                        profile.displayName || profile.username, 
+                        profile.emails?.[0]?.value || '', 
+                        true, // Nos aseguramos de mantener el booleano en TRUE
+                        result.rows[0].id
+                    ]
+                );
+                user = updateResult.rows[0];
             }
 
             return done(null, user);
         } catch (error) {
+            console.error("Error en la estrategia de Passport 42:", error);
             return done(error, null);
         }
     }));

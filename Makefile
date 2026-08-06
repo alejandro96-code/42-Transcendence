@@ -65,18 +65,18 @@ mock-user: docker-db
 
 docker-down:
 	@echo "$(YELLOW)Deteniendo frontend y backend (PostgreSQL sigue corriendo)...$(NC)"
-	$(DOCKER_COMPOSE) -f docker-compose.yml down
+	SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) -f docker-compose.yml down
 
 docker-down-all:
 	@echo "$(YELLOW)Deteniendo TODOS los servicios (incluyendo PostgreSQL)...$(NC)"
-	$(DOCKER_COMPOSE) down
-	$(DOCKER_COMPOSE) -f docker-compose.db.yml down
+	SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) down
+	SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) -f docker-compose.db.yml down
 
 docker-clean:
 	@echo "$(YELLOW)⚠️  ADVERTENCIA: Esto eliminará TODOS los datos de la base de datos$(NC)"
 	@echo "$(YELLOW)Deteniendo servicios y eliminando volúmenes...$(NC)"
-	$(DOCKER_COMPOSE) down -v
-	$(DOCKER_COMPOSE) -f docker-compose.db.yml down -v
+	SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) down -v
+	SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) -f docker-compose.db.yml down -v
 
 clean:
 	@echo "$(YELLOW)Limpiando node_modules y lock files...$(NC)"

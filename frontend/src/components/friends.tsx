@@ -166,6 +166,7 @@ export function Friends({
         <Dialog header="Nueva solicitud de amistad" visible={isAddFriendOpen} onHide={() => { setIsAddFriendOpen(false); setFriendNick('') }} className="add-friend-dialog">
         <div className="flex flex-column gap-3">
           <span>Escribe el nick del usuario al que quieres enviar la solicitud.</span>
+          <span>Si el usuario es pertenece a 42 añade "_42" al final de su nick.</span>
           <InputText value={friendNick} onChange={(event) => setFriendNick(event.target.value)} placeholder="ejemplo: alejanr2" autoFocus onKeyDown={(event) => { if (event.key === 'Enter') void handleSendFriendRequest() }} />
           <div className="flex justify-content-end gap-2">
             <Button label="Cancelar" text onClick={() => { setIsAddFriendOpen(false); setFriendNick('') }} />
