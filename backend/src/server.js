@@ -120,6 +120,20 @@ async function ensureAuthSchema(pool) {
         CREATE INDEX IF NOT EXISTS friend_requests_recipient_idx
         ON friend_requests (recipient_id, status, created_at DESC)
     `);
+
+    await pool.query(`
+    CREATE TABLE IF NOT EXISTS posts (
+        id SERIAL PRIMARY KEY,
+        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        image_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+    `);
+
+await pool.query(`
+    CREATE INDEX IF NOT EXISTS posts_author_idx ON posts (author_id, created_at DESC)
+`);
 }
 
 function start_server() {
@@ -132,15 +146,27 @@ function start_server() {
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
 
     console.log("Server start")
-    
-    // Middleware
+
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'http://10.14.8.6:3000',
+        process.env.FRONTEND_URL
+    ].filter(Boolean);
+
     app.use(cors({
-        origin: FRONTEND_URL,
+        origin: function (origin, callback) {
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('Bloqueado por CORS: Origen no permitido'));
+            }
+        },
         credentials: true
     }));
     app.use(express.json());
 
-    // JSONSCHEMA ERROR HANDLER
     app.use((error, request, response, next) => {
         if (error instanceof ValidationError) {
             response.status(400).json(formatErrorJson(400, "Bad request",
@@ -151,23 +177,18 @@ function start_server() {
         next(error);
     });
 
-
-    // Configuración de sesión
     app.use(session({
         secret: process.env.SESSION_SECRET || 'secret-key-change-this',
         resave: false,
         saveUninitialized: false,
         cookie: {
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000 // 24 horas
+            maxAge: 24 * 60 * 60 * 1000
         }
     }));
-
-    // Inicializar Passport
     app.use(passport.initialize());
     app.use(passport.session());
 
-    // Configuración de PostgreSQL
     const pool = new pg.Pool({
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 5432,
@@ -176,95 +197,96 @@ function start_server() {
         password: process.env.DB_PASSWORD || 'postgres',
     });
 
-    // Configuración de Passport con 42
     passport.use(new FortyTwoStrategy({
         clientID: process.env.FORTYTWO_CLIENT_ID,
         clientSecret: process.env.FORTYTWO_CLIENT_SECRET,
         callbackURL: FORTYTWO_CALLBACK_URL
     },
 
-    async (accessToken, refreshToken, profile, done) => {
-        try {
-            // Obtener el avatar de la API de 42
-            const avatarUrl = profile._json?.image?.link || 
-                            profile._json?.image_url || 
-                            profile.photos?.[0]?.value || 
-                            '';
+        async (accessToken, refreshToken, profile, done) => {
+            try {
 
-            // Definimos el formato de username obligatorio para la Intra
-            const intraUsername = `${profile.username}_42`;
+                const avatarUrl = profile._json?.image?.link ||
+                    profile._json?.image_url ||
+                    profile.photos?.[0]?.value ||
+                    '';
 
-            // 1. Buscamos si ya existe el usuario usando su intra_id único
-            const result = await pool.query(
-                'SELECT * FROM users WHERE intra_id = $1',
-                [profile.id]
-            );
-
-            let user;
-            if (result.rows.length === 0) {
-                // REGISTRO: Creamos el usuario de la Intra con el sufijo y el booleano en TRUE
-                console.log(`Registrando nuevo usuario de la Intra: ${intraUsername}`);
-                const insertResult = await pool.query(
-                    `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, is_intra_user) 
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-                    [
-                        profile.id,
-                        intraUsername, // Guardamos el nombre modificado (ej. "marquez_42")
-                        profile.emails?.[0]?.value || '',
-                        profile.displayName || profile.username,
-                        avatarUrl,
-                        null,
-                        null,
-                        true // Marcamos que SÍ es un usuario registrado por la Intra
-                    ]
+                const intraUsername = `${profile.username}_42`;
+                const result = await pool.query(
+                    'SELECT * FROM users WHERE intra_id = $1',
+                    [profile.id]
                 );
-                user = insertResult.rows[0];
-            } else {
-                // LOGEO / ACTUALIZACIÓN: El usuario ya existía en la BD.
-                console.log(`Usuario de la Intra ${intraUsername} encontrado. Actualizando datos...`);
-                const updateResult = await pool.query(
-                    `UPDATE users 
+
+                let user;
+                if (result.rows.length === 0) {
+
+                    console.log(`Registrando nuevo usuario de la Intra: ${intraUsername}`);
+                    const insertResult = await pool.query(
+                        `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, is_intra_user) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+                        [
+                            profile.id,
+                            intraUsername,
+                            profile.emails?.[0]?.value || '',
+                            profile.displayName || profile.username,
+                            avatarUrl,
+                            null,
+                            null,
+                            true
+                        ]
+                    );
+                    user = insertResult.rows[0];
+                } else {
+                    console.log(`Usuario de la Intra ${intraUsername} encontrado. Actualizando datos...`);
+                    const updateResult = await pool.query(
+                        `UPDATE users 
                     SET avatar_url = $1, full_name = $2, email = $3, updated_at = CURRENT_TIMESTAMP, is_intra_user = $4
                     WHERE id = $5 RETURNING *`,
-                    [
-                        avatarUrl, 
-                        profile.displayName || profile.username, 
-                        profile.emails?.[0]?.value || '', 
-                        true, // Nos aseguramos de mantener el booleano en TRUE
-                        result.rows[0].id
-                    ]
-                );
-                user = updateResult.rows[0];
+                        [
+                            avatarUrl,
+                            profile.displayName || profile.username,
+                            profile.emails?.[0]?.value || '',
+                            true,
+                            result.rows[0].id
+                        ]
+                    );
+                    user = updateResult.rows[0];
+                }
+
+                return done(null, user);
+            } catch (error) {
+                console.error("Error en la estrategia de Passport 42:", error);
+                return done(error, null);
             }
+        }));
 
-            return done(null, user);
-        } catch (error) {
-            console.error("Error en la estrategia de Passport 42:", error);
-            return done(error, null);
-        }
-    }));
-
-    // Serialización de usuario para la sesión
     passport.serializeUser((user, done) => {
         done(null, user.id);
     });
 
     passport.deserializeUser(async (id, done) => {
         try {
-            const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-            done(null, result.rows[0]);
+            const res = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+
+            if (!res || !res.rows || res.rows.length === 0) {
+                const error = new Error('Cuenta ya no existe');
+                error.statusCode = 401;
+                return done(error, null);
+            }
+
+            const user = res.rows[0];
+            done(null, user);
         } catch (error) {
+            console.error("Error crítico en deserializeUser:", error);
             done(error, null);
         }
     });
 
-    // Rutas de autenticación
     app.get('/api/auth/42', passport.authenticate('42'));
 
     app.get('/api/auth/42/callback',
         passport.authenticate('42', { failureRedirect: `${FRONTEND_URL}/login` }),
         (req, res) => {
-            // Autenticación exitosa, redirigir al frontend
             res.redirect(`${FRONTEND_URL}/callback?success=true`);
         }
     );
@@ -357,7 +379,7 @@ function start_server() {
     app.post('/api/auth/logout', (req, res) => {
         req.logout((err) => {
             if (err) {
-            return res.status(500).json({ error: 'Error al cerrar sesión' });
+                return res.status(500).json({ error: 'Error al cerrar sesión' });
             }
             res.json({ message: 'Sesión cerrada' });
         });

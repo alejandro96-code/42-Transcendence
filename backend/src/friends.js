@@ -201,23 +201,35 @@ router.post('/requests', isAuthenticated, async (req, res) => {
 
 router.patch('/requests/:requestId', isAuthenticated, async (req, res) => {
     const requestId = Number.parseInt(req.params.requestId, 10);
-    const status = req.body?.status;
-    if (!Number.isInteger(requestId) || !['accepted', 'rejected'].includes(status)) {
-        return res.status(400).json({ error: 'Solicitud o acción inválida.' });
+    const action = String(req.body?.action ?? '').trim();
+
+    if (!Number.isInteger(requestId)) {
+        return res.status(400).json({ error: 'Solicitud inválida.' });
+    }
+
+    if (action !== 'accepted' && action !== 'rejected') {
+        return res.status(400).json({ error: 'Acción inválida. Debe ser accepted o rejected.' });
     }
 
     try {
-        const result = await pool.query(
-            `UPDATE friend_requests SET status = $1, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $2 AND recipient_id = $3 AND status = 'pending'
-             RETURNING id`,
-            [status, requestId, req.user.id],
+        const requestCheck = await pool.query(
+            'SELECT * FROM friend_requests WHERE id = $1 AND recipient_id = $2 AND status = \'pending\'',
+            [requestId, req.user.id]
         );
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Solicitud no encontrada.' });
-        return res.json({ message: status === 'accepted' ? 'Solicitud aceptada.' : 'Solicitud rechazada.' });
+
+        if (requestCheck.rows.length === 0) {
+            return res.status(404).json({ error: 'Solicitud de amistad no encontrada o ya procesada.' });
+        }
+
+        await pool.query(
+            'UPDATE friend_requests SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [action, requestId]
+        );
+
+        return res.json({ message: `Solicitud de amistad ${action === 'accepted' ? 'aceptada' : 'rechazada'} correctamente.` });
     } catch (error) {
-        console.error('Error al responder solicitud:', error);
-        return res.status(500).json({ error: 'No se pudo actualizar la solicitud.' });
+        console.error('Error al procesar la solicitud de amistad:', error);
+        return res.status(500).json({ error: 'No se pudo procesar la solicitud.' });
     }
 });
 
