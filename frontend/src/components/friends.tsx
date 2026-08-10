@@ -51,6 +51,20 @@ export function Friends({
     }
   }, [ownerUserId, readOnly])
 
+  useEffect(() => {
+    void friendsAPI.heartbeat()
+    void loadFriends()
+
+    const interval = setInterval(() => {
+      void friendsAPI.heartbeat()
+      void loadFriends()
+    }, 10000)
+
+    return () => {
+        clearInterval(interval)
+    }
+  }, [ownerUserId])
+
   const sortedFriends = useMemo(() => (
     [...friendsList].sort((a, b) => a.username.localeCompare(b.username, 'es', { sensitivity: 'base' }))
   ), [friendsList])
@@ -136,8 +150,8 @@ export function Friends({
             <section className="friends-section">
               {sortedFriends.length > 0 ? <div className="friends-list">{sortedFriends.map((friend) => (
                 <div key={friend.id} className="friend-card">
-                  <div className="friend-info"><div className="friend-details"><h4 className="mb-0"><span className="status-dot offline" />{friend.username}</h4></div></div>
-                  <div className="friend-actions">
+                  <div className="friend-info"><div className="friend-details"><h4 className="mb-0">        <span
+                        className={`online-status ${ friend.is_online ? 'online' : 'offline'}`}/><span>{friend.username}</span></h4></div></div><div className="friend-actions">
                     {!readOnly && !ownerUserId && (
                       <>
                         <Button icon="pi pi-eye" aria-label={`Abrir chat con ${friend.username}`} className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`} tooltip={`Abrir chat con ${friend.username}`} onClick={() => onOpenChat?.({ id: friend.id, name: friend.username })} />

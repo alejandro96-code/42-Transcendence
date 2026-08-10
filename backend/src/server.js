@@ -72,6 +72,10 @@ function toPublicUser(user) {
 async function ensureAuthSchema(pool) {
     await pool.query(`
         ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP
+    `);
+    await pool.query(`
+        ALTER TABLE users
         ALTER COLUMN intra_id DROP NOT NULL
     `);
     await pool.query(`

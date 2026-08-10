@@ -7,6 +7,7 @@ import { Perfil } from '../pages/Perfil'
 import { Login } from '../pages/Login'
 import { Callback } from '../pages/Callback'
 import { ProgressSpinner } from 'primereact/progressspinner'
+import { friendsAPI } from '../services/friendsAPI'
 
 export function AppRoutes() {
   const dispatch = useAppDispatch()
@@ -35,6 +36,30 @@ export function AppRoutes() {
       mounted = false
     }
   }, [dispatch])
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+        return
+    }
+
+    const sendHeartbeat = async () => {
+        try {
+            await friendsAPI.heartbeat()
+        } catch (error) {
+            console.error('Error enviando heartbeat:', error)
+        }
+    }
+
+    void sendHeartbeat()
+
+    const interval = setInterval(() => {
+        void sendHeartbeat()
+    }, 10000)
+
+    return () => {
+        clearInterval(interval)
+    }
+  }, [isAuthenticated])
 
   if (isLoading) {
     return (

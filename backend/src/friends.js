@@ -7,21 +7,33 @@ const router = express.Router();
 router.get('/', isAuthenticated, async (req, res) => {
     try {
         const result = await pool.query(
-            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description
+            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen,
+                CASE
+                    WHEN users.last_seen > CURRENT_TIMESTAMP - INTERVAL '20 seconds'
+                    THEN true
+                    ELSE false
+                END AS is_online
              FROM friend_requests
              JOIN users ON users.id = CASE
-                 WHEN friend_requests.requester_id = $1 THEN friend_requests.recipient_id
+                 WHEN friend_requests.requester_id = $1
+                 THEN friend_requests.recipient_id
                  ELSE friend_requests.requester_id
              END
              WHERE friend_requests.status = 'accepted'
-               AND (friend_requests.requester_id = $1 OR friend_requests.recipient_id = $1)
+               AND (
+                   friend_requests.requester_id = $1
+                   OR friend_requests.recipient_id = $1
+               )
              ORDER BY LOWER(users.username)`,
             [req.user.id],
         );
+
         return res.json(result.rows);
     } catch (error) {
         console.error('Error al obtener amigos:', error);
-        return res.status(500).json({ error: 'No se pudieron obtener los amigos.' });
+        return res.status(500).json({
+            error: 'No se pudieron obtener los amigos.'
+        });
     }
 });
 
@@ -49,7 +61,7 @@ router.get('/user/:userId', isAuthenticated, async (req, res) => {
         }
 
         const result = await pool.query(
-            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description
+            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen
              FROM friend_requests
              JOIN users ON users.id = CASE
                  WHEN friend_requests.requester_id = $1 THEN friend_requests.recipient_id
@@ -77,7 +89,7 @@ router.get('/search', isAuthenticated, async (req, res) => {
 
     try {
         const result = await pool.query(
-            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description
+            `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen
              FROM friend_requests
              JOIN users ON users.id = CASE
                  WHEN friend_requests.requester_id = $1 THEN friend_requests.recipient_id
@@ -110,7 +122,7 @@ router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
 
     try {
         const result = await pool.query(
-            `SELECT users.id, users.username, users.email, users.full_name, users.avatar_url, users.profession, users.description
+            `SELECT users.id, users.username, users.email, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen
              FROM users
              WHERE users.id = $1
                AND (
@@ -154,6 +166,24 @@ router.get('/requests', isAuthenticated, async (req, res) => {
         return res.status(500).json({ error: 'No se pudieron obtener las solicitudes.' });
     }
 });
+
+router.post('/heartbeat', isAuthenticated, async (req, res) => {
+    try {
+        await pool.query(
+            `UPDATE users
+             SET last_seen = CURRENT_TIMESTAMP
+             WHERE id = $1`,
+            [req.user.id]
+        )
+
+        return res.json({ success: true })
+    } catch (error) {
+        console.error('Error actualizando presencia:', error)
+        return res.status(500).json({
+            error: 'No se pudo actualizar la presencia.'
+        })
+    }
+})
 
 router.post('/requests', isAuthenticated, async (req, res) => {
     const username = String(req.body?.username ?? '').trim();

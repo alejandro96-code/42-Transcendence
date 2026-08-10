@@ -8,6 +8,8 @@ export interface Friend {
   avatar_url?: string | null
   profession?: string | null
   description?: string | null
+  last_seen?: string | null
+  is_online?: boolean
 }
 
 export interface PendingFriendRequest {
@@ -47,6 +49,13 @@ async function request(path: string, options?: RequestInit) {
 }
 
 export const friendsAPI = {
+
+  async heartbeat(): Promise<void> {
+    await request('/heartbeat', {
+        method: 'POST',
+    })
+  },
+
   async getFriends(): Promise<Friend[]> {
     return (await request('/')).json()
   },

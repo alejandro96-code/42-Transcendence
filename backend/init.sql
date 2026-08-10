@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     profession TEXT,
     description TEXT,
     password_hash TEXT,
+    last_seen TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

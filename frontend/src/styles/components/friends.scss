@@ -271,6 +271,24 @@
     }
   }
 
+  .online-status {
+    width: 10px;
+    height: 10px;
+    min-width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .online-status.online {
+      background-color: #22c55e;
+  }
+
+  .online-status.offline {
+      background-color: #9ca3af;
+  }
+
   .p-button-friends {
     font-weight: 600;
     background: $color-button;
