@@ -1,18 +1,15 @@
-import express from 'express';
-
 export const postsCreateSchema = {
     type: "object",
     required: [
-        "author_id",
         "content",
     ],
     properties: {
-        author_id: {
-            type: "number"
-        },
         content: {
             type: "string",
             maxLength: 240,
+        },
+        author_id: {
+            type: "number"
         },
         author_username: {
             type: "string",

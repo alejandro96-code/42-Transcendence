@@ -119,55 +119,105 @@ async function read_posts(req, res) {
 }
 
 async function create_post(req, res) {
-    const media = [];
-    const authorId = req.user.id;
-    const content = String(req.body?.content ?? '').trim();
-    
-    if (containsProfanity(content)) {
-        const responseBody = formatErrorJson( 400, "Bad Request", "El contenido contiene palabras no permitidas" );
-        return res.status(400).json(responseBody);
-    }
+    try {
+        console.log('>>> CREATE_POST ENTRANDO');
+        console.log('>>> BODY:', req.body);
+        console.log('>>> USER:', req.user);
 
-    const author_username = await pool.query(
-        'SELECT username FROM users WHERE id = $1',
-        [authorId]
-    );
+        const media = [];
+        const authorId = req.user.id;
+        const content = String(req.body?.content ?? '').trim();
 
-    if (!author_username || author_username.rows.length === 0) {
-        let responseBody = formatErrorJson(404, "Not found", "Post author not found in Database");
-        res.status(404).json(responseBody);
-        return;
-    }
+        console.log('>>> AUTHOR:', authorId);
+        console.log('>>> CONTENT:', content);
 
-    const parent = req.body.parent ? req.body.parent : 0;
-    const new_post = await pool.query(
-        `INSERT INTO posts (author_id, author_username, content, media, parent)
-        VALUES($1, $2, $3, $4, $5) RETURNING *`,
-        [
-            authorId, 
-            author_username.rows[0].username,
-            content,
-            media, 
-            parent
-        ]
-    );
+        if (containsProfanity(content)) {
+            console.log('>>> PROFANITY DETECTADO');
 
-    if (!new_post || new_post.rows.length === 0) {
-        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        res.status(500).json(responseBody);
-    } else {
-        res.json(new_post.rows);
+            return res.status(400).json(
+                formatErrorJson(
+                    400,
+                    "Bad Request",
+                    "El contenido contiene palabras no permitidas"
+                )
+            );
+        }
+
+        const author_username = await pool.query(
+            'SELECT username FROM users WHERE id = $1',
+            [authorId]
+        );
+
+        console.log('>>> AUTHOR QUERY:', author_username.rows);
+
+        if (!author_username || author_username.rows.length === 0) {
+            return res.status(404).json(
+                formatErrorJson(
+                    404,
+                    "Not found",
+                    "Post author not found in Database"
+                )
+            );
+        }
+
+        const parent = req.body.parent ? req.body.parent : 0;
+
+        console.log('>>> ANTES DEL INSERT');
+
+        const new_post = await pool.query(
+            `INSERT INTO posts (
+                author_id,
+                author_username,
+                content,
+                media,
+                parent
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *`,
+            [
+                authorId,
+                author_username.rows[0].username,
+                content,
+                media,
+                parent
+            ]
+        );
+
+        console.log('>>> DESPUES DEL INSERT:', new_post.rows);
+
+        if (!new_post || new_post.rows.length === 0) {
+            return res.status(500).json(
+                formatErrorJson(
+                    500,
+                    "Internal Server Error",
+                    "Something went bad on post creation"
+                )
+            );
+        }
+
+        return res.json(new_post.rows);
+
+    } catch (error) {
+        console.error('>>> ERROR CREANDO POST:', error);
+
+        return res.status(500).json({
+            error: 'Error al crear el post.',
+            details: error.message
+        });
     }
 }
-export default function posts_endpoints(app, customPool) {
 
+export default function posts_endpoints(app, customPool) {
     const router = express.Router();
+
     router.use(express.json());
     router.use(isAuthenticated);
+
     router.delete("/likes", remove_likes);
     router.patch("/likes", update_likes);
     router.get("/", read_posts);
     router.get("/comments", read_comments);
-    router.post("/", validate(postsCreateSchema), create_post);
+    router.post("/", validate({ body: postsCreateSchema }), create_post);
+
     app.use("/api/posts", router);
 }

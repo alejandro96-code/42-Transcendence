@@ -3,6 +3,7 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
 import { Paginator, type PaginatorPageChangeEvent } from 'primereact/paginator'
+import { postsAPI } from '../services/postAPI'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
 
@@ -66,21 +67,39 @@ export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps)
     reader.readAsDataURL(file)
   }
 
-  const handlePost = () => {
-    if (!text.trim()) return
+const handlePost = async () => {
+  const content = text.trim()
+
+  if (!content) return
+
+  try {
+    const createdPost = await postsAPI.createPost(content)
+
     const newPost: Post = {
-      id: Date.now(),
-      content: text.trim(),
-      date: new Date().toLocaleString(),
+      id: Number(createdPost[0]?.id ?? createdPost.id),
+      content: createdPost[0]?.content ?? createdPost.content ?? content,
+      date: createdPost[0]?.created_at
+        ? new Date(createdPost[0].created_at).toLocaleString()
+        : new Date().toLocaleString(),
       isFromFriend: false,
       image: image || null,
     }
+
     setPosts((currentPosts) => [newPost, ...currentPosts])
     setText('')
     setImage(null)
     setImageError('')
     setFirst(0)
+  } catch (error) {
+    console.error('Error al crear el post:', error)
+
+    if (error instanceof Error) {
+      setImageError(error.message)
+    } else {
+      setImageError('No se pudo publicar el post.')
+    }
   }
+}
 
   const filteredPosts = posts.filter((post) => {
     if (readOnly) return true

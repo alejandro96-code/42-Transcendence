@@ -10,7 +10,7 @@ import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
-import { isAuthenticated } from "./utils.js"
+import { isAuthenticated, formatErrorJson } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -127,18 +127,23 @@ async function ensureAuthSchema(pool) {
     `);
 
     await pool.query(`
-    CREATE TABLE IF NOT EXISTS posts (
-        id SERIAL PRIMARY KEY,
-        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        content TEXT NOT NULL,
-        image_url TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
+        CREATE TABLE IF NOT EXISTS posts (
+            id SERIAL PRIMARY KEY,
+            author_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            author_username VARCHAR(50) NOT NULL,
+            content TEXT NOT NULL,
+            media TEXT[] DEFAULT '{}',
+            parent INT DEFAULT 0,
+            likes INT[] DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     `);
 
-await pool.query(`
-    CREATE INDEX IF NOT EXISTS posts_author_idx ON posts (author_id, created_at DESC)
-`);
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS posts_author_idx
+        ON posts (author_id, created_at DESC)
+    `);
 }
 
 function start_server() {
