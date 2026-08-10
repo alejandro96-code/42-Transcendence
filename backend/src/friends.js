@@ -201,15 +201,21 @@ router.post('/requests', isAuthenticated, async (req, res) => {
 
 router.patch('/requests/:requestId', isAuthenticated, async (req, res) => {
     const requestId = Number.parseInt(req.params.requestId, 10);
-    const action = String(req.body?.action ?? '').trim();
+    const action = String(req.body?.status ?? '').trim();
+    
 
     if (!Number.isInteger(requestId)) {
         return res.status(400).json({ error: 'Solicitud inválida.' });
     }
 
-    if (action !== 'accepted' && action !== 'rejected') {
-        return res.status(400).json({ error: 'Acción inválida. Debe ser accepted o rejected.' });
-    }
+    console.log('REQ BODY:', req.body);
+    console.log('ACTION:', action);
+
+if (action !== 'accepted' && action !== 'rejected') {
+    return res.status(400).json({
+        error: 'Acción inválida. Debe ser accepted o rejected.'
+    });
+}
 
     try {
         const requestCheck = await pool.query(
