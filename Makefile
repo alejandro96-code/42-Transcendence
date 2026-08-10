@@ -1,29 +1,34 @@
-.PHONY: install dev dev-backend clean docker-env docker-network docker-db docker-up docker-down docker-down-all docker-clean mock-user
+.PHONY: install dev dev-backend clean docker-env docker-network docker-db docker-build docker-up docker-down docker-down-all docker-restart docker-clean mock-user
 
 GREEN = \033[0;32m
 BLUE = \033[0;34m
 YELLOW = \033[0;33m
-NC = \033[0m # No Color
+NC = \033[0m
 
 DOCKER_COMPOSE ?= $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 SERVER_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '{print $$7; exit}')
 
+
 install:
-	@echo "$(GREEN)Instalando dependencias del monorepo...$(NC)"
+	@echo "$(GREEN)Instalando dependencias...$(NC)"
 	npm install
-	@echo "$(GREEN)✓ Dependencias instaladas en la raíz$(NC)"
+	@echo "$(GREEN)✓ Dependencias instaladas$(NC)"
+
 
 dev:
 	@echo "$(GREEN)Iniciando frontend...$(NC)"
 	npm run dev:frontend
 
+
 dev-backend:
 	@echo "$(GREEN)Iniciando backend...$(NC)"
 	npm run dev:backend
 
+
 docker-network:
 	@docker network inspect transcendence-network >/dev/null 2>&1 || \
-		docker network create transcendence-network
+	docker network create transcendence-network
+
 
 docker-env:
 	@if [ ! -f backend/.env ]; then \
@@ -31,12 +36,27 @@ docker-env:
 		echo "$(YELLOW)Se creó backend/.env desde backend/.env.example$(NC)"; \
 	fi
 
+
 docker-db: docker-env docker-network
 	@echo "$(BLUE)Levantando PostgreSQL (se mantiene corriendo)...$(NC)"
 	@echo "$(BLUE)PostgreSQL: localhost:5432$(NC)"
 	@$(DOCKER_COMPOSE) -f docker-compose.db.yml up -d
 	@$(DOCKER_COMPOSE) -f docker-compose.db.yml ps -q postgres >/dev/null 2>&1 || \
-		(echo "$(YELLOW)PostgreSQL no se pudo iniciar$(NC)" && exit 1)
+	(echo "$(YELLOW)PostgreSQL no se pudo iniciar$(NC)" && exit 1)
+
+
+docker-build:
+	@echo "$(BLUE)Construyendo imágenes Docker...$(NC)"
+	@if [ -z "$(SERVER_IP)" ]; then \
+		echo "$(YELLOW)No se pudo detectar SERVER_IP automáticamente. Define SERVER_IP manualmente.$(NC)"; \
+		exit 1; \
+	fi
+	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		-f docker-compose.yml \
+		-f docker-compose.db.yml \
+		build --no-cache
+	@echo "$(GREEN)✓ Imágenes Docker construidas$(NC)"
+
 
 docker-up: docker-db
 	@if [ -z "$(SERVER_IP)" ]; then \
@@ -70,6 +90,7 @@ docker-up: docker-db
 
 	@echo "$(GREEN)✓ Base de datos lista$(NC)"
 
+
 mock-user: docker-db
 	@echo "$(BLUE)Esperando a PostgreSQL...$(NC)"
 	@until docker exec transcendence-postgres pg_isready -U postgres >/dev/null 2>&1; do \
@@ -86,11 +107,13 @@ mock-user: docker-db
 
 	@echo "$(GREEN)✓ Usuario mock creado o actualizado$(NC)"
 
+
 docker-down:
 	@echo "$(YELLOW)Deteniendo frontend y backend (PostgreSQL sigue corriendo)...$(NC)"
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
 		-f docker-compose.yml \
-		down
+		down --remove-orphans
+
 
 docker-down-all:
 	@echo "$(YELLOW)Deteniendo TODOS los servicios (incluyendo PostgreSQL)...$(NC)"
@@ -102,15 +125,20 @@ docker-down-all:
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
 		-f docker-compose.db.yml \
 		down
-		
+
+
 docker-restart:
 	@echo "$(BLUE)Reiniciando frontend y backend...$(NC)"
 	@if [ -z "$(SERVER_IP)" ]; then \
-		echo "$(YELLOW)No se pudo detectar SERVER_IP automaticamente. Define SERVER_IP manualmente.$(NC)"; \
+		echo "$(YELLOW)No se pudo detectar SERVER_IP automáticamente. Define SERVER_IP manualmente.$(NC)"; \
 		exit 1; \
 	fi
-	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.db.yml restart frontend backend
+	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		-f docker-compose.yml \
+		-f docker-compose.db.yml \
+		restart frontend backend
 	@echo "$(GREEN)✓ Frontend y backend reiniciados$(NC)"
+
 
 docker-clean:
 	@echo "$(YELLOW)⚠️ ADVERTENCIA: Esto eliminará TODOS los datos de la base de datos$(NC)"
@@ -123,6 +151,8 @@ docker-clean:
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
 		-f docker-compose.db.yml \
 		down -v
+
+
 clean:
 	@echo "$(YELLOW)Limpiando node_modules y lock files...$(NC)"
 
