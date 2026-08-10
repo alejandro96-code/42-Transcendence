@@ -5,4 +5,6 @@ export interface User {
   email: string
   full_name: string
   avatar_url: string
+  profession?: string
+  description?: string
 }
