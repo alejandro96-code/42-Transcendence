@@ -1,6 +1,7 @@
 import express from 'express';
 import { pool } from './db.js';
 import { isAuthenticated } from './utils.js';
+import { containsProfanity } from './profanity.js';
 
 const router = express.Router();
 
@@ -40,6 +41,12 @@ router.post('/:recipientId', isAuthenticated, async (req, res) => {
     if (!content || content.length > 1000) {
         return res.status(400).json({ error: 'El mensaje debe tener entre 1 y 1000 caracteres.' });
     }
+    
+    if (containsProfanity(content)) {
+    return res.status(400).json({
+        error: 'El mensaje contiene palabras no permitidas.'
+    });
+}
 
     try {
         const recipient = await pool.query('SELECT id FROM users WHERE id = $1', [recipientId]);

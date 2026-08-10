@@ -11,6 +11,7 @@ import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
 import { isAuthenticated } from "./utils.js"
+import { containsProfanity } from "./profanity.js"
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
@@ -304,7 +305,17 @@ function start_server() {
         const password = String(req.body?.password ?? '');
         const fullName = normalizeText(req.body?.fullName);
         const email = normalizeText(req.body?.email).toLowerCase();
-
+        
+        if (containsProfanity(username)) {
+            return res.status(400).json({
+                error: 'El nombre de usuario contiene palabras no permitidas.'
+            });
+        }
+        if (containsProfanity(fullName)) {
+            return res.status(400).json({
+                error: 'El nombre completo contiene palabras no permitidas.'
+            });
+        }
         if (!USERNAME_REGEX.test(username)) {
             return res.status(400).json({ error: 'El usuario debe tener entre 3 y 30 caracteres (letras, números, . _ -).' });
         }
@@ -392,7 +403,18 @@ function start_server() {
     app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
         const profession = normalizeText(req.body?.profession);
         const description = normalizeText(req.body?.description);
+        
+        if (containsProfanity(profession)) {
+            return res.status(400).json({
+                error: 'La profesión contiene palabras no permitidas.'
+            });
+        }
 
+        if (containsProfanity(description)) {
+            return res.status(400).json({
+                error: 'La descripción contiene palabras no permitidas.'
+            });
+        }
         if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
             return res.status(400).json({ error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.` });
         }

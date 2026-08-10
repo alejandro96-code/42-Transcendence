@@ -2,6 +2,7 @@ import express from 'express';
 import { formatErrorJson, isAuthenticated, validate } from './utils.js';
 import { postsCreateSchema } from "./classes.js";
 import { pool } from "./db.js";
+import { containsProfanity } from './profanity.js';
 
 async function remove_likes(req, res) {
     const likes = await pool.query(
@@ -120,6 +121,13 @@ async function read_posts(req, res) {
 async function create_post(req, res) {
     const media = [];
     const authorId = req.user.id;
+    const content = String(req.body?.content ?? '').trim();
+    
+    if (containsProfanity(content)) {
+        const responseBody = formatErrorJson( 400, "Bad Request", "El contenido contiene palabras no permitidas" );
+        return res.status(400).json(responseBody);
+    }
+
     const author_username = await pool.query(
         'SELECT username FROM users WHERE id = $1',
         [authorId]
@@ -138,7 +146,7 @@ async function create_post(req, res) {
         [
             authorId, 
             author_username.rows[0].username,
-            req.body.content, 
+            content,
             media, 
             parent
         ]

@@ -102,6 +102,15 @@ docker-down-all:
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
 		-f docker-compose.db.yml \
 		down
+		
+docker-restart:
+	@echo "$(BLUE)Reiniciando frontend y backend...$(NC)"
+	@if [ -z "$(SERVER_IP)" ]; then \
+		echo "$(YELLOW)No se pudo detectar SERVER_IP automaticamente. Define SERVER_IP manualmente.$(NC)"; \
+		exit 1; \
+	fi
+	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.db.yml restart frontend backend
+	@echo "$(GREEN)✓ Frontend y backend reiniciados$(NC)"
 
 docker-clean:
 	@echo "$(YELLOW)⚠️ ADVERTENCIA: Esto eliminará TODOS los datos de la base de datos$(NC)"
