@@ -2,17 +2,18 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
+import { Dropdown } from 'primereact/dropdown'
+import { useTranslation } from 'react-i18next'
 import { useAppDispatch } from '../store/hooks'
 import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { friendsAPI, type Friend } from '../services/friendsAPI'
 import logo42 from '../img/42.png'
 
-
 export function Header() {
-  
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
+  const { t, i18n } = useTranslation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [friendResults, setFriendResults] = useState<Friend[]>([])
@@ -61,6 +62,20 @@ export function Header() {
     navigate(`/perfil/${friendId}`)
   }
 
+  const languageOptions = [
+    { label: 'ES', value: 'es' },
+    { label: 'EU', value: 'eu' },
+    { label: 'EN', value: 'en' }
+  ]
+
+  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || 'es')
+
+  const handleLanguageChange = (e: { value: string }) => {
+    const newLang = e.value
+    setSelectedLanguage(newLang)
+    i18n.changeLanguage(newLang)
+  }
+
   const handleLogout = async () => {
     await authAPI.logout()
     dispatch(clearUser())
@@ -73,22 +88,21 @@ export function Header() {
       <div className="header-bar">
 
         <div className="header-nav">
-              <Link to="/" className="header-brand">
-                <img src={logo42} alt="Logo de Transcendence" className="header-brand-logo" />
-              </Link>
+          <Link to="/" className="header-brand">
+            <img src={logo42} alt="Logo de Transcendence" className="header-brand-logo" />
+          </Link>
         </div>
 
         <Button
           type="button"
           className="header-menu-toggle p-button-text"
           icon="pi pi-bars"
-          aria-label="Abrir menú"
+          aria-label={t('header_menu_aria_label')}
           aria-expanded={isMenuOpen}
           aria-controls="header-mobile-menu"
           onClick={() => setIsMenuOpen((currentValue) => !currentValue)}
         />
         
-        {/* Search Label and Logout Label (Añadir Dropdown de lenguajes)*/}
         <div className="header-actions">
           <div className="header-search-wrapper">
             <label htmlFor="header-search" className="sr-only">Buscar amigos</label>
@@ -131,7 +145,8 @@ export function Header() {
             outlined
             size="small"
             onClick={handleLogout}
-          > Logout
+          > 
+            {t('header_logout')}
           </Button>
         </div>
 
@@ -177,7 +192,8 @@ export function Header() {
             outlined
             size="small"
             onClick={handleLogout}
-          > Logout
+          > 
+            {t('header_logout')}
           </Button>
         </div>
 

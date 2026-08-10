@@ -11,9 +11,13 @@
     "dev:frontend": "npm run dev --workspace=frontend",
     "dev:backend": "npm run dev --workspace=backend"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "i18next": "^26.3.6",
+    "i18next-http-backend": "^4.0.1",
+    "react-i18next": "^17.0.11"
   }
 }

@@ -14,6 +14,9 @@ export default defineConfig({
     allowedHosts: ['localhost', SERVER_IP],
     watch: {
       usePolling: true // Necesario para hot-reload en algunos sistemas
+    },
+    fs: {
+      allow: ['.']
     }
   }
 })

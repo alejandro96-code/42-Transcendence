@@ -5,6 +5,7 @@ import { InputText } from 'primereact/inputtext'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Toast } from 'primereact/toast'
 import { friendsAPI, type Friend, type PendingFriendRequest } from '../services/friendsAPI'
+import { useI18n } from '../hooks/useI18n'
 
 interface FriendsProps {
   selectedFriendId?: number | null
@@ -32,7 +33,7 @@ export function Friends({
     try {
       setFriendsList(ownerUserId ? await friendsAPI.getUserFriends(ownerUserId) : await friendsAPI.getFriends())
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudieron cargar los amigos.' })
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_load_error') })
     }
   }
 
@@ -40,7 +41,7 @@ export function Friends({
     try {
       setPendingRequests(await friendsAPI.getPendingRequests())
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudieron cargar las solicitudes.' })
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_load_dialog_error') })
     }
   }
 
@@ -76,7 +77,7 @@ export function Friends({
   const handleAnswerRequest = (request: PendingFriendRequest, status: 'accepted' | 'rejected') => {
     const accepted = status === 'accepted'
     confirmDialog({
-      message: `¿${accepted ? 'Aceptar' : 'Rechazar'} la solicitud de amistad de ${request.username}?`,
+      message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${(t('friends_confirm_accept_msg'))} ${request.username}?`,
       header: 'Confirmar',
       icon: accepted ? 'pi pi-check' : 'pi pi-times',
       accept: async () => {
@@ -84,9 +85,9 @@ export function Friends({
           await friendsAPI.answerRequest(request.id, status)
           await loadRequests()
           if (accepted) await loadFriends()
-          toast.current?.show({ severity: accepted ? 'success' : 'info', summary: accepted ? 'Solicitud aceptada' : 'Solicitud rechazada', detail: accepted ? `${request.username} ya es tu amigo.` : `Has rechazado la solicitud de ${request.username}.` })
+          toast.current?.show({ severity: accepted ? 'success' : 'info', summary: accepted ? t('friends_request_accepted') : t('friends_request_rejected'), detail: accepted ? `${request.username} ${t('friends_new_friend')}` : `${t('friends_no_new_fried')} ${request.username}.` })
         } catch (error) {
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudo responder a la solicitud.' })
+          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_request_response_error')})
         }
       },
     })
@@ -95,7 +96,7 @@ export function Friends({
   const handleSendFriendRequest = async () => {
     const nickname = friendNick.trim()
     if (!nickname) {
-      toast.current?.show({ severity: 'warn', summary: 'Nick requerido', detail: 'Introduce un nick para enviar la solicitud.' })
+      toast.current?.show({ severity: 'warn', summary: t('friends_toast_req_title'), detail: t('friends_toast_req_detail') })
       return
     }
 
@@ -103,15 +104,15 @@ export function Friends({
       await friendsAPI.sendRequest(nickname)
       setFriendNick('')
       setIsAddFriendOpen(false)
-      toast.current?.show({ severity: 'success', summary: 'Solicitud enviada', detail: `Se envió la solicitud a ${nickname}.` })
+      toast.current?.show({ severity: 'success', summary: t('friends_toast_sent_title'), detail: `${t('friends_toast_sent_detail')} ${nickname}.` })
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudo enviar la solicitud.' })
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_request_send_error') })
     }
   }
 
   const handleRemoveFriend = (friend: Friend) => {
     confirmDialog({
-      message: `¿Eliminar a ${friend.username} de tus amigos?`,
+      message: `¿Eliminar a ${friend.username} de tus amigos?`, //transate pendent
       header: 'Confirmar',
       icon: 'pi pi-times',
       accept: async () => {
@@ -119,9 +120,9 @@ export function Friends({
           await friendsAPI.removeFriend(friend.id)
           await loadFriends()
           onFriendRemoved?.(friend.id)
-          toast.current?.show({ severity: 'info', summary: 'Eliminado', detail: `${friend.username} ha sido eliminado.` })
+          toast.current?.show({ severity: 'info', summary: 'Eliminado', detail: `${friend.username} ${t('friends_removed_message')}` })
         } catch (error) {
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudo eliminar el amigo.' })
+          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_remove_error') })
         }
       },
     })
@@ -160,7 +161,7 @@ export function Friends({
                     )}
                   </div>
                 </div>
-              ))}</div> : <div className="empty-state"><i className="pi pi-heart-fill" /><p>No tienes amigos aún</p></div>}
+              ))}</div> : <div className="empty-state"><i className="pi pi-heart-fill" /><p>{t('friends_empty_state')}</p></div>}
             </section>
           )}
           {!readOnly && !ownerUserId && activeSection === 'requests' && pendingRequests.length > 0 && (
