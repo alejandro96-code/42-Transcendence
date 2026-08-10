@@ -213,3 +213,9 @@ info de post
 amigos agregados
 solicitudes de amigos
 chat individual con cada amigo
+
+pasos para ejecutar le proyecto anda mas clonarlp
+make clean
+make install
+make docker-build
+make docker-up
