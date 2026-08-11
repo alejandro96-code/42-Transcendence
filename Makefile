@@ -12,6 +12,8 @@ SERVER_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '{print $$7; exit}')
 install:
 	@echo "$(GREEN)Instalando dependencias...$(NC)"
 	npm install
+	npm install react react-dom
+	npm install -D @types/react @types/react-dom
 	@echo "$(GREEN)✓ Dependencias instaladas$(NC)"
 
 
