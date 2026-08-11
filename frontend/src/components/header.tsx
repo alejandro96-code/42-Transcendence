@@ -104,6 +104,14 @@ export function Header() {
         />
         
         <div className="header-actions">
+          <div className="header-languages-wrapper">
+            <Dropdown
+              value={selectedLanguage}
+              options={languageOptions}
+              onChange={handleLanguageChange}
+              className="p-inputtext-sm"
+            />
+          </div>
           <div className="header-search-wrapper">
             <label htmlFor="header-search" className="sr-only">Buscar amigos</label>
             <InputText
