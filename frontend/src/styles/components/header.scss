@@ -115,6 +115,20 @@
     }
   }
 
+  .header-languages-wrapper{
+    font-size: 0.875rem;
+    padding: 0.65625rem 0.65625rem;
+    .p-dropdown-trigger{
+      display: none;
+    }
+  }
+
+  .p-dropdown{
+    background: rgba(6, 13, 26, 0.28);
+    border: 1px solid rgba(99, 192, 255, 0.3);
+    color: #eaf4ff;
+  }
+
   .header-search--mobile,
   .header-logout--mobile {
     width: 100%;

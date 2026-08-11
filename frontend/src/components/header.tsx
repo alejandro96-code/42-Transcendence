@@ -164,7 +164,7 @@ export function Header() {
               value={selectedLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
-              className="p-inputtext-sm"
+              className="dropdown-element p-inputtext-sm"
             />
           </div>
           <div className="header-search-wrapper header-search-wrapper--mobile">
