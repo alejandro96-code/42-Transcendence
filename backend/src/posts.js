@@ -103,15 +103,21 @@ async function read_comments(req, res) {
 }
 
 async function read_posts(req, res) {
-    
-    const targetUser = req.body.user || req.user.id;
+    const targetUser = req.query.user || req.user.id;
+    const amount = req.query.amount || 50;
+
     const posts_lists = await pool.query(
         'SELECT * FROM posts WHERE author_id = $1 FETCH FIRST $2 ROWS ONLY',
-        [targetUser, req.body.amount || 50]
+        [targetUser, amount]
     );
 
     if (!posts_lists || posts_lists.rows.length === 0) {
-        let responseBody = formatErrorJson(404, "Not Found", "No posts were found in database");
+        const responseBody = formatErrorJson(
+            404,
+            "Not Found",
+            "No posts were found in database"
+        );
+
         res.status(404).json(responseBody);
     } else {
         res.json(posts_lists.rows);

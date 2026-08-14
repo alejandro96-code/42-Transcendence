@@ -56,7 +56,10 @@ export function Perfil() {
             <PersonalData profileUser={profileUser ?? undefined} readOnly={isFriendProfile} />
           </div>
           <div className="col-12 lg:col-6 middle-pane">
-            <PostFeed readOnly={isFriendProfile} />
+            <PostFeed
+              readOnly={isFriendProfile}
+              userId={isFriendProfile && profileUser ? profileUser.id : undefined}
+            />
           </div>
           <div className="col-12 lg:col-3 right-pane">
             <div className="right-pane-item">

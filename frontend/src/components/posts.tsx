@@ -21,9 +21,10 @@ type SortOrder = 'desc' | 'asc'
 interface PostFeedProps {
   readOnly?: boolean
   initialPosts?: Post[]
+  userId?: number
 }
 
-export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
+export function PostFeed({ readOnly = false, initialPosts = [], userId}: PostFeedProps) {
   const POSTS_PER_PAGE = 4
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [posts, setPosts] = useState<Post[]>(initialPosts)
@@ -113,7 +114,7 @@ export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps)
 useEffect(() => {
   const loadPosts = async () => {
     try {
-      const data = await postsAPI.getPosts()
+      const data = await postsAPI.getPosts(userId)
 
       const loadedPosts: Post[] = data.map((post: any) => ({
         id: Number(post.id),
@@ -135,8 +136,8 @@ useEffect(() => {
     }
   }
 
-  loadPosts()
-}, [])
+  void loadPosts()
+}, [userId])
 
   useEffect(() => {
     const lastValidFirst = Math.max(0, Math.floor((Math.max(filteredPosts.length - 1, 0)) / POSTS_PER_PAGE) * POSTS_PER_PAGE)

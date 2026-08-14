@@ -64,8 +64,14 @@ export const postsAPI = {
     return await response.json()
   },
 
-  async getPosts() {
-    const response = await fetch(`${API_URL}/api/posts`, {
+  async getPosts(userId?: number) {
+    const url = new URL(`${API_URL}/api/posts`)
+
+    if (userId !== undefined) {
+      url.searchParams.set('user', String(userId))
+    }
+
+    const response = await fetch(url.toString(), {
       method: 'GET',
       credentials: 'include',
     })
