@@ -113,7 +113,7 @@ export function Header() {
       <div className="header-bar">
 
         <div className="header-nav">
-          <Link to="/" className="header-brand">
+          <Link to="/perfil" className="header-brand">
             <img
               src={logo42}
               alt="Logo de Transcendence"
