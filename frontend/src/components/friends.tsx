@@ -22,6 +22,7 @@ export function Friends({
   readOnly = false,
   ownerUserId = null,
 }: FriendsProps) {
+  const { t } = useI18n() // <-- PUESTO AQUÍ
   const toast = useRef<Toast>(null)
   const [friendsList, setFriendsList] = useState<Friend[]>([])
   const [pendingRequests, setPendingRequests] = useState<PendingFriendRequest[]>([])
@@ -77,8 +78,8 @@ export function Friends({
   const handleAnswerRequest = (request: PendingFriendRequest, status: 'accepted' | 'rejected') => {
     const accepted = status === 'accepted'
     confirmDialog({
-      message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${(t('friends_confirm_accept_msg'))} ${request.username}?`,
-      header: 'Confirmar',
+      message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${request.username}?`,
+      header: t('friends_confirm_header'),
       icon: accepted ? 'pi pi-check' : 'pi pi-times',
       accept: async () => {
         try {
@@ -112,15 +113,15 @@ export function Friends({
 
   const handleRemoveFriend = (friend: Friend) => {
     confirmDialog({
-      message: `¿Eliminar a ${friend.username} de tus amigos?`, //transate pendent
-      header: 'Confirmar',
+      message: t('friends_confirm_remove_msg', { name: friend.username }), // <-- CAMBIADO
+      header: t('friends_confirm_header'), // <-- CAMBIADO
       icon: 'pi pi-times',
       accept: async () => {
         try {
           await friendsAPI.removeFriend(friend.id)
           await loadFriends()
           onFriendRemoved?.(friend.id)
-          toast.current?.show({ severity: 'info', summary: 'Eliminado', detail: `${friend.username} ${t('friends_removed_message')}` })
+          toast.current?.show({ severity: 'info', summary: t('friends_toast_removed_title'), detail: `${friend.username} ${t('friends_removed_message')}` }) // <-- CAMBIADO
         } catch (error) {
           toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_remove_error') })
         }
