@@ -166,17 +166,31 @@ useEffect(() => {
               <small className="character-counter">
                 {text.length}/200
               </small>
-              
-              {image && (
-                <div className="preview-image-container">
-                  <img
-                    src={image}
-                    alt="Preview"
-                    className="preview-image"
-                  />
-                </div>
-              )}
+              <div className=''>           
+                {image && (
+                  <div className="preview-image-container">
+                    <img
+                      src={image}
+                      alt="Preview"
+                      className="preview-image"
+                    />
 
+                    <Button
+                      type="button"
+                      className="delete-imagen-button"
+                      severity="danger"
+                      rounded
+                      text
+                      icon="pi pi-times"
+                      aria-label="Quitar imagen"
+                      onClick={() => {
+                        setImage(null)
+                        setImageError('')
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
               <label htmlFor="post-image-upload" className="sr-only">Añadir imagen a la publicación</label>
               <input
                 id="post-image-upload"
