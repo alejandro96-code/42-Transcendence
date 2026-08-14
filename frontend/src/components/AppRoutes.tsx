@@ -73,8 +73,8 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" />} />
       <Route path="/callback" element={<Callback />} />
-      <Route path="/" element={isAuthenticated ? <Perfil /> : <Navigate to="/login" />} />
-      <Route path="/perfil/:friendId" element={isAuthenticated ? <Perfil /> : <Navigate to="/login" />} />
+      <Route path="/perfil" element={<Perfil />} />
+      <Route path="/perfil/:friendId" element={<Perfil />} />
     </Routes>
   )
 }

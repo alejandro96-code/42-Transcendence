@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
@@ -14,12 +14,27 @@ export function Header() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { t, i18n } = useTranslation()
+  const location = useLocation()
+
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [friendResults, setFriendResults] = useState<Friend[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+
   const searchTimeout = useRef<number | null>(null)
+
+  const isFriendProfile = /^\/perfil\/\d+$/.test(location.pathname)
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const user = await authAPI.getCurrentUser()
+      setCurrentUser(user)
+    }
+
+    void loadCurrentUser()
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -35,6 +50,7 @@ export function Header() {
     }
 
     const query = searchValue.trim()
+
     if (!query) {
       setFriendResults([])
       setShowResults(false)
@@ -43,6 +59,7 @@ export function Header() {
 
     searchTimeout.current = window.setTimeout(async () => {
       setIsSearching(true)
+
       try {
         const results = await friendsAPI.searchFriends(query)
         setFriendResults(results)
@@ -60,6 +77,12 @@ export function Header() {
     setShowResults(false)
     setSearchValue('')
     navigate(`/perfil/${friendId}`)
+    setIsMenuOpen(false)
+  }
+
+  const handleOpenMyProfile = () => {
+    navigate('/perfil')
+    setIsMenuOpen(false)
   }
 
   const languageOptions = [
@@ -68,7 +91,9 @@ export function Header() {
     { label: 'EN', value: 'en' }
   ]
 
-  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language || 'es')
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    i18n.language || 'es'
+  )
 
   const handleLanguageChange = (e: { value: string }) => {
     const newLang = e.value
@@ -89,21 +114,55 @@ export function Header() {
 
         <div className="header-nav">
           <Link to="/" className="header-brand">
-            <img src={logo42} alt="Logo de Transcendence" className="header-brand-logo" />
+            <img
+              src={logo42}
+              alt="Logo de Transcendence"
+              className="header-brand-logo"
+            />
           </Link>
         </div>
 
-        <Button
-          type="button"
-          className="header-menu-toggle p-button-text"
-          icon="pi pi-bars"
-          aria-label={t('header_menu_aria_label')}
-          aria-expanded={isMenuOpen}
-          aria-controls="header-mobile-menu"
-          onClick={() => setIsMenuOpen((currentValue) => !currentValue)}
-        />
-        
+        {/* Controles móviles: SIEMPRE fuera del burger */}
+        <div className="header-mobile-controls">
+
+          <div className="header-mobile-language">
+            <Dropdown
+              value={selectedLanguage}
+              options={languageOptions}
+              onChange={handleLanguageChange}
+              className="p-inputtext-sm"
+            />
+          </div>
+
+          {isFriendProfile && currentUser && (
+            <button
+              type="button"
+              className="header-avatar-button"
+              onClick={handleOpenMyProfile}
+              title={currentUser.username}
+            >
+              <img
+                src={currentUser.avatar_url || '/img/Not_image.png'}
+                alt={`Avatar de ${currentUser.username}`}
+                className="header-avatar"
+              />
+            </button>
+          )}
+
+          <Button
+            type="button"
+            className="header-menu-toggle p-button-text"
+            icon="pi pi-bars"
+            aria-label={t('header_menu_aria_label')}
+            aria-expanded={isMenuOpen}
+            aria-controls="header-mobile-menu"
+            onClick={() => setIsMenuOpen((currentValue) => !currentValue)}
+          />
+        </div>
+
+        {/* Controles de escritorio */}
         <div className="header-actions">
+
           <div className="header-languages-wrapper">
             <Dropdown
               value={selectedLanguage}
@@ -112,8 +171,27 @@ export function Header() {
               className="p-inputtext-sm"
             />
           </div>
+
+          {isFriendProfile && currentUser && (
+            <button
+              type="button"
+              className="header-avatar-button"
+              onClick={handleOpenMyProfile}
+              title={currentUser.username}
+            >
+              <img
+                src={currentUser.avatar_url || '/img/Not_image.png'}
+                alt={`Avatar de ${currentUser.username}`}
+                className="header-avatar"
+              />
+            </button>
+          )}
+
           <div className="header-search-wrapper">
-            <label htmlFor="header-search" className="sr-only">Buscar amigos</label>
+            <label htmlFor="header-search" className="sr-only">
+              Buscar amigos
+            </label>
+
             <InputText
               id="header-search"
               placeholder="Buscar amigos..."
@@ -121,12 +199,17 @@ export function Header() {
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               onFocus={() => searchValue.trim() && setShowResults(true)}
-              onBlur={() => window.setTimeout(() => setShowResults(false), 150)}
+              onBlur={() =>
+                window.setTimeout(() => setShowResults(false), 150)
+              }
             />
+
             {showResults && (
               <div className="header-search-results">
                 {isSearching ? (
-                  <div className="header-search-result header-search-result--empty">Buscando...</div>
+                  <div className="header-search-result header-search-result--empty">
+                    Buscando...
+                  </div>
                 ) : friendResults.length > 0 ? (
                   friendResults.map((friend) => (
                     <button
@@ -136,16 +219,26 @@ export function Header() {
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => handleOpenFriendProfile(friend.id)}
                     >
-                      <span className="header-search-result__name">{friend.username}</span>
-                      {friend.full_name && <span className="header-search-result__meta">{friend.full_name}</span>}
+                      <span className="header-search-result__name">
+                        {friend.username}
+                      </span>
+
+                      {friend.full_name && (
+                        <span className="header-search-result__meta">
+                          {friend.full_name}
+                        </span>
+                      )}
                     </button>
                   ))
                 ) : (
-                  <div className="header-search-result header-search-result--empty">No hay amigos que coincidan</div>
+                  <div className="header-search-result header-search-result--empty">
+                    No hay amigos que coincidan
+                  </div>
                 )}
               </div>
             )}
           </div>
+
           <Button
             type="button"
             severity="danger"
@@ -153,22 +246,23 @@ export function Header() {
             outlined
             size="small"
             onClick={handleLogout}
-          > 
+          >
             {t('header_logout')}
           </Button>
+
         </div>
 
-        <div className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
-          <div className="header-languages-wrapper">
-            <Dropdown
-              value={selectedLanguage}
-              options={languageOptions}
-              onChange={handleLanguageChange}
-              className="dropdown-element p-inputtext-sm"
-            />
-          </div>
+        {/* Menú móvil: SOLO buscador + logout */}
+        <div
+          id="header-mobile-menu"
+          className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}
+        >
+
           <div className="header-search-wrapper header-search-wrapper--mobile">
-            <label htmlFor="header-search-mobile" className="sr-only">Buscar amigos</label>
+            <label htmlFor="header-search-mobile" className="sr-only">
+              Buscar amigos
+            </label>
+
             <InputText
               id="header-search-mobile"
               placeholder="Buscar amigos..."
@@ -176,12 +270,17 @@ export function Header() {
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
               onFocus={() => searchValue.trim() && setShowResults(true)}
-              onBlur={() => window.setTimeout(() => setShowResults(false), 150)}
+              onBlur={() =>
+                window.setTimeout(() => setShowResults(false), 150)
+              }
             />
+
             {showResults && (
               <div className="header-search-results header-search-results--mobile">
                 {isSearching ? (
-                  <div className="header-search-result header-search-result--empty">Buscando...</div>
+                  <div className="header-search-result header-search-result--empty">
+                    Buscando...
+                  </div>
                 ) : friendResults.length > 0 ? (
                   friendResults.map((friend) => (
                     <button
@@ -191,16 +290,26 @@ export function Header() {
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => handleOpenFriendProfile(friend.id)}
                     >
-                      <span className="header-search-result__name">{friend.username}</span>
-                      {friend.full_name && <span className="header-search-result__meta">{friend.full_name}</span>}
+                      <span className="header-search-result__name">
+                        {friend.username}
+                      </span>
+
+                      {friend.full_name && (
+                        <span className="header-search-result__meta">
+                          {friend.full_name}
+                        </span>
+                      )}
                     </button>
                   ))
                 ) : (
-                  <div className="header-search-result header-search-result--empty">No hay amigos que coincidan</div>
+                  <div className="header-search-result header-search-result--empty">
+                    No hay amigos que coincidan
+                  </div>
                 )}
               </div>
             )}
           </div>
+
           <Button
             type="button"
             severity="danger"
@@ -208,9 +317,10 @@ export function Header() {
             outlined
             size="small"
             onClick={handleLogout}
-          > 
+          >
             {t('header_logout')}
           </Button>
+
         </div>
 
       </div>
