@@ -76,7 +76,11 @@ export const authAPI = {
     return await response.json()
   },
 
-  async updateMyProfile(profile: { profession: string; description: string }): Promise<User> {
+  async updateMyProfile(profile: {
+    profession: string
+    description: string
+    avatarUrl?: string
+  }): Promise<User> {
     const response = await fetch(`${API_URL}/api/auth/me`, {
       method: 'PATCH',
       headers: {
@@ -87,7 +91,11 @@ export const authAPI = {
     })
 
     if (!response.ok) {
-      const message = await readErrorMessage(response, 'No se pudo guardar el perfil.')
+      const message = await readErrorMessage(
+        response,
+        'No se pudo guardar el perfil.',
+      )
+
       throw new Error(message)
     }
 

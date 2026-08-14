@@ -410,7 +410,8 @@ function start_server() {
     app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
         const profession = normalizeText(req.body?.profession);
         const description = normalizeText(req.body?.description);
-        
+        const avatarUrl = normalizeText(req.body?.avatarUrl);
+
         if (containsProfanity(profession)) {
             return res.status(400).json({
                 error: 'La profesión contiene palabras no permitidas.'
@@ -422,28 +423,66 @@ function start_server() {
                 error: 'La descripción contiene palabras no permitidas.'
             });
         }
+
         if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
-            return res.status(400).json({ error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.` });
+            return res.status(400).json({
+                error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.`
+            });
         }
+
         if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
-            return res.status(400).json({ error: `La descripción no puede superar ${PROFILE_DESCRIPTION_MAX_LENGTH} caracteres.` });
+            return res.status(400).json({
+                error: `La descripción no puede superar ${PROFILE_DESCRIPTION_MAX_LENGTH} caracteres.`
+            });
+        }
+
+        const allowedAvatars = [
+            '/avatars/avatar-boy.png',
+            '/avatars/avatar-girl.png',
+            '/avatars/avatar-senior-boy.png',
+            '/avatars/avatar-senior-girl.png',
+            '/avatars/avatar-admin.png'
+        ];
+
+        if (!req.user.is_intra_user && avatarUrl && !allowedAvatars.includes(avatarUrl)) {
+            return res.status(400).json({
+                error: 'Avatar no válido.'
+            });
+        }
+
+        if (req.user.is_intra_user && avatarUrl) {
+            return res.status(403).json({
+                error: 'Los usuarios de 42 no pueden cambiar su avatar.'
+            });
         }
 
         try {
             const result = await pool.query(
                 `UPDATE users
-                 SET profession = $1,
-                     description = $2,
-                     updated_at = CURRENT_TIMESTAMP
-                 WHERE id = $3
-                 RETURNING *`,
-                [profession || null, description || null, req.user.id]
+                SET profession = $1,
+                    description = $2,
+                    avatar_url = CASE
+                        WHEN is_intra_user = TRUE THEN avatar_url
+                        WHEN $3 = '' THEN avatar_url
+                        ELSE $3
+                    END,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = $4
+                RETURNING *`,
+                [
+                    profession || null,
+                    description || null,
+                    avatarUrl,
+                    req.user.id
+                ]
             );
 
             return res.json(toPublicUser(result.rows[0]));
         } catch (error) {
             console.error('Error al actualizar el perfil:', error);
-            return res.status(500).json({ error: 'Error al actualizar el perfil.' });
+            return res.status(500).json({
+                error: 'Error al actualizar el perfil.'
+            });
         }
     });
 

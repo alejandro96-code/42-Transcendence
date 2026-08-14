@@ -22,9 +22,31 @@
     {
         margin-bottom: 2rem;
     }
+    .profile-avatar-selector{
+        position: absolute;
+        top: 1px;
+        z-index: 99;
+    }
 
-    .profile-img{
-        text-align: center;
+    .profile-avatar-options{
+        background-color: $color-button;
+        border-radius: 5px;
+        margin: 10px;
+    }
+
+    .profile-img {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+    }
+    .profile-avatar-upload {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 34px;
+        height: 34px;
+        z-index: 2;
     }
 
     .profile-title,
