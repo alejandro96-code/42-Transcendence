@@ -8,15 +8,31 @@ async function readErrorMessage(
   try {
     const data = await response.json()
 
-    if (typeof data?.error === 'string' && data.error.length > 0) {
-      return data.error
-    }
-
-    if (typeof data?.description === 'string' && data.description.length > 0) {
+    // Priorizamos el mensaje descriptivo
+    if (
+      typeof data?.description === 'string' &&
+      data.description.length > 0
+    ) {
       return data.description
     }
+
+    if (
+      typeof data?.message === 'string' &&
+      data.message.length > 0
+    ) {
+      return data.message
+    }
+
+    // Evitamos devolver "Bad Request" si existe un mensaje más útil
+    if (
+      typeof data?.error === 'string' &&
+      data.error.length > 0 &&
+      data.error !== 'Bad Request'
+    ) {
+      return data.error
+    }
   } catch {
-    // Usamos el mensaje por defecto.
+    // Si la respuesta no contiene JSON, usamos el mensaje por defecto.
   }
 
   return fallbackMessage
