@@ -111,6 +111,30 @@ const handlePost = async () => {
   const paginatedPosts = orderedPosts.slice(first, first + POSTS_PER_PAGE)
 
   useEffect(() => {
+  const loadPosts = async () => {
+    try {
+      const data = await postsAPI.getPosts()
+
+      const loadedPosts: Post[] = data.map((post: any) => ({
+        id: Number(post.id),
+        content: post.content,
+        date: post.created_at
+          ? new Date(post.created_at).toLocaleString()
+          : '',
+        isFromFriend: false,
+        image: null,
+      }))
+
+      setPosts(loadedPosts)
+    } catch (error) {
+      console.error('Error cargando los posts:', error)
+    }
+  }
+
+  loadPosts()
+}, [])
+
+  useEffect(() => {
     const lastValidFirst = Math.max(0, Math.floor((Math.max(filteredPosts.length - 1, 0)) / POSTS_PER_PAGE) * POSTS_PER_PAGE)
     if (first > lastValidFirst) {
       setFirst(lastValidFirst)

@@ -46,4 +46,22 @@ export const postsAPI = {
 
     return await response.json()
   },
+
+  async getPosts() {
+    const response = await fetch(`${API_URL}/api/posts`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const message = await readErrorMessage(
+        response,
+        'No se pudieron cargar las publicaciones.',
+      )
+
+      throw new Error(message)
+    }
+
+    return await response.json()
+  },
 }

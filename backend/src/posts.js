@@ -207,17 +207,19 @@ async function create_post(req, res) {
     }
 }
 
-export default function posts_endpoints(app, customPool) {
-    const router = express.Router();
+const router = express.Router();
 
-    router.use(express.json());
-    router.use(isAuthenticated);
+router.use(express.json());
+router.use(isAuthenticated);
 
-    router.delete("/likes", remove_likes);
-    router.patch("/likes", update_likes);
-    router.get("/", read_posts);
-    router.get("/comments", read_comments);
-    router.post("/", validate({ body: postsCreateSchema }), create_post);
+router.delete('/likes', remove_likes);
+router.patch('/likes', update_likes);
+router.get('/', read_posts);
+router.get('/comments', read_comments);
+router.post(
+    '/',
+    validate({ body: postsCreateSchema }),
+    create_post
+);
 
-    app.use("/api/posts", router);
-}
+export default router;
