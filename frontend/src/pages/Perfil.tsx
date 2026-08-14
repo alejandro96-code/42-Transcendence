@@ -78,21 +78,21 @@ export function Perfil() {
     }
   }, [friendId, isFriendProfile])
 
-const handleAvatarChange = async (avatarUrl: string): Promise<User> => {
-  if (!currentUser) {
-    throw new Error('No hay un usuario autenticado.')
+  const handleAvatarChange = async (avatarUrl: string): Promise<User> => {
+    if (!currentUser) {
+      throw new Error('No hay un usuario autenticado.')
+    }
+
+    const updatedUser = await authAPI.updateMyProfile({
+      profession: currentUser.profession ?? '',
+      description: currentUser.description ?? '',
+      avatarUrl,
+    })
+
+    setCurrentUser(updatedUser)
+
+    return updatedUser
   }
-
-  const updatedUser = await authAPI.updateMyProfile({
-    profession: currentUser.profession ?? '',
-    description: currentUser.description ?? '',
-    avatarUrl,
-  })
-
-  setCurrentUser(updatedUser)
-
-  return updatedUser
-}
 
   return (
     <div className="app-shell perfil-layout">
@@ -105,15 +105,15 @@ const handleAvatarChange = async (avatarUrl: string): Promise<User> => {
 
           {/* PERFIL */}
           <div className="col-12 lg:col-3 left-pane">
-            <PersonalData
-              profileUser={profileUser ?? undefined}
-              readOnly={isFriendProfile}
-              onAvatarChange={
-                !isFriendProfile && currentUser
-                  ? handleAvatarChange
-                  : undefined
-              }
-            />
+          <PersonalData
+            profileUser={profileUser ?? undefined}
+            readOnly={isFriendProfile}
+            onAvatarChange={
+              !isFriendProfile && currentUser && !currentUser.is_intra_user
+                ? handleAvatarChange
+                : undefined
+            }
+          />
           </div>
 
           {/* PUBLICACIONES */}

@@ -6,7 +6,6 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
-
 import type { User } from '../types/auth'
 import { availableAvatars } from '../constants/avatars'
 
@@ -22,7 +21,7 @@ interface ProfileUser {
 interface PersonalDataProps {
   profileUser?: ProfileUser
   readOnly?: boolean
-  onAvatarChange?: (avatarUrl: string) => Promise<User> | User
+  onAvatarChange?: (avatarUrl: string) => User | Promise<User>
 }
 
 export function PersonalData({
@@ -45,17 +44,13 @@ export function PersonalData({
     description: '',
   })
 
-  /*
-   * Solo puede cambiar el avatar:
-   * - el usuario de su propio perfil
-   * - si no estamos viendo el perfil de un amigo
-   * - si existe onAvatarChange
-   */
   const canChangeAvatar =
     !readOnly &&
     !profileUser &&
     Boolean(user) &&
-    Boolean(onAvatarChange)
+    !user?.is_intra_user &&
+    Boolean(onAvatarChange) &&
+    isEditing
 
   useEffect(() => {
     if (!activeUser) {
@@ -100,16 +95,6 @@ export function PersonalData({
     setIsEditing(true)
   }
 
-  const handleCancel = () => {
-    setForm({
-      profession: activeUser.profession ?? '',
-      description: activeUser.description ?? '',
-    })
-
-    setErrorMessage('')
-    setIsEditing(false)
-  }
-
   const handleSave = async () => {
     setIsSaving(true)
     setErrorMessage('')
@@ -121,6 +106,7 @@ export function PersonalData({
       })
 
       dispatch(setUser(updatedUser))
+      setShowAvatarSelector(false)
       setIsEditing(false)
     } catch (error) {
       setErrorMessage(
@@ -356,14 +342,6 @@ export function PersonalData({
                       className='p-button-sm'
                       loading={isSaving}
                       onClick={handleSave}
-                    />
-
-                    <Button
-                      label='Cancelar'
-                      icon='pi pi-times'
-                      className='p-button-sm p-button-secondary'
-                      onClick={handleCancel}
-                      disabled={isSaving}
                     />
 
                   </div>

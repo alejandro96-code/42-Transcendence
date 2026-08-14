@@ -446,11 +446,8 @@ function start_server() {
         }
 
         const allowedAvatars = [
-            '/avatars/avatar-boy.png',
-            '/avatars/avatar-girl.png',
-            '/avatars/avatar-senior-boy.png',
-            '/avatars/avatar-senior-girl.png',
-            '/avatars/avatar-admin.png'
+            '/img/avatar1.png',
+            '/img/avatar2.png'
         ];
 
         if (!req.user.is_intra_user && avatarUrl && !allowedAvatars.includes(avatarUrl)) {
