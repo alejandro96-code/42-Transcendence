@@ -73,7 +73,7 @@ const handlePost = async () => {
   if (!content) return
 
   try {
-    const createdPost = await postsAPI.createPost(content)
+    const createdPost = await postsAPI.createPost(content, image)
 
     const newPost: Post = {
       id: Number(createdPost[0]?.id ?? createdPost.id),
@@ -122,7 +122,7 @@ const handlePost = async () => {
           ? new Date(post.created_at).toLocaleString()
           : '',
         isFromFriend: false,
-        image: null,
+        image: post.media?.[0] ?? null,
       }))
 
       setPosts(loadedPosts)

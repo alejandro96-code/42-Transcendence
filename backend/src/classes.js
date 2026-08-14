@@ -8,6 +8,10 @@ export const postsCreateSchema = {
             type: "string",
             maxLength: 240,
         },
+        image: {
+            type: ["string", "null"],
+            maxLength: 3000000,
+        },
         author_id: {
             type: "number"
         },

@@ -23,7 +23,7 @@ async function readErrorMessage(
 }
 
 export const postsAPI = {
-  async createPost(content: string) {
+  async createPost(content: string, image?: string | null) {
     const response = await fetch(`${API_URL}/api/posts`, {
       method: 'POST',
       headers: {
@@ -32,6 +32,7 @@ export const postsAPI = {
       credentials: 'include',
       body: JSON.stringify({
         content,
+        ...(image ? { image } : {}),
       }),
     })
 

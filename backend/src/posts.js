@@ -120,16 +120,9 @@ async function read_posts(req, res) {
 
 async function create_post(req, res) {
     try {
-        console.log('>>> CREATE_POST ENTRANDO');
-        console.log('>>> BODY:', req.body);
-        console.log('>>> USER:', req.user);
-
-        const media = [];
+        const media = req.body.image ? [req.body.image] : [];
         const authorId = req.user.id;
         const content = String(req.body?.content ?? '').trim();
-
-        console.log('>>> AUTHOR:', authorId);
-        console.log('>>> CONTENT:', content);
 
         if (containsProfanity(content)) {
             console.log('>>> PROFANITY DETECTADO');
@@ -209,15 +202,14 @@ async function create_post(req, res) {
 
 const router = express.Router();
 
-router.use(express.json());
 router.use(isAuthenticated);
 
-router.delete('/likes', remove_likes);
-router.patch('/likes', update_likes);
-router.get('/', read_posts);
-router.get('/comments', read_comments);
+router.delete("/likes", remove_likes);
+router.patch("/likes", update_likes);
+router.get("/", read_posts);
+router.get("/comments", read_comments);
 router.post(
-    '/',
+    "/",
     validate({ body: postsCreateSchema }),
     create_post
 );
