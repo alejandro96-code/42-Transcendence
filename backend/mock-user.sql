@@ -17,7 +17,7 @@ VALUES (
     'mockuser',
     'mockuser@example.test',
     'Usuario Mock',
-    'https://via.placeholder.com/96?text=MU',
+    '/img/Not_image.png',
     'Desarrollador/a',
     'Usuario de prueba creado con make mock-user.',
     '0123456789abcdef0123456789abcdef:c10c20060f292ede4dc69a8c538d657d2171f5aeba911215f9a6bb524137ef7436ef822a71a1c3d1848ce6be6d31e91b0230bcd5ad776b5391e07c06456c41fd'

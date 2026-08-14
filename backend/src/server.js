@@ -64,7 +64,7 @@ function toPublicUser(user) {
         intra_id: rest.intra_id ?? null,
         email: rest.email ?? '',
         full_name: rest.full_name ?? rest.username ?? '',
-        avatar_url: rest.avatar_url ?? '',
+        avatar_url: rest.avatar_url || '/img/Not_image.png',
         profession: rest.profession ?? '',
         description: rest.description ?? '',
     };
@@ -154,7 +154,7 @@ function start_server() {
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
     const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
-
+    const sessionSecret = process.env.SESSION_SECRET;
     console.log("Server start")
 
     const allowedOrigins = [
@@ -187,8 +187,12 @@ function start_server() {
         next(error);
     });
 
+    if (!sessionSecret) {
+        throw new Error('SESSION_SECRET no está configurado');
+    }
+
     app.use(session({
-        secret: process.env.SESSION_SECRET || 'secret-key-change-this',
+        secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
         cookie: {
@@ -219,7 +223,7 @@ function start_server() {
                 const avatarUrl = profile._json?.image?.link ||
                     profile._json?.image_url ||
                     profile.photos?.[0]?.value ||
-                    '';
+                    '/img/Not_image.png';
 
                 const intraUsername = `${profile.username}_42`;
                 const result = await pool.query(
@@ -345,9 +349,7 @@ function start_server() {
             }
 
             const passwordHash = hashPassword(password);
-            const avatarInitials = username.slice(0, 2).toUpperCase() || 'US';
-            const avatarUrl = `https://via.placeholder.com/96?text=${encodeURIComponent(avatarInitials)}`;
-
+            const avatarUrl = '/img/Not_image.png';
             const result = await pool.query(
                 `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, password_hash)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)

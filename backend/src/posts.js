@@ -148,22 +148,9 @@ async function read_posts(req, res) {
             [targetUser, amount]
         );
 
-        if (!posts_lists || posts_lists.rows.length === 0) {
-            const responseBody = formatErrorJson(
-                404,
-                "Not Found",
-                "No posts were found in database"
-            );
-
-            res.status(404).json(responseBody);
-            return;
-        }
-
         res.json(posts_lists.rows);
 
     } catch (error) {
-        console.error("Error leyendo posts:", error);
-
         const responseBody = formatErrorJson(
             500,
             "Internal Server Error",
@@ -181,8 +168,6 @@ async function create_post(req, res) {
         const content = String(req.body?.content ?? '').trim();
 
         if (containsProfanity(content)) {
-            console.log('>>> PROFANITY DETECTADO');
-
             return res.status(400).json(
                 formatErrorJson(
                     400,
@@ -197,8 +182,6 @@ async function create_post(req, res) {
             [authorId]
         );
 
-        console.log('>>> AUTHOR QUERY:', author_username.rows);
-
         if (!author_username || author_username.rows.length === 0) {
             return res.status(404).json(
                 formatErrorJson(
@@ -210,9 +193,7 @@ async function create_post(req, res) {
         }
 
         const parent = req.body.parent ? req.body.parent : 0;
-
-        console.log('>>> ANTES DEL INSERT');
-
+        
         const new_post = await pool.query(
             `INSERT INTO posts (
                 author_id,
@@ -232,8 +213,6 @@ async function create_post(req, res) {
             ]
         );
 
-        console.log('>>> DESPUES DEL INSERT:', new_post.rows);
-
         if (!new_post || new_post.rows.length === 0) {
             return res.status(500).json(
                 formatErrorJson(
@@ -247,8 +226,6 @@ async function create_post(req, res) {
         return res.json(new_post.rows);
 
     } catch (error) {
-        console.error('>>> ERROR CREANDO POST:', error);
-
         return res.status(500).json({
             error: 'Error al crear el post.',
             details: error.message
