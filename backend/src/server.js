@@ -159,7 +159,7 @@ function start_server() {
 
     const allowedOrigins = [
         'http://localhost:3000',
-        'http://10.14.8.6:3000',
+        'http://172.31.252.113:3000',
         process.env.FRONTEND_URL
     ].filter(Boolean);
 
@@ -197,6 +197,8 @@ function start_server() {
         saveUninitialized: false,
         cookie: {
             secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
         }
     }));
@@ -298,16 +300,23 @@ function start_server() {
 
     app.get('/api/auth/42', passport.authenticate('42'));
 
-    app.get('/api/auth/42/callback',
-        passport.authenticate('42', { failureRedirect: `${FRONTEND_URL}/login` }),
-        (req, res) => {
-            res.redirect(`${FRONTEND_URL}/callback?success=true`);
-        }
-    );
+    app.get(
+    '/api/auth/42/callback',
+    passport.authenticate('42', {
+        failureRedirect: `${FRONTEND_URL}/`,
+    }),
+    (req, res) => {
+        res.redirect(`${FRONTEND_URL}/perfil`);
+    }
+    )
 
-    app.get('/api/auth/me', isAuthenticated, (req, res) => {
-        res.json(toPublicUser(req.user));
-    });
+    app.get('/api/auth/me', (req, res) => {
+        if (!req.user) {
+            return res.status(200).json(null)
+        }
+
+        return res.json(toPublicUser(req.user))
+    })
 
     app.post('/api/auth/register', async (req, res) => {
         const username = normalizeUsername(req.body?.username);

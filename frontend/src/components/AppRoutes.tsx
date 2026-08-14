@@ -5,19 +5,21 @@ import { setUser, clearUser, setLoading } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { Perfil } from '../pages/Perfil'
 import { Login } from '../pages/Login'
-import { Callback } from '../pages/Callback'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { friendsAPI } from '../services/friendsAPI'
 
 export function AppRoutes() {
   const dispatch = useAppDispatch()
-  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth)
+  const { isAuthenticated, isLoading } = useAppSelector(
+    (state) => state.auth,
+  )
 
   useEffect(() => {
     let mounted = true
 
     const checkAuth = async () => {
       const user = await authAPI.getCurrentUser()
+
       if (!mounted) {
         return
       }
@@ -27,10 +29,11 @@ export function AppRoutes() {
       } else {
         dispatch(clearUser())
       }
+
       dispatch(setLoading(false))
     }
 
-    checkAuth()
+    void checkAuth()
 
     return () => {
       mounted = false
@@ -39,25 +42,25 @@ export function AppRoutes() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-        return
+      return
     }
 
     const sendHeartbeat = async () => {
-        try {
-            await friendsAPI.heartbeat()
-        } catch (error) {
-            console.error('Error enviando heartbeat:', error)
-        }
+      try {
+        await friendsAPI.heartbeat()
+      } catch (error) {
+        console.error('Error enviando heartbeat:', error)
+      }
     }
 
     void sendHeartbeat()
 
     const interval = setInterval(() => {
-        void sendHeartbeat()
+      void sendHeartbeat()
     }, 10000)
 
     return () => {
-        clearInterval(interval)
+      clearInterval(interval)
     }
   }, [isAuthenticated])
 
@@ -69,29 +72,39 @@ export function AppRoutes() {
     )
   }
 
-return (
-  <Routes>
-    <Route
-      path="/login"
-      element={!isAuthenticated ? <Login /> : <Navigate to="/perfil" replace />}
-    />
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          isAuthenticated
+            ? <Navigate to="/perfil" replace />
+            : <Login />
+        }
+      />
 
-    <Route path="/callback" element={<Callback />} />
+      <Route
+        path="/perfil"
+        element={
+          isAuthenticated
+            ? <Perfil />
+            : <Navigate to="/" replace />
+        }
+      />
 
-    <Route
-      path="/"
-      element={<Navigate to="/perfil" replace />}
-    />
+      <Route
+        path="/perfil/:friendId"
+        element={
+          isAuthenticated
+            ? <Perfil />
+            : <Navigate to="/" replace />
+        }
+      />
 
-    <Route
-      path="/perfil"
-      element={<Perfil />}
-    />
-
-    <Route
-      path="/perfil/:friendId"
-      element={<Perfil />}
-    />
-  </Routes>
-)
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
+      />
+    </Routes>
+  )
 }
