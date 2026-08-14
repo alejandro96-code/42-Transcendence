@@ -1,5 +1,8 @@
-const SERVER_IP = import.meta.env.VITE_SERVER_IP || window.location.hostname
-const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
+const SERVER_IP =
+  import.meta.env.VITE_SERVER_IP || window.location.hostname
+
+const API_URL =
+  import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 
 async function readErrorMessage(
   response: Response,
@@ -8,7 +11,6 @@ async function readErrorMessage(
   try {
     const data = await response.json()
 
-    // Priorizamos el mensaje descriptivo
     if (
       typeof data?.description === 'string' &&
       data.description.length > 0
@@ -23,7 +25,6 @@ async function readErrorMessage(
       return data.message
     }
 
-    // Evitamos devolver "Bad Request" si existe un mensaje más útil
     if (
       typeof data?.error === 'string' &&
       data.error.length > 0 &&
@@ -32,25 +33,32 @@ async function readErrorMessage(
       return data.error
     }
   } catch {
-    // Si la respuesta no contiene JSON, usamos el mensaje por defecto.
+    // Si la respuesta no contiene JSON,
+    // usamos el mensaje por defecto.
   }
 
   return fallbackMessage
 }
 
 export const postsAPI = {
-  async createPost(content: string, image?: string | null) {
-    const response = await fetch(`${API_URL}/api/posts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+  async createPost(
+    content: string,
+    image?: string | null,
+  ): Promise<any> {
+    const response = await fetch(
+      `${API_URL}/api/posts`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          content,
+          ...(image ? { image } : {}),
+        }),
       },
-      credentials: 'include',
-      body: JSON.stringify({
-        content,
-        ...(image ? { image } : {}),
-      }),
-    })
+    )
 
     if (!response.ok) {
       const message = await readErrorMessage(
@@ -64,17 +72,35 @@ export const postsAPI = {
     return await response.json()
   },
 
-  async getPosts(userId?: number) {
-    const url = new URL(`${API_URL}/api/posts`)
+  async getPosts(
+    userId?: number,
+    filter?: string,
+  ): Promise<any[]> {
+    const url = new URL(
+      `${API_URL}/api/posts`,
+    )
 
     if (userId !== undefined) {
-      url.searchParams.set('user', String(userId))
+      url.searchParams.set(
+        'user',
+        String(userId),
+      )
     }
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      credentials: 'include',
-    })
+    if (filter !== undefined) {
+      url.searchParams.set(
+        'filter',
+        filter,
+      )
+    }
+
+    const response = await fetch(
+      url.toString(),
+      {
+        method: 'GET',
+        credentials: 'include',
+      },
+    )
 
     if (!response.ok) {
       const message = await readErrorMessage(
@@ -85,6 +111,12 @@ export const postsAPI = {
       throw new Error(message)
     }
 
-    return await response.json()
+    const data = await response.json()
+
+    if (!Array.isArray(data)) {
+      return []
+    }
+
+    return data
   },
 }

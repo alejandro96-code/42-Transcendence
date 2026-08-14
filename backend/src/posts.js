@@ -103,24 +103,74 @@ async function read_comments(req, res) {
 }
 
 async function read_posts(req, res) {
-    const targetUser = req.query.user || req.user.id;
-    const amount = req.query.amount || 50;
+    try {
+        const targetUser = req.query.user || req.user.id;
+        const amount = Number(req.query.amount) || 50;
+        const filter = req.query.filter;
 
-    const posts_lists = await pool.query(
-        'SELECT * FROM posts WHERE author_id = $1 FETCH FIRST $2 ROWS ONLY',
-        [targetUser, amount]
-    );
+        if (filter === 'mentions') {
+            const mentions_posts = await pool.query(
+                `
+                SELECT p.*
+                FROM posts p
+                JOIN users mentioned
+                    ON mentioned.id = $1
+                JOIN friend_requests fr
+                    ON fr.status = 'accepted'
+                    AND (
+                        (
+                            fr.requester_id = p.author_id
+                            AND fr.recipient_id = $1
+                        )
+                        OR
+                        (
+                            fr.recipient_id = p.author_id
+                            AND fr.requester_id = $1
+                        )
+                    )
+                WHERE p.content ~ (
+                    '(^|[^a-zA-Z0-9_])@'
+                    || mentioned.username
+                    || '([^a-zA-Z0-9_]|$)'
+                )
+                ORDER BY p.created_at DESC
+                FETCH FIRST $2 ROWS ONLY
+                `,
+                [req.user.id, amount]
+            );
 
-    if (!posts_lists || posts_lists.rows.length === 0) {
-        const responseBody = formatErrorJson(
-            404,
-            "Not Found",
-            "No posts were found in database"
+            res.json(mentions_posts.rows);
+            return;
+        }
+
+        const posts_lists = await pool.query(
+            ` SELECT * FROM posts WHERE author_id = $1 ORDER BY created_at DESC FETCH FIRST $2 ROWS ONLY `,
+            [targetUser, amount]
         );
 
-        res.status(404).json(responseBody);
-    } else {
+        if (!posts_lists || posts_lists.rows.length === 0) {
+            const responseBody = formatErrorJson(
+                404,
+                "Not Found",
+                "No posts were found in database"
+            );
+
+            res.status(404).json(responseBody);
+            return;
+        }
+
         res.json(posts_lists.rows);
+
+    } catch (error) {
+        console.error("Error leyendo posts:", error);
+
+        const responseBody = formatErrorJson(
+            500,
+            "Internal Server Error",
+            "Couldn't read posts"
+        );
+
+        res.status(500).json(responseBody);
     }
 }
 
