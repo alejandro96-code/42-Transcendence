@@ -5,7 +5,7 @@ import { InputText } from 'primereact/inputtext'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Toast } from 'primereact/toast'
 import { friendsAPI, type Friend, type PendingFriendRequest } from '../services/friendsAPI'
-import { t } from 'i18next'
+import { useI18n } from '../hooks/useI18n'
 
 interface FriendsProps {
   selectedFriendId?: number | null
