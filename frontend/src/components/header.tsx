@@ -104,6 +104,14 @@ export function Header() {
         />
         
         <div className="header-actions">
+          <div className="header-languages-wrapper">
+            <Dropdown
+              value={selectedLanguage}
+              options={languageOptions}
+              onChange={handleLanguageChange}
+              className="p-inputtext-sm"
+            />
+          </div>
           <div className="header-search-wrapper">
             <label htmlFor="header-search" className="sr-only">Buscar amigos</label>
             <InputText
@@ -151,6 +159,14 @@ export function Header() {
         </div>
 
         <div className={`header-mobile-menu ${isMenuOpen ? 'is-open' : ''}`}>
+          <div className="header-languages-wrapper">
+            <Dropdown
+              value={selectedLanguage}
+              options={languageOptions}
+              onChange={handleLanguageChange}
+              className="dropdown-element p-inputtext-sm"
+            />
+          </div>
           <div className="header-search-wrapper header-search-wrapper--mobile">
             <label htmlFor="header-search-mobile" className="sr-only">Buscar amigos</label>
             <InputText

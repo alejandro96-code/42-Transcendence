@@ -238,9 +238,6 @@ router.patch('/requests/:requestId', isAuthenticated, async (req, res) => {
         return res.status(400).json({ error: 'Solicitud inválida.' });
     }
 
-    console.log('REQ BODY:', req.body);
-    console.log('ACTION:', action);
-
 if (action !== 'accepted' && action !== 'rejected') {
     return res.status(400).json({
         error: 'Acción inválida. Debe ser accepted o rejected.'

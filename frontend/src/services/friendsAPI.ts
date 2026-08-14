@@ -96,17 +96,21 @@ export const friendsAPI = {
     await request(`/${friendId}`, { method: 'DELETE' })
   },
 
-  async searchFriends(query: string): Promise<Friend[]> {
-    const response = await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(query)}`, {
+async searchFriends(query: string) {
+  const response = await fetch(
+    `${API_URL}/api/friends/search?q=${encodeURIComponent(query)}`,
+    {
+      method: 'GET',
       credentials: 'include',
-    })
+    },
+  )
 
-    if (!response.ok) {
-      throw new Error(await getError(response, 'No se pudo buscar amigos.'))
-    }
+  if (!response.ok) {
+    throw new Error('No se pudieron buscar tus amigos.')
+  }
 
-    return response.json()
-  },
+  return await response.json()
+},
 
   async getFriendProfile(friendId: number): Promise<FriendProfile> {
     const response = await fetch(`${API_URL}/api/friends/${friendId}/profile`, {
