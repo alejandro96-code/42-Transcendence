@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
@@ -121,13 +121,13 @@ export function Header() {
     <div className='header-container'>
       <div className='header-bar'>
         <div className='header-nav'>
-          <Link to='/perfil' className='header-brand'>
+          <div className='header-brand'>
             <img
               src={logo42}
               alt='Logo de Transcendence'
               className='header-brand-logo'
             />
-          </Link>
+          </div>
         </div>
 
         <div className='header-mobile-controls'>
