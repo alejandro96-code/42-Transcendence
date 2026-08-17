@@ -3,6 +3,8 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
 import { Paginator, type PaginatorPageChangeEvent } from 'primereact/paginator'
+import { postsAPI } from '../services/postAPI'
+import { friendsAPI } from '../services/friendsAPI'
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
 
@@ -14,112 +16,375 @@ interface Post {
   image?: string | null
 }
 
-type FilterType = 'all' | 'my_posts' | 'friends_posts'
+interface MentionUser {
+  id: number
+  username: string
+  full_name?: string
+  avatar_url?: string
+}
+
+type FilterType = 'all' | 'my_posts' | 'mentions'
 type SortOrder = 'desc' | 'asc'
 
 interface PostFeedProps {
   readOnly?: boolean
   initialPosts?: Post[]
+  userId?: number
 }
 
-export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps) {
+export function PostFeed({
+  readOnly = false,
+  initialPosts = [],
+  userId,
+}: PostFeedProps) {
   const POSTS_PER_PAGE = 4
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [text, setText] = useState<string>('')
   const [filter, setFilter] = useState<FilterType>('all')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+
   const [image, setImage] = useState<string | null>(null)
   const [imageError, setImageError] = useState<string>('')
   const [first, setFirst] = useState(0)
+
+  const [mentionUsers, setMentionUsers] = useState<MentionUser[]>([])
+  const [showMentionSuggestions, setShowMentionSuggestions] = useState(false)
+  const [mentionStart, setMentionStart] = useState<number | null>(null)
 
   const onPageChange = (event: PaginatorPageChangeEvent) => {
     setFirst(event.first)
   }
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /*
+   * Detecta si el usuario está escribiendo una mención.
+   *
+   * Ejemplos:
+   *   "@"
+   *   "@ale"
+   *   "Hola @ale"
+   *
+   * Solo se buscan amigos mediante friendsAPI.searchFriends().
+   */
+  const handleTextChange = async (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    const value = e.target.value.slice(0, 200)
+    const cursorPosition = e.target.selectionStart
 
+    setText(value)
+
+    const textBeforeCursor = value.slice(0, cursorPosition)
+
+    const match = textBeforeCursor.match(/(^|\s)@([a-zA-Z0-9._-]*)$/)
+
+    if (!match) {
+      setShowMentionSuggestions(false)
+      setMentionUsers([])
+      setMentionStart(null)
+      return
+    }
+
+    const query = match[2]
+
+    setMentionStart(cursorPosition - query.length - 1)
+
+    try {
+      const users = await friendsAPI.searchFriends(query)
+
+      setMentionUsers(users)
+      setShowMentionSuggestions(users.length > 0)
+    } catch (error) {
+      console.error('Error buscando amigos para mencionar:', error)
+
+      setMentionUsers([])
+      setShowMentionSuggestions(false)
+    }
+  }
+
+  /*
+   * Inserta la mención seleccionada en la posición donde estaba @texto.
+   */
+  const handleMentionSelect = (user: MentionUser) => {
+    if (mentionStart === null) return
+
+    const textarea = textareaRef.current
+
+    if (!textarea) return
+
+    const cursorPosition = textarea.selectionStart
+
+    const beforeMention = text.slice(0, mentionStart)
+    const afterMention = text.slice(cursorPosition)
+
+    const mention = `@${user.username}`
+
+    const newText = `${beforeMention}${mention} ${afterMention}`.slice(0, 200)
+
+    setText(newText)
+    setShowMentionSuggestions(false)
+    setMentionUsers([])
+    setMentionStart(null)
+
+    requestAnimationFrame(() => {
+      const newCursorPosition =
+        beforeMention.length + mention.length + 1
+
+      textarea.focus()
+      textarea.setSelectionRange(
+        newCursorPosition,
+        newCursorPosition,
+      )
+    })
+  }
+
+  /*
+   * Selección de imagen.
+   */
+  const handleImageSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0]
+
     if (!file) return
 
     setImageError('')
 
-    // Validar que sea imagen
     if (!file.type.startsWith('image/')) {
       setImageError('Solo se permiten imágenes')
       return
     }
 
-    // Validar tamaño (máximo 2 MB)
     if (file.size > MAX_IMAGE_SIZE) {
-      setImageError(`La imagen es demasiado pesada. Máximo 2 MB (actual: ${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+      setImageError(
+        `La imagen es demasiado pesada. Máximo 2 MB (actual: ${(file.size / 1024 / 1024).toFixed(2)} MB)`,
+      )
       return
     }
 
-    // Convertir a base64
     const reader = new FileReader()
+
     reader.onloadend = () => {
       setImage(reader.result as string)
-      // Permite seleccionar de nuevo el mismo archivo si el usuario quiere.
+
+      // Permite volver a seleccionar el mismo archivo.
       e.target.value = ''
     }
+
     reader.readAsDataURL(file)
   }
 
-  const handlePost = () => {
-    if (!text.trim()) return
-    const newPost: Post = {
-      id: Date.now(),
-      content: text.trim(),
-      date: new Date().toLocaleString(),
-      isFromFriend: false,
-      image: image || null,
-    }
-    setPosts((currentPosts) => [newPost, ...currentPosts])
-    setText('')
-    setImage(null)
+  /*
+   * Crear publicación.
+   */
+  const handlePost = async () => {
+    const content = text.trim()
+
+    if (!content) return
+
     setImageError('')
-    setFirst(0)
+
+    try {
+      const createdPost = await postsAPI.createPost(content, image)
+
+      const newPost: Post = {
+        id: Number(
+          createdPost[0]?.id ?? createdPost.id,
+        ),
+        content:
+          createdPost[0]?.content ??
+          createdPost.content ??
+          content,
+        date: createdPost[0]?.created_at
+          ? new Date(
+              createdPost[0].created_at,
+            ).toLocaleString()
+          : new Date().toLocaleString(),
+        isFromFriend: false,
+        image:
+          createdPost[0]?.media?.[0] ??
+          image ??
+          null,
+      }
+
+      setPosts((currentPosts) => [
+        newPost,
+        ...currentPosts,
+      ])
+
+      setText('')
+      setImage(null)
+      setImageError('')
+      setFirst(0)
+
+      setShowMentionSuggestions(false)
+      setMentionUsers([])
+      setMentionStart(null)
+    } catch (error) {
+      if (error instanceof Error) {
+        setImageError(error.message)
+      } else {
+        setImageError('No se pudo publicar el post.')
+      }
+    }
   }
 
-  const filteredPosts = posts.filter((post) => {
-    if (readOnly) return true
-    if (filter === 'my_posts') return !post.isFromFriend
-    if (filter === 'friends_posts') return post.isFromFriend
-    return true
-  })
-  const orderedPosts = sortOrder === 'asc' ? [...filteredPosts].reverse() : filteredPosts
-  const paginatedPosts = orderedPosts.slice(first, first + POSTS_PER_PAGE)
-
+  /*
+   * Cargar publicaciones.
+   *
+   * En un perfil propio:
+   *   GET /api/posts
+   *
+   * En el perfil de un amigo:
+   *   GET /api/posts?user=ID
+   *
+   * En "Menciones":
+   *   GET /api/posts?filter=mentions
+   */
   useEffect(() => {
-    const lastValidFirst = Math.max(0, Math.floor((Math.max(filteredPosts.length - 1, 0)) / POSTS_PER_PAGE) * POSTS_PER_PAGE)
+    const loadPosts = async () => {
+      try {
+        const postFilter =
+          !readOnly && filter === 'mentions'
+            ? 'mentions'
+            : undefined
+
+        const data = await postsAPI.getPosts(
+          userId,
+          postFilter,
+        )
+
+        const loadedPosts: Post[] = data.map(
+          (post: any) => ({
+            id: Number(post.id),
+            content: post.content,
+            date: post.created_at
+              ? new Date(
+                  post.created_at,
+                ).toLocaleString()
+              : '',
+            isFromFriend: false,
+            image: post.media?.[0] ?? null,
+          }),
+        )
+
+        setPosts(loadedPosts)
+        setFirst(0)
+      } catch (error) {
+        if (error instanceof Error) {
+          setImageError(error.message)
+        } else {
+          setImageError(
+            'No se pudieron cargar las publicaciones.',
+          )
+        }
+
+        setPosts([])
+      }
+    }
+
+    void loadPosts()
+  }, [userId, filter, readOnly])
+
+  /*
+   * Los posts ya vienen filtrados desde el backend.
+   *
+   * Por eso no filtramos aquí por "mentions".
+   */
+  const filteredPosts = posts
+
+  const orderedPosts =
+    sortOrder === 'asc'
+      ? [...filteredPosts].reverse()
+      : filteredPosts
+
+  const paginatedPosts = orderedPosts.slice(
+    first,
+    first + POSTS_PER_PAGE,
+  )
+
+  /*
+   * Mantener la página actual válida cuando cambia
+   * el número de publicaciones.
+   */
+  useEffect(() => {
+    const lastValidFirst = Math.max(
+      0,
+      Math.floor(
+        Math.max(filteredPosts.length - 1, 0) /
+          POSTS_PER_PAGE,
+      ) * POSTS_PER_PAGE,
+    )
+
     if (first > lastValidFirst) {
       setFirst(lastValidFirst)
     }
-  }, [filteredPosts.length, first, POSTS_PER_PAGE])
+  }, [
+    filteredPosts.length,
+    first,
+    POSTS_PER_PAGE,
+  ])
 
   return (
-    <div className='posts-container'>
+    <div className="posts-container">
       <div className="surface-card border-round-sm p-3">
+
         {!readOnly && (
           <div className="posts-form">
+
             <div className="post-comment">
-              <label htmlFor="post-content" className="sr-only">Contenido de la publicación</label>
+
+              <label
+                htmlFor="post-content"
+                className="sr-only"
+              >
+                Contenido de la publicación
+              </label>
+
               <InputTextarea
                 id="post-content"
+                ref={textareaRef}
                 value={text}
-                onChange={(e) => setText(e.target.value.slice(0, 200))}
+                onChange={handleTextChange}
                 rows={3}
                 placeholder="¿Qué quieres compartir?"
-                className={`w-full post-comment-textarea ${image ? 'with-image' : ''}`}
+                className={`w-full post-comment-textarea ${
+                  image ? 'with-image' : ''
+                }`}
                 autoResize
                 maxLength={200}
               />
-              
+
+              {showMentionSuggestions &&
+                mentionUsers.length > 0 && (
+                  <div className="mention-suggestions">
+                    {mentionUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        className="mention-suggestion"
+                        onMouseDown={(event) => {
+                          event.preventDefault()
+                          handleMentionSelect(user)
+                        }}
+                      >
+                        <div className="mention-user-info">
+                          <span className="mention-username">
+                            @{user.username}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
               <small className="character-counter">
                 {text.length}/200
               </small>
-              
+
               {image && (
                 <div className="preview-image-container">
                   <img
@@ -127,10 +392,30 @@ export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps)
                     alt="Preview"
                     className="preview-image"
                   />
+
+                  <Button
+                    type="button"
+                    className="delete-imagen-button"
+                    severity="danger"
+                    rounded
+                    text
+                    icon="pi pi-times"
+                    aria-label="Quitar imagen"
+                    onClick={() => {
+                      setImage(null)
+                      setImageError('')
+                    }}
+                  />
                 </div>
               )}
 
-              <label htmlFor="post-image-upload" className="sr-only">Añadir imagen a la publicación</label>
+              <label
+                htmlFor="post-image-upload"
+                className="sr-only"
+              >
+                Añadir imagen a la publicación
+              </label>
+
               <input
                 id="post-image-upload"
                 ref={fileInputRef}
@@ -142,54 +427,110 @@ export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps)
 
               <div className="post-actions">
                 <Button
-                  severity={image ? 'success' : 'secondary'}
+                  severity={
+                    image ? 'success' : 'secondary'
+                  }
                   text
                   className="cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                > {image ? "Imagen seleccionada ✓" : "Añadir imagen"}
+                  onClick={() =>
+                    fileInputRef.current?.click()
+                  }
+                >
+                  {image
+                    ? 'Imagen seleccionada ✓'
+                    : 'Añadir imagen'}
                 </Button>
+
                 <Button
-                onClick={handlePost}
-                disabled={!text.trim()}
-                > Publicar
+                  onClick={handlePost}
+                  disabled={!text.trim()}
+                >
+                  Publicar
                 </Button>
               </div>
 
-              {imageError && <small className="image-error">{imageError}</small>}
+              {imageError && (
+                <small className="image-error">
+                  {imageError}
+                </small>
+              )}
             </div>
-            
-            <div className="flex gap-2 mt-4 mb-4">
-              <Button
-                onClick={() => setFilter('my_posts')}
-                severity={filter === 'my_posts' ? 'info' : 'secondary'}
-                text={filter !== 'my_posts'}
-              > Tus posts
-              </Button>
-              <Button
-                onClick={() => setFilter('friends_posts')}
-                severity={filter === 'friends_posts' ? 'info' : 'secondary'}
-                text={filter !== 'friends_posts'}
-              > Menciones
-              </Button>
-              <Button
-                onClick={() => {
-                  setSortOrder((currentOrder) => (currentOrder === 'desc' ? 'asc' : 'desc'))
-                  setFirst(0)
-                }}
-              > {sortOrder === 'desc' ? '+ antiguo primero' : '+ reciente primero'}
-              </Button>
-            </div>
+
+            {!readOnly && (
+              <div className="flex gap-2 mt-4 mb-4">
+
+                <Button
+                  onClick={() => {
+                    setFilter('my_posts')
+                    setFirst(0)
+                  }}
+                  severity={
+                    filter === 'my_posts'
+                      ? 'info'
+                      : 'secondary'
+                  }
+                  text={filter !== 'my_posts'}
+                >
+                  Tus posts
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setFilter('mentions')
+                    setFirst(0)
+                  }}
+                  severity={
+                    filter === 'mentions'
+                      ? 'info'
+                      : 'secondary'
+                  }
+                  text={filter !== 'mentions'}
+                >
+                  Menciones
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setSortOrder(
+                      (currentOrder) =>
+                        currentOrder === 'desc'
+                          ? 'asc'
+                          : 'desc',
+                    )
+                    setFirst(0)
+                  }}
+                >
+                  {sortOrder === 'desc'
+                    ? '+ antiguo primero'
+                    : '+ reciente primero'}
+                </Button>
+
+              </div>
+            )}
+
           </div>
         )}
 
-        {/* Sección de posts - ocupa espacio restante con scroll */}
+        {/* Lista de publicaciones */}
         <div className="posts-list">
+
           {filteredPosts.length === 0 && (
-            <p className="text-color-secondary text-center">Aún no hay publicaciones.</p>
+            <p className="text-color-secondary text-center">
+              {filter === 'mentions'
+                ? 'No tienes menciones.'
+                : 'Aún no hay publicaciones.'}
+            </p>
           )}
+
           {paginatedPosts.map((post) => (
-            <Card key={post.id} className="w-full">
-              <p className="texto mt-0 mb-5">{post.content}</p>
+            <Card
+              key={post.id}
+              className="w-full"
+            >
+              <p className="texto mt-0 mb-5">
+                {post.content}
+              </p>
+
               {post.image && (
                 <img
                   src={post.image}
@@ -197,10 +538,15 @@ export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps)
                   className="post-image"
                 />
               )}
-              <p className="fecha text-color-secondary">{post.date}</p>
+
+              <p className="fecha text-color-secondary">
+                {post.date}
+              </p>
             </Card>
           ))}
+
         </div>
+
         {filteredPosts.length > POSTS_PER_PAGE && (
           <div className="card">
             <Paginator
@@ -208,11 +554,15 @@ export function PostFeed({ readOnly = false, initialPosts = [] }: PostFeedProps)
               rows={POSTS_PER_PAGE}
               totalRecords={filteredPosts.length}
               onPageChange={onPageChange}
-              template={{ layout: 'PrevPageLink CurrentPageReport NextPageLink' }}
+              template={{
+                layout:
+                  'PrevPageLink CurrentPageReport NextPageLink',
+              }}
               className="post-paginator"
-              />
+            />
           </div>
         )}
+
       </div>
     </div>
   )

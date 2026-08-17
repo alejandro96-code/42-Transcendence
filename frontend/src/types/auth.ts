@@ -1,8 +1,10 @@
 export interface User {
   id: number
-  intra_id: string | null
   username: string
-  email: string
   full_name: string
-  avatar_url: string
+  email: string
+  avatar_url?: string | null
+  profession?: string | null
+  description?: string | null
+  is_intra_user?: boolean
 }

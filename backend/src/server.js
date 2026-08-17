@@ -10,11 +10,14 @@ import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
-import { isAuthenticated } from "./utils.js"
+import { isAuthenticated, formatErrorJson } from "./utils.js"
+import { containsProfanity } from "./profanity.js"
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PROFILE_PROFESSION_MAX_LENGTH = 80;
+const PROFILE_DESCRIPTION_MAX_LENGTH = 200;
 
 function normalizeUsername(value) {
     return String(value ?? '').trim();
@@ -61,11 +64,17 @@ function toPublicUser(user) {
         intra_id: rest.intra_id ?? null,
         email: rest.email ?? '',
         full_name: rest.full_name ?? rest.username ?? '',
-        avatar_url: rest.avatar_url ?? '',
+        avatar_url: rest.avatar_url || '/img/Not_image.png',
+        profession: rest.profession ?? '',
+        description: rest.description ?? '',
     };
 }
 
 async function ensureAuthSchema(pool) {
+    await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP
+    `);
     await pool.query(`
         ALTER TABLE users
         ALTER COLUMN intra_id DROP NOT NULL
@@ -73,6 +82,18 @@ async function ensureAuthSchema(pool) {
     await pool.query(`
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS password_hash TEXT
+    `);
+    await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS profession TEXT
+    `);
+    await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS description TEXT
+    `);
+    await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS is_intra_user BOOLEAN DEFAULT FALSE
     `);
     await pool.query(`
         CREATE TABLE IF NOT EXISTS messages (
@@ -104,6 +125,25 @@ async function ensureAuthSchema(pool) {
         CREATE INDEX IF NOT EXISTS friend_requests_recipient_idx
         ON friend_requests (recipient_id, status, created_at DESC)
     `);
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS posts (
+            id SERIAL PRIMARY KEY,
+            author_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            author_username VARCHAR(50) NOT NULL,
+            content TEXT NOT NULL,
+            media TEXT[] DEFAULT '{}',
+            parent INT DEFAULT 0,
+            likes INT[] DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    `);
+
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS posts_author_idx
+        ON posts (author_id, created_at DESC)
+    `);
 }
 
 function start_server() {
@@ -114,17 +154,29 @@ function start_server() {
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
     const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
-
+    const sessionSecret = process.env.SESSION_SECRET;
     console.log("Server start")
-    
-    // Middleware
+
+    const allowedOrigins = [
+        `https://${SERVER_IP}:8443`,
+        'http://localhost:3000'
+    ].filter(Boolean);
+
     app.use(cors({
-        origin: FRONTEND_URL,
+        origin: function (origin, callback) {
+            if (!origin) return callback(null, true);
+
+            if (allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error('Bloqueado por CORS: Origen no permitido'));
+            }
+        },
         credentials: true
     }));
-    app.use(express.json());
 
-    // JSONSCHEMA ERROR HANDLER
+    app.use(express.json({ limit: '5mb' }));
+
     app.use((error, request, response, next) => {
         if (error instanceof ValidationError) {
             response.status(400).json(formatErrorJson(400, "Bad request",
@@ -135,23 +187,25 @@ function start_server() {
         next(error);
     });
 
+    if (!sessionSecret) {
+        throw new Error('SESSION_SECRET no está configurado');
+    }
 
-    // Configuración de sesión
+    app.set('trust proxy', 1);
     app.use(session({
-        secret: process.env.SESSION_SECRET || 'secret-key-change-this',
+        secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000 // 24 horas
+            secure: true,
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000
         }
     }));
-
-    // Inicializar Passport
     app.use(passport.initialize());
     app.use(passport.session());
 
-    // Configuración de PostgreSQL
     const pool = new pg.Pool({
         host: process.env.DB_HOST || 'localhost',
         port: process.env.DB_PORT || 5432,
@@ -160,93 +214,126 @@ function start_server() {
         password: process.env.DB_PASSWORD || 'postgres',
     });
 
-    // Configuración de Passport con 42
     passport.use(new FortyTwoStrategy({
         clientID: process.env.FORTYTWO_CLIENT_ID,
         clientSecret: process.env.FORTYTWO_CLIENT_SECRET,
         callbackURL: FORTYTWO_CALLBACK_URL
     },
 
-    async (accessToken, refreshToken, profile, done) => {
-        try {
-            // Obtener el avatar de la API de 42
-            const avatarUrl = profile._json?.image?.link || 
-                            profile._json?.image_url || 
-                            profile.photos?.[0]?.value || 
-                            '';
+        async (accessToken, refreshToken, profile, done) => {
+            try {
 
-            // Buscar o crear usuario en la base de datos
-            const result = await pool.query(
-                'SELECT * FROM users WHERE intra_id = $1',
-                [profile.id]
-            );
+                const avatarUrl = profile._json?.image?.link ||
+                    profile._json?.image_url ||
+                    profile.photos?.[0]?.value ||
+                    '/img/Not_image.png';
 
-            let user;
-            if (result.rows.length === 0) {
-            // Crear nuevo usuario
-            const insertResult = await pool.query(
-                `INSERT INTO users (intra_id, username, email, full_name, avatar_url) 
-                VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-                [
-                    profile.id,
-                    profile.username,
-                    profile.emails?.[0]?.value || '',
-                    profile.displayName || profile.username,
-                    avatarUrl
-                ]
-            );
-            user = insertResult.rows[0];
-            } else {
-            // Actualizar avatar si cambió
-            const updateResult = await pool.query(
-                `UPDATE users SET avatar_url = $1, full_name = $2, email = $3, updated_at = CURRENT_TIMESTAMP 
-                WHERE id = $4 RETURNING *`,
-                [avatarUrl, profile.displayName || profile.username, profile.emails?.[0]?.value || '', result.rows[0].id]
-            );
-            user = updateResult.rows[0];
+                const intraUsername = `${profile.username}_42`;
+                const result = await pool.query(
+                    'SELECT * FROM users WHERE intra_id = $1',
+                    [profile.id]
+                );
+
+                let user;
+                if (result.rows.length === 0) {
+
+                    console.log(`Registrando nuevo usuario de la Intra: ${intraUsername}`);
+                    const insertResult = await pool.query(
+                        `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, is_intra_user) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+                        [
+                            profile.id,
+                            intraUsername,
+                            profile.emails?.[0]?.value || '',
+                            profile.displayName || profile.username,
+                            avatarUrl,
+                            null,
+                            null,
+                            true
+                        ]
+                    );
+                    user = insertResult.rows[0];
+                } else {
+                    console.log(`Usuario de la Intra ${intraUsername} encontrado. Actualizando datos...`);
+                    const updateResult = await pool.query(
+                        `UPDATE users 
+                    SET avatar_url = $1, full_name = $2, email = $3, updated_at = CURRENT_TIMESTAMP, is_intra_user = $4
+                    WHERE id = $5 RETURNING *`,
+                        [
+                            avatarUrl,
+                            profile.displayName || profile.username,
+                            profile.emails?.[0]?.value || '',
+                            true,
+                            result.rows[0].id
+                        ]
+                    );
+                    user = updateResult.rows[0];
+                }
+
+                return done(null, user);
+            } catch (error) {
+                console.error("Error en la estrategia de Passport 42:", error);
+                return done(error, null);
             }
+        }));
 
-            return done(null, user);
-        } catch (error) {
-            return done(error, null);
-        }
-    }));
-
-    // Serialización de usuario para la sesión
     passport.serializeUser((user, done) => {
         done(null, user.id);
     });
 
     passport.deserializeUser(async (id, done) => {
         try {
-            const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-            done(null, result.rows[0]);
+            const res = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+
+            if (!res || !res.rows || res.rows.length === 0) {
+                const error = new Error('Cuenta ya no existe');
+                error.statusCode = 401;
+                return done(error, null);
+            }
+
+            const user = res.rows[0];
+            done(null, user);
         } catch (error) {
+            console.error("Error crítico en deserializeUser:", error);
             done(error, null);
         }
     });
 
-    // Rutas de autenticación
     app.get('/api/auth/42', passport.authenticate('42'));
 
     app.get('/api/auth/42/callback',
-        passport.authenticate('42', { failureRedirect: `${FRONTEND_URL}/login` }),
+        passport.authenticate('42', {
+            failureRedirect: `${FRONTEND_URL}/`,
+        }),
         (req, res) => {
-            // Autenticación exitosa, redirigir al frontend
-            res.redirect(`${FRONTEND_URL}/callback?success=true`);
+            res.redirect(`${FRONTEND_URL}/perfil`);
         }
     );
 
-    app.get('/api/auth/me', isAuthenticated, (req, res) => {
-        res.json(toPublicUser(req.user));
-    });
+    app.get('/api/auth/me', (req, res) => {
+        if (!req.user) {
+            return res.status(200).json(null)
+        }
+
+        return res.json(toPublicUser(req.user))
+    })
 
     app.post('/api/auth/register', async (req, res) => {
         const username = normalizeUsername(req.body?.username);
         const password = String(req.body?.password ?? '');
         const fullName = normalizeText(req.body?.fullName);
         const email = normalizeText(req.body?.email).toLowerCase();
-
+        
+        if (containsProfanity(username)) {
+            return res.status(400).json({
+                error: 'El nombre de usuario contiene palabras no permitidas.'
+            });
+        }
+        if (containsProfanity(fullName)) {
+            return res.status(400).json({
+                error: 'El nombre completo contiene palabras no permitidas.'
+            });
+        }
         if (!USERNAME_REGEX.test(username)) {
             return res.status(400).json({ error: 'El usuario debe tener entre 3 y 30 caracteres (letras, números, . _ -).' });
         }
@@ -271,14 +358,12 @@ function start_server() {
             }
 
             const passwordHash = hashPassword(password);
-            const avatarInitials = username.slice(0, 2).toUpperCase() || 'US';
-            const avatarUrl = `https://via.placeholder.com/96?text=${encodeURIComponent(avatarInitials)}`;
-
+            const avatarUrl = '/img/Not_image.png';
             const result = await pool.query(
-                `INSERT INTO users (intra_id, username, email, full_name, avatar_url, password_hash)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, password_hash)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *`,
-                [null, username, email, fullName, avatarUrl, passwordHash]
+                [null, username, email, fullName, avatarUrl, null, null, passwordHash]
             );
 
             const user = result.rows[0];
@@ -325,10 +410,86 @@ function start_server() {
     app.post('/api/auth/logout', (req, res) => {
         req.logout((err) => {
             if (err) {
-            return res.status(500).json({ error: 'Error al cerrar sesión' });
+                return res.status(500).json({ error: 'Error al cerrar sesión' });
             }
             res.json({ message: 'Sesión cerrada' });
         });
+    });
+
+    app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
+        const profession = normalizeText(req.body?.profession);
+        const description = normalizeText(req.body?.description);
+        const avatarUrl = normalizeText(req.body?.avatarUrl);
+
+        if (containsProfanity(profession)) {
+            return res.status(400).json({
+                error: 'La profesión contiene palabras no permitidas.'
+            });
+        }
+
+        if (containsProfanity(description)) {
+            return res.status(400).json({
+                error: 'La descripción contiene palabras no permitidas.'
+            });
+        }
+
+        if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
+            return res.status(400).json({
+                error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.`
+            });
+        }
+
+        if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
+            return res.status(400).json({
+                error: `La descripción no puede superar ${PROFILE_DESCRIPTION_MAX_LENGTH} caracteres.`
+            });
+        }
+
+        const allowedAvatars = [
+            '/img/avatar1.png',
+            '/img/avatar2.png'
+        ];
+
+        if (!req.user.is_intra_user && avatarUrl && !allowedAvatars.includes(avatarUrl)) {
+            return res.status(400).json({
+                error: 'Avatar no válido.'
+            });
+        }
+
+        if (req.user.is_intra_user && avatarUrl) {
+            return res.status(403).json({
+                error: 'Los usuarios de 42 no pueden cambiar su avatar.'
+            });
+        }
+
+        try {
+            const result = await pool.query(
+                `UPDATE users
+                SET profession = $1,
+                    description = $2,
+                    avatar_url = CASE
+                        WHEN is_intra_user = TRUE THEN avatar_url
+                        WHEN $3 = '' THEN avatar_url
+                        ELSE $3
+                    END,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = $4
+                RETURNING *`,
+                [
+                    profession || null,
+                    description || null,
+                    avatarUrl,
+                    req.user.id
+                ]
+            );
+
+            return res.json(toPublicUser(result.rows[0]));
+        } catch (error) {
+            console.error('Error al actualizar el perfil:', error);
+            return res.status(500).json({
+                error: 'Error al actualizar el perfil.'
+            });
+        }
     });
 
     app.get('/', (req, res) => {

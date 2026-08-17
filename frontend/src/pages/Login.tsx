@@ -27,9 +27,14 @@ export function Login() {
     authAPI.initiateLogin()
   }
 
+  const switchAuthMode = (nextMode: AuthMode) => {
+    setMode(nextMode)
+    setErrorMessage('')
+  }
+
   const isRegisterMode = mode === 'register'
 
-  const handleCredentialsSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleCredentialsSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const normalizedUsername = username.trim()
     const normalizedFullName = fullName.trim()
@@ -53,18 +58,30 @@ export function Login() {
     setErrorMessage('')
     setIsSubmitting(true)
 
-    try {
-      const user = isRegisterMode
-        ? await authAPI.registerWithCredentials(normalizedUsername, password, normalizedFullName, normalizedEmail)
-        : await authAPI.loginWithCredentials(normalizedUsername, password)
+try {
+  const user = isRegisterMode
+    ? await authAPI.registerWithCredentials(
+        normalizedUsername,
+        password,
+        normalizedFullName,
+        normalizedEmail,
+      )
+    : await authAPI.loginWithCredentials(
+        normalizedUsername,
+        password,
+      )
 
-      dispatch(setUser(user))
-      navigate('/')
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo completar la autenticación.')
-    } finally {
-      setIsSubmitting(false)
-    }
+  dispatch(setUser(user))
+  navigate('/perfil')
+} catch (error) {
+  setErrorMessage(
+    error instanceof Error
+      ? error.message
+      : 'No se pudo completar la autenticación.',
+  )
+} finally {
+  setIsSubmitting(false)
+}
   }
 
   return (
@@ -156,9 +173,9 @@ export function Login() {
                 <Button
                   type="button"
                   className={`button-login ${mode === 'register' ? 'active' : ''}`}
-                  label="Registrarse"
-                  outlined={mode !== 'register'}
-                  onClick={() => setMode('register')}
+                  label={isRegisterMode ? 'Volver a Iniciar sesión' : 'Registrarse'}
+                  outlined={!isRegisterMode}
+                  onClick={() => switchAuthMode(isRegisterMode ? 'login' : 'register' )}
                 />
               </div>
               </div>

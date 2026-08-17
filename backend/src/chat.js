@@ -1,7 +1,10 @@
 import express from 'express';
 import { formatErrorJson, isAuthenticated, validate } from './utils.js';
-import { postsCreateSchema } from "./classes.js"
-import { pool } from "./db.js"
+import { pool } from './db.js';
+import { isAuthenticated } from './utils.js';
+import { containsProfanity } from './profanity.js';
+
+const router = express.Router();
 
 function getRecipientId(value) {
     const recipientId = Number.parseInt(value, 10);
@@ -72,6 +75,12 @@ async function create_message(req, res) {
         let responseBody = formatErrorJson(413, "Content Too Large", "Content must be between 1 and 1000 characters long");
         res.status(413).json(responseBody);
     }
+    
+    if (containsProfanity(content)) {
+    return res.status(400).json({
+        error: 'El mensaje contiene palabras no permitidas.'
+    });
+}
 
     const chat_users = await pool.query(
             'SELECT id FROM users WHERE (id = $1) OR (id = $2)',

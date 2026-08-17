@@ -5,14 +5,23 @@ import { InputText } from 'primereact/inputtext'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Toast } from 'primereact/toast'
 import { friendsAPI, type Friend, type PendingFriendRequest } from '../services/friendsAPI'
+import { t } from 'i18next'
 
 interface FriendsProps {
   selectedFriendId?: number | null
   onOpenChat?: (friend: { id: number; name: string }) => void
   onFriendRemoved?: (friendId: number) => void
+  readOnly?: boolean
+  ownerUserId?: number | null
 }
 
-export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }: FriendsProps) {
+export function Friends({
+  selectedFriendId = null,
+  onOpenChat,
+  onFriendRemoved,
+  readOnly = false,
+  ownerUserId = null,
+}: FriendsProps) {
   const toast = useRef<Toast>(null)
   const [friendsList, setFriendsList] = useState<Friend[]>([])
   const [pendingRequests, setPendingRequests] = useState<PendingFriendRequest[]>([])
@@ -22,9 +31,9 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
 
   const loadFriends = async () => {
     try {
-      setFriendsList(await friendsAPI.getFriends())
+      setFriendsList(ownerUserId ? await friendsAPI.getUserFriends(ownerUserId) : await friendsAPI.getFriends())
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudieron cargar los amigos.' })
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_load_error') })
     }
   }
 
@@ -32,14 +41,30 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
     try {
       setPendingRequests(await friendsAPI.getPendingRequests())
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudieron cargar las solicitudes.' })
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_load_dialog_error') })
     }
   }
 
   useEffect(() => {
     void loadFriends()
-    void loadRequests()
-  }, [])
+    if (!readOnly && !ownerUserId) {
+      void loadRequests()
+    }
+  }, [ownerUserId, readOnly])
+
+  useEffect(() => {
+    void friendsAPI.heartbeat()
+    void loadFriends()
+
+    const interval = setInterval(() => {
+      void friendsAPI.heartbeat()
+      void loadFriends()
+    }, 10000)
+
+    return () => {
+        clearInterval(interval)
+    }
+  }, [ownerUserId])
 
   const sortedFriends = useMemo(() => (
     [...friendsList].sort((a, b) => a.username.localeCompare(b.username, 'es', { sensitivity: 'base' }))
@@ -52,7 +77,7 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
   const handleAnswerRequest = (request: PendingFriendRequest, status: 'accepted' | 'rejected') => {
     const accepted = status === 'accepted'
     confirmDialog({
-      message: `¿${accepted ? 'Aceptar' : 'Rechazar'} la solicitud de amistad de ${request.username}?`,
+      message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${(t('friends_confirm_accept_msg'))} ${request.username}?`,
       header: 'Confirmar',
       icon: accepted ? 'pi pi-check' : 'pi pi-times',
       accept: async () => {
@@ -60,9 +85,9 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
           await friendsAPI.answerRequest(request.id, status)
           await loadRequests()
           if (accepted) await loadFriends()
-          toast.current?.show({ severity: accepted ? 'success' : 'info', summary: accepted ? 'Solicitud aceptada' : 'Solicitud rechazada', detail: accepted ? `${request.username} ya es tu amigo.` : `Has rechazado la solicitud de ${request.username}.` })
+          toast.current?.show({ severity: accepted ? 'success' : 'info', summary: accepted ? t('friends_request_accepted') : t('friends_request_rejected'), detail: accepted ? `${request.username} ${t('friends_new_friend')}` : `${t('friends_no_new_fried')} ${request.username}.` })
         } catch (error) {
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudo responder a la solicitud.' })
+          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_request_response_error')})
         }
       },
     })
@@ -71,7 +96,7 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
   const handleSendFriendRequest = async () => {
     const nickname = friendNick.trim()
     if (!nickname) {
-      toast.current?.show({ severity: 'warn', summary: 'Nick requerido', detail: 'Introduce un nick para enviar la solicitud.' })
+      toast.current?.show({ severity: 'warn', summary: t('friends_toast_req_title'), detail: t('friends_toast_req_detail') })
       return
     }
 
@@ -79,15 +104,15 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
       await friendsAPI.sendRequest(nickname)
       setFriendNick('')
       setIsAddFriendOpen(false)
-      toast.current?.show({ severity: 'success', summary: 'Solicitud enviada', detail: `Se envió la solicitud a ${nickname}.` })
+      toast.current?.show({ severity: 'success', summary: t('friends_toast_sent_title'), detail: `${t('friends_toast_sent_detail')} ${nickname}.` })
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudo enviar la solicitud.' })
+      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_request_send_error') })
     }
   }
 
   const handleRemoveFriend = (friend: Friend) => {
     confirmDialog({
-      message: `¿Eliminar a ${friend.username} de tus amigos?`,
+      message: `¿Eliminar a ${friend.username} de tus amigos?`, //transate pendent
       header: 'Confirmar',
       icon: 'pi pi-times',
       accept: async () => {
@@ -95,9 +120,9 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
           await friendsAPI.removeFriend(friend.id)
           await loadFriends()
           onFriendRemoved?.(friend.id)
-          toast.current?.show({ severity: 'info', summary: 'Eliminado', detail: `${friend.username} ha sido eliminado.` })
+          toast.current?.show({ severity: 'info', summary: 'Eliminado', detail: `${friend.username} ${t('friends_removed_message')}` })
         } catch (error) {
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : 'No se pudo eliminar el amigo.' })
+          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_remove_error') })
         }
       },
     })
@@ -109,12 +134,14 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
       <ConfirmDialog />
       <div className="surface-card border-round-sm p-3">
         <div className="friends-tabs">
-          <button type="button" className={`friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
+          <button type="button" className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
             <span>Amigos ({friendsList.length})</span>
-            <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
+            {!readOnly && (
+              <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
+            )}
           </button>
-          {pendingRequests.length > 0 && (
-            <button type="button" className={`friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
+          {!readOnly && !ownerUserId && pendingRequests.length > 0 && (
+            <button type="button" className={`p-button-friends friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
               Solicitudes ({pendingRequests.length})
             </button>
           )}
@@ -124,16 +151,20 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
             <section className="friends-section">
               {sortedFriends.length > 0 ? <div className="friends-list">{sortedFriends.map((friend) => (
                 <div key={friend.id} className="friend-card">
-                  <div className="friend-info"><div className="friend-details"><h4 className="mb-0"><span className="status-dot offline" />{friend.username}</h4></div></div>
-                  <div className="friend-actions">
-                    <Button icon="pi pi-eye" aria-label={`Abrir chat con ${friend.username}`} className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`} tooltip={`Abrir chat con ${friend.username}`} onClick={() => onOpenChat?.({ id: friend.id, name: friend.username })} />
-                    <Button icon="pi pi-times" label="Eliminar amigo" className="p-button-rounded p-button-danger p-button-text p-button-sm" tooltip="Eliminar" onClick={() => handleRemoveFriend(friend)}>Eliminar amigos</Button>
+                  <div className="friend-info"><div className="friend-details"><h4 className="mb-0">        <span
+                        className={`online-status ${ friend.is_online ? 'online' : 'offline'}`}/><span>{friend.username}</span></h4></div></div><div className="friend-actions">
+                    {!readOnly && !ownerUserId && (
+                      <>
+                        <Button icon="pi pi-eye" aria-label={`Abrir chat con ${friend.username}`} className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`} tooltip={`Abrir chat con ${friend.username}`} onClick={() => onOpenChat?.({ id: friend.id, name: friend.username })} />
+                        <Button icon="pi pi-times" label="Eliminar amigo" className="p-button-rounded p-button-danger p-button-text p-button-sm" tooltip="Eliminar" onClick={() => handleRemoveFriend(friend)}>Eliminar amigos</Button>
+                      </>
+                    )}
                   </div>
                 </div>
-              ))}</div> : <div className="empty-state"><i className="pi pi-heart-fill" /><p>No tienes amigos aún</p></div>}
+              ))}</div> : <div className="empty-state"><i className="pi pi-heart-fill" /><p>{t('friends_empty_state')}</p></div>}
             </section>
           )}
-          {activeSection === 'requests' && pendingRequests.length > 0 && (
+          {!readOnly && !ownerUserId && activeSection === 'requests' && pendingRequests.length > 0 && (
             <section className="friends-section"><div className="requests-list">{pendingRequests.map((request) => (
               <div key={request.id} className="request-card">
                 <div className="request-info"><div className="request-details"><h4 className="mb-0">{request.username}</h4><small className="text-secondary">{new Date(request.created_at).toLocaleDateString('es-ES')}</small></div></div>
@@ -146,16 +177,19 @@ export function Friends({ selectedFriendId = null, onOpenChat, onFriendRemoved }
           )}
         </div>
       </div>
-      <Dialog header="Nueva solicitud de amistad" visible={isAddFriendOpen} onHide={() => { setIsAddFriendOpen(false); setFriendNick('') }} className="add-friend-dialog">
+      {!readOnly && !ownerUserId && (
+        <Dialog header="Nueva solicitud de amistad" visible={isAddFriendOpen} onHide={() => { setIsAddFriendOpen(false); setFriendNick('') }} className="add-friend-dialog">
         <div className="flex flex-column gap-3">
           <span>Escribe el nick del usuario al que quieres enviar la solicitud.</span>
+          <span>Si el usuario es pertenece a 42 añade "_42" al final de su nick.</span>
           <InputText value={friendNick} onChange={(event) => setFriendNick(event.target.value)} placeholder="ejemplo: alejanr2" autoFocus onKeyDown={(event) => { if (event.key === 'Enter') void handleSendFriendRequest() }} />
           <div className="flex justify-content-end gap-2">
             <Button label="Cancelar" text onClick={() => { setIsAddFriendOpen(false); setFriendNick('') }} />
             <Button label="Enviar solicitud" icon="pi pi-send" onClick={() => void handleSendFriendRequest()} />
           </div>
         </div>
-      </Dialog>
+        </Dialog>
+      )}
     </div>
   )
 }

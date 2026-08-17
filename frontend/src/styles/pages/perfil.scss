@@ -42,7 +42,15 @@
     flex: 1;
     min-height: 0;
   }
+    .profile-avatar-option {
+    text-align: center;
+    margin: 5px;
+    img{
+      width: 100px;
+    }
+  }
 }
+
 
 .perfil-layout{
   .content-grid {

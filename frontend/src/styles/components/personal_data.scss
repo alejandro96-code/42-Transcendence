@@ -22,9 +22,32 @@
     {
         margin-bottom: 2rem;
     }
+    .profile-avatar-selector{
+        position: absolute;
+        top: 1px;
+        z-index: 99;
+    }
 
-    .profile-img{
-        text-align: center;
+    .profile-avatar-options{
+        display: inline-flex;
+        background-color: $color-button;
+        border-radius: 5px;
+        margin: 10px;
+    }
+
+    .profile-img {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+    }
+    .profile-avatar-upload {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 34px;
+        height: 34px;
+        z-index: 2;
     }
 
     .profile-title,
@@ -45,9 +68,62 @@
         margin-bottom: 1rem;
     }
 
+    .profile-value {
+        margin: 0;
+        padding: 0.65rem 0.85rem;
+        border-radius: $radius-sm;
+        background: rgba($color-1, 0.18);
+        border: 1px solid rgba($color-5, 0.18);
+        min-height: 2.5rem;
+        display: flex;
+        align-items: center;
+        color: $color-text-write;
+    }
+
+    .profile-description {
+        align-items: flex-start;
+        white-space: pre-wrap;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .profile-actions {
+        margin-top: 0.5rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .profile-actions__group {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .profile-error {
+        margin: 0.75rem 0 0;
+        color: #ffd2d2;
+        font-size: 0.92rem;
+    }
+
     .profile-input-textarea::placeholder{
         font-style: italic;
         font-size: 14px;
+    }
+    
+    .p-button {
+        background: $color-button;
+        color: $color-text-write;
+        border-radius: $radius-xs;
+        border-color: $color-button;
+        padding: 0.50rem 1.00rem;
+        font-size: 0.75rem;
+
+        &:hover {
+            background: $color-button-hover;
+            color: $color-text-write;
+            border-color: $color-text-write;
+        }
     }
 
 }

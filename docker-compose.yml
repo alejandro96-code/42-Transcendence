@@ -1,14 +1,25 @@
-# Frontend y Backend
-# La base de datos corre en docker-compose.db.yml (separada)
-
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: transcendence-nginx
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - transcendence-network
+
   frontend:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile
     container_name: transcendence-frontend
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     volumes:
       - .:/app
       - /app/node_modules
@@ -16,7 +27,7 @@ services:
       - NODE_ENV=development
       - SERVER_IP=${SERVER_IP:?SERVER_IP is required}
       - VITE_SERVER_IP=${SERVER_IP:?SERVER_IP is required}
-      - VITE_API_URL=http://${SERVER_IP:?SERVER_IP is required}:4000
+      - VITE_API_URL=https://${SERVER_IP:?SERVER_IP is required}:8443
     stdin_open: true
     tty: true
     networks:
@@ -27,8 +38,8 @@ services:
       context: .
       dockerfile: ./backend/Dockerfile
     container_name: transcendence-backend
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"
     volumes:
       - .:/app
       - /app/node_modules
@@ -37,8 +48,8 @@ services:
     environment:
       - NODE_ENV=development
       - SERVER_IP=${SERVER_IP:?SERVER_IP is required}
-      - FRONTEND_URL=http://${SERVER_IP:?SERVER_IP is required}:3000
-      - FORTYTWO_CALLBACK_URL=http://${SERVER_IP:?SERVER_IP is required}:4000/api/auth/42/callback
+      - FRONTEND_URL=https://${SERVER_IP:?SERVER_IP is required}:8443
+      - FORTYTWO_CALLBACK_URL=https://${SERVER_IP:?SERVER_IP is required}:8443/api/auth/42/callback
       - DB_HOST=postgres
     stdin_open: true
     tty: true

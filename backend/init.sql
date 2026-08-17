@@ -12,7 +12,10 @@ CREATE TABLE IF NOT EXISTS users (
     title VARCHAR(25) DEFAULT "Student",
     bio VARCHAR(140) DEFAULT "I'm using Transcendence!",
     avatar_url TEXT,
+    profession TEXT,
+    description TEXT,
     password_hash TEXT,
+    last_seen TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
