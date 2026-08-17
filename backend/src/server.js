@@ -158,16 +158,15 @@ function start_server() {
     console.log("Server start")
 
     const allowedOrigins = [
-        'http://localhost:3000',
-        'http://10.14.8.6:3000',
-        process.env.FRONTEND_URL
+        `https://${SERVER_IP}:8443`,
+        'http://localhost:3000'
     ].filter(Boolean);
 
     app.use(cors({
         origin: function (origin, callback) {
             if (!origin) return callback(null, true);
 
-            if (allowedOrigins.indexOf(origin) !== -1) {
+            if (allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
                 callback(new Error('Bloqueado por CORS: Origen no permitido'));
@@ -175,6 +174,7 @@ function start_server() {
         },
         credentials: true
     }));
+
     app.use(express.json({ limit: '5mb' }));
 
     app.use((error, request, response, next) => {
@@ -191,12 +191,15 @@ function start_server() {
         throw new Error('SESSION_SECRET no está configurado');
     }
 
+    app.set('trust proxy', 1);
     app.use(session({
         secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: process.env.NODE_ENV === 'production',
+            secure: true,
+            httpOnly: true,
+            sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
         }
     }));
@@ -299,15 +302,21 @@ function start_server() {
     app.get('/api/auth/42', passport.authenticate('42'));
 
     app.get('/api/auth/42/callback',
-        passport.authenticate('42', { failureRedirect: `${FRONTEND_URL}/login` }),
+        passport.authenticate('42', {
+            failureRedirect: `${FRONTEND_URL}/`,
+        }),
         (req, res) => {
-            res.redirect(`${FRONTEND_URL}/callback?success=true`);
+            res.redirect(`${FRONTEND_URL}/perfil`);
         }
     );
 
-    app.get('/api/auth/me', isAuthenticated, (req, res) => {
-        res.json(toPublicUser(req.user));
-    });
+    app.get('/api/auth/me', (req, res) => {
+        if (!req.user) {
+            return res.status(200).json(null)
+        }
+
+        return res.json(toPublicUser(req.user))
+    })
 
     app.post('/api/auth/register', async (req, res) => {
         const username = normalizeUsername(req.body?.username);
@@ -410,7 +419,8 @@ function start_server() {
     app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
         const profession = normalizeText(req.body?.profession);
         const description = normalizeText(req.body?.description);
-        
+        const avatarUrl = normalizeText(req.body?.avatarUrl);
+
         if (containsProfanity(profession)) {
             return res.status(400).json({
                 error: 'La profesión contiene palabras no permitidas.'
@@ -422,28 +432,63 @@ function start_server() {
                 error: 'La descripción contiene palabras no permitidas.'
             });
         }
+
         if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
-            return res.status(400).json({ error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.` });
+            return res.status(400).json({
+                error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.`
+            });
         }
+
         if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
-            return res.status(400).json({ error: `La descripción no puede superar ${PROFILE_DESCRIPTION_MAX_LENGTH} caracteres.` });
+            return res.status(400).json({
+                error: `La descripción no puede superar ${PROFILE_DESCRIPTION_MAX_LENGTH} caracteres.`
+            });
+        }
+
+        const allowedAvatars = [
+            '/img/avatar1.png',
+            '/img/avatar2.png'
+        ];
+
+        if (!req.user.is_intra_user && avatarUrl && !allowedAvatars.includes(avatarUrl)) {
+            return res.status(400).json({
+                error: 'Avatar no válido.'
+            });
+        }
+
+        if (req.user.is_intra_user && avatarUrl) {
+            return res.status(403).json({
+                error: 'Los usuarios de 42 no pueden cambiar su avatar.'
+            });
         }
 
         try {
             const result = await pool.query(
                 `UPDATE users
-                 SET profession = $1,
-                     description = $2,
-                     updated_at = CURRENT_TIMESTAMP
-                 WHERE id = $3
-                 RETURNING *`,
-                [profession || null, description || null, req.user.id]
+                SET profession = $1,
+                    description = $2,
+                    avatar_url = CASE
+                        WHEN is_intra_user = TRUE THEN avatar_url
+                        WHEN $3 = '' THEN avatar_url
+                        ELSE $3
+                    END,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = $4
+                RETURNING *`,
+                [
+                    profession || null,
+                    description || null,
+                    avatarUrl,
+                    req.user.id
+                ]
             );
 
             return res.json(toPublicUser(result.rows[0]));
         } catch (error) {
             console.error('Error al actualizar el perfil:', error);
-            return res.status(500).json({ error: 'Error al actualizar el perfil.' });
+            return res.status(500).json({
+                error: 'Error al actualizar el perfil.'
+            });
         }
     });
 

@@ -1,5 +1,5 @@
 -- Usuario local de prueba para desarrollo.
--- Credenciales: mockuser / mockpass123
+-- Credenciales: admin / admin123
 -- La contraseña usa el mismo formato scrypt (salt:hash) que el backend.
 
 INSERT INTO users (
@@ -13,14 +13,14 @@ INSERT INTO users (
     password_hash
 )
 VALUES (
-    'mock-user-001',
-    'mockuser',
-    'mockuser@example.test',
-    'Usuario Mock',
+    'Admin-user',
+    'admin',
+    'admin@example.com',
+    'Administrator',
     '/img/Not_image.png',
-    'Desarrollador/a',
-    'Usuario de prueba creado con make mock-user.',
-    '0123456789abcdef0123456789abcdef:c10c20060f292ede4dc69a8c538d657d2171f5aeba911215f9a6bb524137ef7436ef822a71a1c3d1848ce6be6d31e91b0230bcd5ad776b5391e07c06456c41fd'
+    'Administrator of Social Page',
+    'Administrator of Social page that can do all',
+    '0123456789abcdef0123456789abcdef:b73d71a9980ff5c0b357becdf2a10bba8841da7a1ad820ce28e15f2b8622fcdb8942397c8791c6c12807bb5afbd4a9ec855dfa0207d3e4b753a103246e03c0ee'
 )
 ON CONFLICT (username) DO UPDATE SET
     intra_id = EXCLUDED.intra_id,

@@ -58,18 +58,30 @@ export function Login() {
     setErrorMessage('')
     setIsSubmitting(true)
 
-    try {
-      const user = isRegisterMode
-        ? await authAPI.registerWithCredentials(normalizedUsername, password, normalizedFullName, normalizedEmail)
-        : await authAPI.loginWithCredentials(normalizedUsername, password)
+try {
+  const user = isRegisterMode
+    ? await authAPI.registerWithCredentials(
+        normalizedUsername,
+        password,
+        normalizedFullName,
+        normalizedEmail,
+      )
+    : await authAPI.loginWithCredentials(
+        normalizedUsername,
+        password,
+      )
 
-      dispatch(setUser(user))
-      navigate('/')
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'No se pudo completar la autenticación.')
-    } finally {
-      setIsSubmitting(false)
-    }
+  dispatch(setUser(user))
+  navigate('/perfil')
+} catch (error) {
+  setErrorMessage(
+    error instanceof Error
+      ? error.message
+      : 'No se pudo completar la autenticación.',
+  )
+} finally {
+  setIsSubmitting(false)
+}
   }
 
   return (
