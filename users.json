@@ -1,0 +1,32 @@
+{
+    "users":[
+        {
+            "name": "Alejandro",
+            "password": "Alejandro123!"
+        },
+        {
+            "name": "Manolo",
+            "password": "Manolo123!"
+        },
+        {
+            "name": "Juanjo",
+            "password": "Juanjo123!"
+        },
+        {
+            "name": "Alejandra",
+            "password": "Alejandra123!"
+        },
+        {
+            "name": "Manola",
+            "password": "Manola123!"
+        },
+        {
+            "name": "Juanja",
+            "password": "Juanja123!"
+        },
+        {
+            "name": "UchijaSlayer",
+            "password": "UchijaSlayer123!"
+        }
+        ]
+}
