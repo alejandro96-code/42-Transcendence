@@ -100,14 +100,12 @@ export function Header() {
     { label: 'EN', value: 'en' },
   ]
 
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    i18n.language || 'es',
-  )
+  const currentLanguage =
+    languageOptions.find((opt) => i18n.language?.startsWith(opt.value))?.value ||
+    'es'
 
   const handleLanguageChange = (e: { value: string }) => {
-    const newLang = e.value
-    setSelectedLanguage(newLang)
-    i18n.changeLanguage(newLang)
+    i18n.changeLanguage(e.value)
   }
 
   const handleLogout = async () => {
@@ -124,7 +122,7 @@ export function Header() {
           <div className='header-brand'>
             <img
               src={logo42}
-              alt='Logo de Transcendence'
+              alt={t('header_logo_alt')}
               className='header-brand-logo'
             />
           </div>
@@ -133,7 +131,7 @@ export function Header() {
         <div className='header-mobile-controls'>
           <div className='header-mobile-language'>
             <Dropdown
-              value={selectedLanguage}
+              value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
               className='p-inputtext-sm'
@@ -149,7 +147,7 @@ export function Header() {
             >
               <img
                 src={currentUser.avatar_url || '/img/Not_image.png'}
-                alt={`Avatar de ${currentUser.username}`}
+                alt={t('header_avatar_alt', { name: currentUser.username })}
                 className='header-avatar'
               />
             </button>
@@ -169,7 +167,7 @@ export function Header() {
         <div className='header-actions'>
           <div className='header-languages-wrapper'>
             <Dropdown
-              value={selectedLanguage}
+              value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
               className='p-inputtext-sm'
@@ -185,7 +183,7 @@ export function Header() {
             >
               <img
                 src={currentUser.avatar_url || '/img/Not_image.png'}
-                alt={`Avatar de ${currentUser.username}`}
+                alt={t('header_avatar_alt', { name: currentUser.username })}
                 className='header-avatar'
               />
             </button>
@@ -193,12 +191,12 @@ export function Header() {
 
           <div className='header-search-wrapper'>
             <label htmlFor='header-search' className='sr-only'>
-              Buscar amigos
+              {t('header_search_aria_label')}
             </label>
 
             <InputText
               id='header-search'
-              placeholder='Buscar amigos...'
+              placeholder={t('header_search_friends_placeholder')}
               className='header-search p-inputtext-sm'
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
@@ -212,7 +210,7 @@ export function Header() {
               <div className='header-search-results'>
                 {isSearching ? (
                   <div className='header-search-result header-search-result--empty'>
-                    Buscando...
+                    {t('header_search_loading')}
                   </div>
                 ) : friendResults.length > 0 ? (
                   friendResults.map((friend) => (
@@ -236,7 +234,7 @@ export function Header() {
                   ))
                 ) : (
                   <div className='header-search-result header-search-result--empty'>
-                    No hay amigos que coincidan
+                    {t('header_search_no_match')}
                   </div>
                 )}
               </div>
@@ -261,12 +259,12 @@ export function Header() {
         >
           <div className='header-search-wrapper header-search-wrapper--mobile'>
             <label htmlFor='header-search-mobile' className='sr-only'>
-              Buscar amigos
+              {t('header_search_aria_label')}
             </label>
 
             <InputText
               id='header-search-mobile'
-              placeholder='Buscar amigos...'
+              placeholder={t('header_search_friends_placeholder')}
               className='header-search header-search--mobile p-inputtext-sm'
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
@@ -280,7 +278,7 @@ export function Header() {
               <div className='header-search-results header-search-results--mobile'>
                 {isSearching ? (
                   <div className='header-search-result header-search-result--empty'>
-                    Buscando...
+                    {t('header_search_loading')}
                   </div>
                 ) : friendResults.length > 0 ? (
                   friendResults.map((friend) => (
@@ -304,7 +302,7 @@ export function Header() {
                   ))
                 ) : (
                   <div className='header-search-result header-search-result--empty'>
-                    No hay amigos que coincidan
+                    {t('header_search_no_match')}
                   </div>
                 )}
               </div>
