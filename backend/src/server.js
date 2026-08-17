@@ -158,16 +158,15 @@ function start_server() {
     console.log("Server start")
 
     const allowedOrigins = [
-        'http://localhost:3000',
-        'http://172.31.252.113:3000',
-        process.env.FRONTEND_URL
+        `https://${SERVER_IP}:8443`,
+        'http://localhost:3000'
     ].filter(Boolean);
 
     app.use(cors({
         origin: function (origin, callback) {
             if (!origin) return callback(null, true);
 
-            if (allowedOrigins.indexOf(origin) !== -1) {
+            if (allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
                 callback(new Error('Bloqueado por CORS: Origen no permitido'));
@@ -175,6 +174,7 @@ function start_server() {
         },
         credentials: true
     }));
+
     app.use(express.json({ limit: '5mb' }));
 
     app.use((error, request, response, next) => {
@@ -191,12 +191,13 @@ function start_server() {
         throw new Error('SESSION_SECRET no está configurado');
     }
 
+    app.set('trust proxy', 1);
     app.use(session({
         secret: sessionSecret,
         resave: false,
         saveUninitialized: false,
         cookie: {
-            secure: process.env.NODE_ENV === 'production',
+            secure: true,
             httpOnly: true,
             sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
@@ -300,15 +301,14 @@ function start_server() {
 
     app.get('/api/auth/42', passport.authenticate('42'));
 
-    app.get(
-    '/api/auth/42/callback',
-    passport.authenticate('42', {
-        failureRedirect: `${FRONTEND_URL}/`,
-    }),
-    (req, res) => {
-        res.redirect(`${FRONTEND_URL}/perfil`);
-    }
-    )
+    app.get('/api/auth/42/callback',
+        passport.authenticate('42', {
+            failureRedirect: `${FRONTEND_URL}/`,
+        }),
+        (req, res) => {
+            res.redirect(`${FRONTEND_URL}/perfil`);
+        }
+    );
 
     app.get('/api/auth/me', (req, res) => {
         if (!req.user) {
