@@ -191,7 +191,8 @@
     .p-paginator .p-paginator-last,
     .p-paginator .p-paginator-current 
     {
-        height: 1rem;
+        height: 2rem;
+        min-width: 2rem;
         margin-top: 1rem;
     }
 
