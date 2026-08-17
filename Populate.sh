@@ -7,13 +7,20 @@ if ! [[ "$NUMBER_OF_USERS" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-curl -k -X POST https://10.14.8.6:8443/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "juan.perez",
-    "password": "Password123!",
-    "fullName": "Juan Pérez",
-    "email": "juan.perez@example.com"
-  }'
+for ((i=1; i<=NUMBER_OF_USERS; i++)); do
+    CURRENT_TIME=$(date '+%Y%m%d-%H%M%S')
+    USERNAME="john.doe-${CURRENT_TIME}-${i}"
 
-echo "$NUMBER_OF_USERS"
+    curl -k -s -o /dev/null -X POST https://10.14.8.6:8443/api/auth/register \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"username\": \"$USERNAME\",
+        \"password\": \"Password123!\",
+        \"fullName\": \"John Doe\",
+        \"email\": \"$USERNAME@example.com\"
+      }"
+
+    echo "Created user: $USERNAME"
+done
+
+echo "Done! $NUMBER_OF_USERS users made whit the Password123!"
