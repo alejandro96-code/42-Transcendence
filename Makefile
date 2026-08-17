@@ -1,4 +1,4 @@
-.PHONY: install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean mock-admin
+.PHONY: install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean mock-admin populate
 
 GREEN = \033[0;32m
 BLUE = \033[0;34m
@@ -73,6 +73,13 @@ docker-up:
 
 	@echo "$(GREEN)✓ Proyecto levantado correctamente$(NC)"
 
+populate:
+	@if [ -z "$(N)" ]; then \
+		echo 'Error: N is required. Usage example: "make populate N=42"'; \
+		exit 1; \
+	fi
+	@echo "Running Populate.sh to create $(N) users"
+	@bash Populate.sh "$(N)"
 
 mock-admin:
 	@echo "$(BLUE)Esperando a PostgreSQL...$(NC)"

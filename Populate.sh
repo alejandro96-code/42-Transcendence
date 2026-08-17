@@ -23,4 +23,4 @@ for ((i=1; i<=NUMBER_OF_USERS; i++)); do
     echo "Created user: $USERNAME"
 done
 
-echo "Done! $NUMBER_OF_USERS users made whit the Password123!"
+echo "Done! $NUMBER_OF_USERS users made with the Password123!"
