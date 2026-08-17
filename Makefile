@@ -48,7 +48,7 @@ docker-up:
 
 	@echo "$(BLUE)Levantando PostgreSQL, frontend y backend...$(NC)"
 	@echo "$(BLUE)SERVER_IP: $(SERVER_IP)$(NC)"
-	@echo "$(BLUE)Frontend: http://$(SERVER_IP):3000$(NC)"
+	@echo "$(BLUE)Frontend: http://$(SERVER_IP):4242$(NC)"
 	@echo "$(BLUE)Backend: http://$(SERVER_IP):4000$(NC)"
 
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
