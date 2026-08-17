@@ -1,10 +1,7 @@
 import express from 'express';
 import { formatErrorJson, isAuthenticated, validate } from './utils.js';
 import { pool } from './db.js';
-import { isAuthenticated } from './utils.js';
 import { containsProfanity } from './profanity.js';
-
-const router = express.Router();
 
 function getRecipientId(value) {
     const recipientId = Number.parseInt(value, 10);
@@ -27,11 +24,11 @@ async function update_message(req, res) {
     }
 
     const updated_message = await pool.query(
-            'UPDATE * FROM chat_messages WHERE id = $1',
-            [
-                req.body.id, req.body.new_body, req.body.amount || 20
-            ]
-        );
+        'UPDATE * FROM chat_messages WHERE id = $1',
+        [
+            req.body.id, req.body.new_body, req.body.amount || 20
+        ]
+    );
     
 }
 
@@ -44,16 +41,16 @@ async function read_messages(req, res) {
     }
 
     const messages_lists = await pool.query(
-            `SELECT * 
-             FROM chat_messages
-             WHERE (sender_id = $1 AND receiver_id = $2) 
-                OR (sender_id = $2 AND receiver_id = $1)
-                ORDER BY created_at ASC, id ASC
-                FETCH FIRST $3 ROWS ONLY`,
-            [
-                req.user.id, recipientId, req.body.amount || 20
-            ]
-        );
+        `SELECT * 
+            FROM chat_messages
+            WHERE (sender_id = $1 AND recipient_id = $2) 
+            OR (sender_id = $2 AND recipient_id = $1)
+            ORDER BY created_at ASC, id ASC
+            FETCH FIRST $3 ROWS ONLY`,
+        [
+            req.user.id, recipientId, req.body.amount || 20
+        ]
+    );
 
     if (!messages_lists || messages_lists.rows.length === 0) {
         let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");

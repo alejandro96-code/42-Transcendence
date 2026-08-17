@@ -71,6 +71,7 @@ function toPublicUser(user) {
 }
 
 async function ensureAuthSchema(pool) {
+    /*
     await pool.query(`
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP
@@ -95,6 +96,7 @@ async function ensureAuthSchema(pool) {
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS is_intra_user BOOLEAN DEFAULT FALSE
     `);
+
     await pool.query(`
         CREATE TABLE IF NOT EXISTS messages (
             id SERIAL PRIMARY KEY,
@@ -144,6 +146,7 @@ async function ensureAuthSchema(pool) {
         CREATE INDEX IF NOT EXISTS posts_author_idx
         ON posts (author_id, created_at DESC)
     `);
+*/
 }
 
 function start_server() {
@@ -154,8 +157,8 @@ function start_server() {
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
     const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
-    const sessionSecret = process.env.SESSION_SECRET;
-    console.log("Server start")
+        const sessionSecret = process.env.SESSION_SECRET;
+        console.log("Server start")
 
     const allowedOrigins = [
         `https://${SERVER_IP}:8443`,
