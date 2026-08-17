@@ -3,6 +3,7 @@ import { InputTextarea } from 'primereact/inputtextarea'
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
 import { Paginator, type PaginatorPageChangeEvent } from 'primereact/paginator'
+import { useTranslation } from 'react-i18next'
 import { postsAPI } from '../services/postAPI'
 import { friendsAPI } from '../services/friendsAPI'
 
@@ -37,6 +38,7 @@ export function PostFeed({
   initialPosts = [],
   userId,
 }: PostFeedProps) {
+  const { t, i18n } = useTranslation()
   const POSTS_PER_PAGE = 4
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -154,13 +156,16 @@ export function PostFeed({
     setImageError('')
 
     if (!file.type.startsWith('image/')) {
-      setImageError('Solo se permiten imágenes')
+      setImageError(t('posts_err_not_an_image'))
       return
     }
 
     if (file.size > MAX_IMAGE_SIZE) {
       setImageError(
-        `La imagen es demasiado pesada. Máximo 2 MB (actual: ${(file.size / 1024 / 1024).toFixed(2)} MB)`,
+        t('posts_err_image_too_large', {
+          maxSize: '2 MB',
+          currentSize: (file.size / 1024 / 1024).toFixed(2),
+        }),
       )
       return
     }
@@ -190,6 +195,13 @@ export function PostFeed({
     try {
       const createdPost = await postsAPI.createPost(content, image)
 
+      const locale =
+        i18n.language === 'en'
+          ? 'en-US'
+          : i18n.language === 'eu'
+            ? 'eu-ES'
+            : 'es-ES'
+
       const newPost: Post = {
         id: Number(
           createdPost[0]?.id ?? createdPost.id,
@@ -201,8 +213,8 @@ export function PostFeed({
         date: createdPost[0]?.created_at
           ? new Date(
               createdPost[0].created_at,
-            ).toLocaleString()
-          : new Date().toLocaleString(),
+            ).toLocaleString(locale)
+          : new Date().toLocaleString(locale),
         isFromFriend: false,
         image:
           createdPost[0]?.media?.[0] ??
@@ -227,7 +239,7 @@ export function PostFeed({
       if (error instanceof Error) {
         setImageError(error.message)
       } else {
-        setImageError('No se pudo publicar el post.')
+        setImageError(t('posts_err_publish'))
       }
     }
   }
@@ -257,6 +269,13 @@ export function PostFeed({
           postFilter,
         )
 
+        const locale =
+          i18n.language === 'en'
+            ? 'en-US'
+            : i18n.language === 'eu'
+              ? 'eu-ES'
+              : 'es-ES'
+
         const loadedPosts: Post[] = data.map(
           (post: any) => ({
             id: Number(post.id),
@@ -264,7 +283,7 @@ export function PostFeed({
             date: post.created_at
               ? new Date(
                   post.created_at,
-                ).toLocaleString()
+                ).toLocaleString(locale)
               : '',
             isFromFriend: false,
             image: post.media?.[0] ?? null,
@@ -277,9 +296,7 @@ export function PostFeed({
         if (error instanceof Error) {
           setImageError(error.message)
         } else {
-          setImageError(
-            'No se pudieron cargar las publicaciones.',
-          )
+          setImageError(t('posts_err_load'))
         }
 
         setPosts([])
@@ -287,7 +304,7 @@ export function PostFeed({
     }
 
     void loadPosts()
-  }, [userId, filter, readOnly])
+  }, [userId, filter, readOnly, i18n.language])
 
   /*
    * Los posts ya vienen filtrados desde el backend.
@@ -341,7 +358,7 @@ export function PostFeed({
                 htmlFor="post-content"
                 className="sr-only"
               >
-                Contenido de la publicación
+                {t('posts_content_aria_label')}
               </label>
 
               <InputTextarea
@@ -350,7 +367,7 @@ export function PostFeed({
                 value={text}
                 onChange={handleTextChange}
                 rows={3}
-                placeholder="¿Qué quieres compartir?"
+                placeholder={t('posts_textarea_placeholder')}
                 className={`w-full post-comment-textarea ${
                   image ? 'with-image' : ''
                 }`}
@@ -389,7 +406,7 @@ export function PostFeed({
                 <div className="preview-image-container">
                   <img
                     src={image}
-                    alt="Preview"
+                    alt={t('posts_preview_image_alt')}
                     className="preview-image"
                   />
 
@@ -400,7 +417,7 @@ export function PostFeed({
                     rounded
                     text
                     icon="pi pi-times"
-                    aria-label="Quitar imagen"
+                    aria-label={t('posts_remove_image_aria_label')}
                     onClick={() => {
                       setImage(null)
                       setImageError('')
@@ -413,7 +430,7 @@ export function PostFeed({
                 htmlFor="post-image-upload"
                 className="sr-only"
               >
-                Añadir imagen a la publicación
+                {t('posts_upload_aria_label')}
               </label>
 
               <input
@@ -437,15 +454,15 @@ export function PostFeed({
                   }
                 >
                   {image
-                    ? 'Imagen seleccionada ✓'
-                    : 'Añadir imagen'}
+                    ? t('posts_btn_image_selected')
+                    : t('posts_btn_add_image')}
                 </Button>
 
                 <Button
                   onClick={handlePost}
                   disabled={!text.trim()}
                 >
-                  Publicar
+                  {t('posts_btn_publish')}
                 </Button>
               </div>
 
@@ -471,7 +488,7 @@ export function PostFeed({
                   }
                   text={filter !== 'my_posts'}
                 >
-                  Tus posts
+                  {t('posts_filter_my_posts')}
                 </Button>
 
                 <Button
@@ -486,7 +503,7 @@ export function PostFeed({
                   }
                   text={filter !== 'mentions'}
                 >
-                  Menciones
+                  {t('posts_filter_mentions')}
                 </Button>
 
                 <Button
@@ -501,8 +518,8 @@ export function PostFeed({
                   }}
                 >
                   {sortOrder === 'desc'
-                    ? '+ antiguo primero'
-                    : '+ reciente primero'}
+                    ? t('posts_sort_oldest_first')
+                    : t('posts_sort_newest_first')}
                 </Button>
 
               </div>
@@ -517,8 +534,8 @@ export function PostFeed({
           {filteredPosts.length === 0 && (
             <p className="text-color-secondary text-center">
               {filter === 'mentions'
-                ? 'No tienes menciones.'
-                : 'Aún no hay publicaciones.'}
+                ? t('posts_empty_mentions')
+                : t('posts_empty_state')}
             </p>
           )}
 
@@ -534,7 +551,7 @@ export function PostFeed({
               {post.image && (
                 <img
                   src={post.image}
-                  alt="Post image"
+                  alt={t('posts_image_alt')}
                   className="post-image"
                 />
               )}

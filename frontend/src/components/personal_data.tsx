@@ -3,6 +3,7 @@ import { Avatar } from 'primereact/avatar'
 import { Button } from 'primereact/button'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
+import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
@@ -29,6 +30,7 @@ export function PersonalData({
   readOnly = false,
   onAvatarChange,
 }: PersonalDataProps) {
+  const { t } = useTranslation()
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
   const activeUser = profileUser ?? user
@@ -112,7 +114,7 @@ export function PersonalData({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'No se pudo guardar el perfil.',
+          : t('personal_data_save_error'),
       )
     } finally {
       setIsSaving(false)
@@ -141,14 +143,11 @@ export function PersonalData({
 
       setAvatarLoadError(false)
       setShowAvatarSelector(false)
-
-      setAvatarLoadError(false)
-      setShowAvatarSelector(false)
     } catch (error) {
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : 'No se pudo cambiar el avatar.',
+          : t('personal_data_avatar_error'),
       )
     } finally {
       setIsChangingAvatar(false)
@@ -164,9 +163,9 @@ export function PersonalData({
           {hasValidAvatar ? (
             <img
               src={activeUser.avatar_url ?? ''}
-              alt={`Foto de perfil de ${
-                activeUser.full_name || activeUser.username
-              }`}
+              alt={t('personal_data_avatar_alt', {
+                name: activeUser.full_name || activeUser.username,
+              })}
               style={{
                 width: '140px',
                 height: '140px',
@@ -208,7 +207,7 @@ export function PersonalData({
                     className='p-button-text p-button-sm'
                     onClick={() => setShowAvatarSelector(false)}
                     disabled={isChangingAvatar}
-                    aria-label='Cerrar selector de avatar'
+                    aria-label={t('personal_data_close_avatar_selector')}
                   />
                 </div>
 
@@ -267,14 +266,14 @@ export function PersonalData({
                 className='profile-title text-sm'
                 htmlFor='profession'
               >
-                Profesión
+                {t('personal_data_headline_label')}
               </label>
 
               {isEditing && !readOnly ? (
                 <InputText
                   id='profession'
                   className='profile-input w-full'
-                  placeholder='Indica tu profesión...'
+                  placeholder={t('personal_data_headline_placeholder')}
                   value={form.profession}
                   onChange={(e) =>
                     handleChange(
@@ -287,7 +286,7 @@ export function PersonalData({
               ) : (
                 <p className='profile-value'>
                   {activeUser.profession?.trim() ||
-                    'Sin profesión indicada'}
+                    t('personal_data_no_profession')}
                 </p>
               )}
             </div>
@@ -297,14 +296,14 @@ export function PersonalData({
                 className='profile-free-text text-sm'
                 htmlFor='about'
               >
-                Descripción
+                {t('personal_data_about_label')}
               </label>
 
               {isEditing && !readOnly ? (
                 <InputTextarea
                   className='profile-input-textarea w-full'
                   id='about'
-                  placeholder='Descríbete en unas pocas líneas...'
+                  placeholder={t('personal_data_about_placeholder')}
                   value={form.description}
                   onChange={(e) =>
                     handleChange(
@@ -318,7 +317,7 @@ export function PersonalData({
               ) : (
                 <p className='profile-value profile-description'>
                   {activeUser.description?.trim() ||
-                    'Sin descripción todavía'}
+                    t('personal_data_no_description')}
                 </p>
               )}
             </div>
@@ -328,7 +327,7 @@ export function PersonalData({
               <div className='profile-actions'>
                 {!isEditing ? (
                   <Button
-                    label='Editar perfil'
+                    label={t('personal_data_edit_profile')}
                     icon='pi pi-pencil'
                     className='p-button-sm'
                     onClick={handleEditClick}
@@ -337,7 +336,7 @@ export function PersonalData({
                   <div className='profile-actions__group'>
 
                     <Button
-                      label='Guardar cambios'
+                      label={t('personal_data_save_changes')}
                       icon='pi pi-check'
                       className='p-button-sm'
                       loading={isSaving}
