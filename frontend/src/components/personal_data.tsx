@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import type { User } from '../types/auth'
-import { availableAvatars } from '../constants/avatars'
+import { availableAvatars } from '../hooks/avatars'
 
 interface ProfileUser {
   full_name: string

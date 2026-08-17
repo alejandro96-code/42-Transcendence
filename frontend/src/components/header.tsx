@@ -9,7 +9,7 @@ import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { friendsAPI, type Friend } from '../services/friendsAPI'
 import type { User } from '../types/auth'
-import logo42 from '../img/42.png'
+import logo42 from '../../public/img/42.png'
 
 export function Header() {
   const navigate = useNavigate()
