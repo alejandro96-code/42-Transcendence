@@ -176,7 +176,7 @@ async function create_post(req, res) {
                 formatErrorJson(
                     400,
                     "Bad Request",
-                    "El contenido contiene palabras no permitidas"
+                    "The media contains vulgar words"
                 )
             );
         }
@@ -230,12 +230,12 @@ async function create_post(req, res) {
         return res.json(new_post.rows);
 
     } catch (error) {
-        return res.status(500).json({
-            error: 'Error al crear el post.',
-            details: error.message
-        });
+        // return res.status(500).json({
+        //     error: 'Error al crear el post.',
+        //     details: error.message
+        // });
     }
-
+//something is wrong here
     const parent = req.body.parent ? req.body.parent : 0
 
     const new_post = await pool.query(
