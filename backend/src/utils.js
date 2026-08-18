@@ -12,8 +12,8 @@ export const isAuthenticated = (req, res, next) => {
 export function formatErrorJson(code, error, description) {
     const errorBody = {
         "code": code,
-        "error": error,
-        "description": description
+        "phrase": error,
+        "error": description
     }
 
     return errorBody;

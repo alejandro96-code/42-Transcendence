@@ -1,6 +1,6 @@
 import express from 'express';
 import { pool } from './db.js';
-import { isAuthenticated } from './utils.js';
+import { formatErrorJson, isAuthenticated } from './utils.js';
 
 const router = express.Router();
 
@@ -30,10 +30,8 @@ router.get('/', isAuthenticated, async (req, res) => {
 
         return res.json(result.rows);
     } catch (error) {
-        console.error('Error al obtener amigos:', error);
-        return res.status(500).json({
-            error: 'No se pudieron obtener los amigos.'
-        });
+        console.error('Error retrieving friends: ', error);
+        return res.status(500).json(formatErrorJson(500, "Internal Server Error", `Error retrieving friends: ${error}`));
     }
 });
 

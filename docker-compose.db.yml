@@ -33,5 +33,5 @@ volumes:
 
 networks:
   transcendence-network:
-    external: true
+    external: false
     name: transcendence-network
