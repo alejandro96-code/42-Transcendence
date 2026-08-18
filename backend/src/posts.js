@@ -285,10 +285,6 @@ router.patch("/likes", update_likes);
 router.delete("/", delete_post);
 router.get("/", read_posts);
 router.get("/comments", read_comments);
-router.post(
-    "/",
-    validate({ body: postsCreateSchema }),
-    create_post
-);
+router.post("/", create_post);
 
 export default router;

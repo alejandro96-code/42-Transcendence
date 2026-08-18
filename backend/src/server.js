@@ -10,7 +10,7 @@ import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
-import { isAuthenticated, formatErrorJson } from "./utils.js"
+import { isAuthenticated, formatErrorJson, hashPassword } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
 import { format } from 'path';
 
@@ -26,32 +26,6 @@ function normalizeUsername(value) {
 
 function normalizeText(value) {
     return String(value ?? '').trim();
-}
-
-function hashPassword(password) {
-    const salt = randomBytes(16).toString('hex');
-    const hash = scryptSync(password, salt, 64).toString('hex');
-    return `${salt}:${hash}`;
-}
-
-function verifyPassword(password, passwordHash) {
-    if (!passwordHash || !passwordHash.includes(':')) {
-        return false;
-    }
-
-    try {
-        const [salt, hash] = passwordHash.split(':');
-        const storedBuffer = Buffer.from(hash, 'hex');
-        const computedBuffer = Buffer.from(scryptSync(password, salt, 64).toString('hex'), 'hex');
-
-        if (storedBuffer.length !== computedBuffer.length) {
-            return false;
-        }
-
-        return timingSafeEqual(storedBuffer, computedBuffer);
-    } catch {
-        return false;
-    }
 }
 
 function toPublicUser(user) {
