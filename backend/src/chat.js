@@ -75,7 +75,7 @@ async function create_message(req, res) {
     
     if (containsProfanity(content)) {
     return res.status(400).json({
-        error: 'El mensaje contiene palabras no permitidas.'
+        error: 'The message contains non allowed or vulgar words.'
     });
 }
 

@@ -231,7 +231,7 @@ async function create_post(req, res) {
 
     } catch (error) {
         // return res.status(500).json({
-        //     error: 'Error al crear el post.',
+        //     error: 'Error creating the post.',
         //     details: error.message
         // });
     }

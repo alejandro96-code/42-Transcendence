@@ -1,7 +1,7 @@
 import express, { response } from 'express';
 import { Validator } from "express-json-validator-middleware";
 
-// Middleware para verificar autenticación
+// Middleware to verify authentication
 export const isAuthenticated = (req, res, next) => {
     if (req.isAuthenticated()) {
         return next();

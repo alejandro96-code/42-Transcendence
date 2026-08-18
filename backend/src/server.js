@@ -232,6 +232,7 @@ function start_server() {
         }),
         (req, res) => {
             res.redirect(`${FRONTEND_URL}/perfil`);
+            //TODO: if i change this to  /profile is going to break everything?
         }
     );
 
@@ -259,7 +260,7 @@ function start_server() {
             return res.status(400).json(formatErrorJson(400, "Bad request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
         }
         if (!fullName || fullName.length > 100) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters lonng'));
+            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters long'));
         }
         if (!EMAIL_REGEX.test(email) || email.length > 100) {
             return res.status(400).json(formatErrorJson(400, "Bad request", 'Invalid email'));
