@@ -1,45 +1,76 @@
 import express from 'express';
+import { formatErrorJson, isAuthenticated, validate } from './utils.js';
 import { pool } from './db.js';
-import { isAuthenticated } from './utils.js';
 import { containsProfanity } from './profanity.js';
-
-const router = express.Router();
 
 function getRecipientId(value) {
     const recipientId = Number.parseInt(value, 10);
     return Number.isInteger(recipientId) && recipientId > 0 ? recipientId : null;
 }
 
-router.get('/:recipientId', isAuthenticated, async (req, res) => {
+async function update_message(req, res) {
+
+    const original_message = await pool.query(
+        'SELECT * FROM chat_messages WHERE id = $1',
+        [
+            req.body.sender, req.body.receiver, req.body.amount || 20
+        ]
+    );
+        
+    if (!original_message || original_message.rows.length === 0) {
+        let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");
+        res.status(404).json(responseBody);
+        return;
+    }
+
+    const updated_message = await pool.query(
+        'UPDATE * FROM chat_messages WHERE id = $1',
+        [
+            req.body.id, req.body.new_body, req.body.amount || 20
+        ]
+    );
+    
+}
+
+async function read_messages(req, res) {
     const recipientId = getRecipientId(req.params.recipientId);
     if (!recipientId || recipientId === req.user.id) {
-        return res.status(400).json({ error: 'Destinatario inválido.' });
+        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
+        res.status(400).json(responseBody);
+        return;
     }
 
-    try {
-        const result = await pool.query(
-            `SELECT id, sender_id, recipient_id, content, created_at
-             FROM messages
-             WHERE (sender_id = $1 AND recipient_id = $2)
-                OR (sender_id = $2 AND recipient_id = $1)
-             ORDER BY created_at ASC, id ASC`,
-            [req.user.id, recipientId],
-        );
-        return res.json(result.rows);
-    } catch (error) {
-        console.error('Error al obtener mensajes:', error);
-        return res.status(500).json({ error: 'No se pudieron obtener los mensajes.' });
-    }
-});
+    const messages_lists = await pool.query(
+        `SELECT * 
+            FROM chat_messages
+            WHERE (sender_id = $1 AND recipient_id = $2) 
+            OR (sender_id = $2 AND recipient_id = $1)
+            ORDER BY created_at ASC, id ASC
+            FETCH FIRST $3 ROWS ONLY`,
+        [
+            req.user.id, recipientId, req.body.amount || 20
+        ]
+    );
 
-router.post('/:recipientId', isAuthenticated, async (req, res) => {
+    if (!messages_lists || messages_lists.rows.length === 0) {
+        let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");
+        res.status(404).json(responseBody);
+    } else {
+        res.json(messages_lists.rows);
+    }
+    
+}
+
+async function create_message(req, res) {
     const recipientId = getRecipientId(req.params.recipientId);
     const content = String(req.body?.content ?? '').trim();
     if (!recipientId || recipientId === req.user.id) {
-        return res.status(400).json({ error: 'Destinatario inválido.' });
-    }
-    if (!content || content.length > 1000) {
-        return res.status(400).json({ error: 'El mensaje debe tener entre 1 y 1000 caracteres.' });
+        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
+        res.status(400).json(responseBody);
+        return;
+    } else if (!content || content.length > 1000) {
+        let responseBody = formatErrorJson(413, "Content Too Large", "Content must be between 1 and 1000 characters long");
+        res.status(413).json(responseBody);
     }
     
     if (containsProfanity(content)) {
@@ -48,23 +79,74 @@ router.post('/:recipientId', isAuthenticated, async (req, res) => {
     });
 }
 
-    try {
-        const recipient = await pool.query('SELECT id FROM users WHERE id = $1', [recipientId]);
-        if (recipient.rows.length === 0) {
-            return res.status(404).json({ error: 'El usuario destinatario no existe.' });
-        }
-
-        const result = await pool.query(
-            `INSERT INTO messages (sender_id, recipient_id, content)
-             VALUES ($1, $2, $3)
-             RETURNING id, sender_id, recipient_id, content, created_at`,
-            [req.user.id, recipientId, content],
+    const chat_users = await pool.query(
+            'SELECT id FROM users WHERE (id = $1) OR (id = $2)',
+            [
+                req.body.sender, req.body.receiver
+            ]
         );
-        return res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.error('Error al enviar mensaje:', error);
-        return res.status(500).json({ error: 'No se pudo enviar el mensaje.' });
+
+    if (!chat_users || chat_users.rows.length < 2) {
+        let responseBody = formatErrorJson(404, "Not found", "Message sender or receiver not found in Database");
+        res.status(404).json(responseBody);
+        return;
     }
+
+    const new_post = await pool.query(
+            `INSERT INTO posts (sender_id, recipient_id, content)
+            VALUES($1, $2, $3) RETURNING *
+            `,
+            [
+                chat_users, chat_users.rows[0].username, content
+            ]
+        );
+
+    if (!new_post || new_post.rows.length === 0) {
+        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
+        res.status(500).json(responseBody);
+    } else {
+        res.json(new_post.rows);
+    }
+    
+}
+
+async function delete_message(req, res) {
+
+    const deleted_post = await pool.query(
+            `DELETE FROM chat_messages where id = $1`,
+            [
+                req.body.id
+            ]
+        );
+
+    if (!deleted_post || deleted_post.rows.length === 0) {
+        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
+        res.status(500).json(responseBody);
+    } else {
+        res.status(204);
+    }
+    
+}
+
+const router = express.Router();
+
+router.use(express.json());
+
+router.get("/", read_messages);
+
+router.patch("/", async (req, res) => {
+    const responseBody = await update_message(req, res);
+    res.json(responseBody);
+});
+
+router.post("/", async (req, res) => {
+    const responseBody = await create_message(req, res);
+    res.json(responseBody);
+});
+
+router.delete("/", async (req, res) => {
+    const responseBody = await delete_message(req, res);
+    res.json(responseBody);
 });
 
 export default router;

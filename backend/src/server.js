@@ -12,6 +12,7 @@ import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
 import { isAuthenticated, formatErrorJson } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
+import { format } from 'path';
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
@@ -70,82 +71,6 @@ function toPublicUser(user) {
     };
 }
 
-async function ensureAuthSchema(pool) {
-    await pool.query(`
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP
-    `);
-    await pool.query(`
-        ALTER TABLE users
-        ALTER COLUMN intra_id DROP NOT NULL
-    `);
-    await pool.query(`
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS password_hash TEXT
-    `);
-    await pool.query(`
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS profession TEXT
-    `);
-    await pool.query(`
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS description TEXT
-    `);
-    await pool.query(`
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS is_intra_user BOOLEAN DEFAULT FALSE
-    `);
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS messages (
-            id SERIAL PRIMARY KEY,
-            sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            content VARCHAR(1000) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT messages_different_users CHECK (sender_id <> recipient_id)
-        )
-    `);
-    await pool.query(`
-        CREATE INDEX IF NOT EXISTS messages_conversation_idx
-        ON messages (sender_id, recipient_id, created_at)
-    `);
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS friend_requests (
-            id SERIAL PRIMARY KEY,
-            requester_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT friend_requests_different_users CHECK (requester_id <> recipient_id),
-            CONSTRAINT friend_requests_unique_pair UNIQUE (requester_id, recipient_id)
-        )
-    `);
-    await pool.query(`
-        CREATE INDEX IF NOT EXISTS friend_requests_recipient_idx
-        ON friend_requests (recipient_id, status, created_at DESC)
-    `);
-
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS posts (
-            id SERIAL PRIMARY KEY,
-            author_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            author_username VARCHAR(50) NOT NULL,
-            content TEXT NOT NULL,
-            media TEXT[] DEFAULT '{}',
-            parent INT DEFAULT 0,
-            likes INT[] DEFAULT '{}',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    `);
-
-    await pool.query(`
-        CREATE INDEX IF NOT EXISTS posts_author_idx
-        ON posts (author_id, created_at DESC)
-    `);
-}
-
 function start_server() {
     dotenv.config();
     const app = express();
@@ -154,8 +79,8 @@ function start_server() {
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
     const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
-    const sessionSecret = process.env.SESSION_SECRET;
-    console.log("Server start")
+        const sessionSecret = process.env.SESSION_SECRET;
+        console.log("Server start")
 
     const allowedOrigins = [
         `https://${SERVER_IP}:8443`,
@@ -169,7 +94,7 @@ function start_server() {
             if (allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
-                callback(new Error('Bloqueado por CORS: Origen no permitido'));
+                callback(new Error('CORS Not allowed'));
             }
         },
         credentials: true
@@ -188,7 +113,7 @@ function start_server() {
     });
 
     if (!sessionSecret) {
-        throw new Error('SESSION_SECRET no está configurado');
+        throw new Error('SESSION_SECRET not in env');
     }
 
     app.set('trust proxy', 1);
@@ -237,7 +162,7 @@ function start_server() {
                 let user;
                 if (result.rows.length === 0) {
 
-                    console.log(`Registrando nuevo usuario de la Intra: ${intraUsername}`);
+                    console.log(`Registering new intra user: ${intraUsername}`);
                     const insertResult = await pool.query(
                         `INSERT INTO users (intra_id, username, email, full_name, avatar_url, profession, description, is_intra_user) 
                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
@@ -254,7 +179,7 @@ function start_server() {
                     );
                     user = insertResult.rows[0];
                 } else {
-                    console.log(`Usuario de la Intra ${intraUsername} encontrado. Actualizando datos...`);
+                    console.log(`Intra user ${intraUsername} found, updating`);
                     const updateResult = await pool.query(
                         `UPDATE users 
                     SET avatar_url = $1, full_name = $2, email = $3, updated_at = CURRENT_TIMESTAMP, is_intra_user = $4
@@ -272,7 +197,7 @@ function start_server() {
 
                 return done(null, user);
             } catch (error) {
-                console.error("Error en la estrategia de Passport 42:", error);
+                console.error("Error on 42 Passport strategy", error);
                 return done(error, null);
             }
         }));
@@ -286,15 +211,15 @@ function start_server() {
             const res = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
 
             if (!res || !res.rows || res.rows.length === 0) {
-                const error = new Error('Cuenta ya no existe');
-                error.statusCode = 401;
+                const error = new Error('Account does not exist');
+                error.statusCode = 404;
                 return done(error, null);
             }
 
             const user = res.rows[0];
             done(null, user);
         } catch (error) {
-            console.error("Error crítico en deserializeUser:", error);
+            console.error("Internal sever error on deserializeUser");
             done(error, null);
         }
     });
@@ -325,36 +250,32 @@ function start_server() {
         const email = normalizeText(req.body?.email).toLowerCase();
         
         if (containsProfanity(username)) {
-            return res.status(400).json({
-                error: 'El nombre de usuario contiene palabras no permitidas.'
-            });
+            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Username contains vulgar words'));
         }
         if (containsProfanity(fullName)) {
-            return res.status(400).json({
-                error: 'El nombre completo contiene palabras no permitidas.'
-            });
+            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Full name contains vulgar words'));
         }
         if (!USERNAME_REGEX.test(username)) {
-            return res.status(400).json({ error: 'El usuario debe tener entre 3 y 30 caracteres (letras, números, . _ -).' });
+            return res.status(400).json(formatErrorJson(400, "Bad request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
         }
         if (!fullName || fullName.length > 100) {
-            return res.status(400).json({ error: 'El nombre completo es obligatorio y debe tener máximo 100 caracteres.' });
+            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters lonng'));
         }
         if (!EMAIL_REGEX.test(email) || email.length > 100) {
-            return res.status(400).json({ error: 'Debes indicar un correo electrónico válido.' });
+            return res.status(400).json(formatErrorJson(400, "Bad request", 'Invalid email'));
         }
         if (password.length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json({ error: `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.` });
+            return res.status(400).json(formatErrorJson(400, "Bad request", `Password must be at least ${MIN_PASSWORD_LENGTH} long`));
         }
 
         try {
             const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
             if (existingUser.rows.length > 0) {
-                return res.status(409).json({ error: 'Ese nombre de usuario ya existe.' });
+                return res.status(409).json(formatErrorJson(409, "Conflict", 'Username already taken'));
             }
             const existingEmail = await pool.query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email]);
             if (existingEmail.rows.length > 0) {
-                return res.status(409).json({ error: 'Ese correo electrónico ya está en uso.' });
+                return res.status(409).json(formatErrorJson(409, "Conflict", 'Email already associated to an account'));
             }
 
             const passwordHash = hashPassword(password);
@@ -369,13 +290,12 @@ function start_server() {
             const user = result.rows[0];
             req.login(user, (error) => {
                 if (error) {
-                    return res.status(500).json({ error: 'No se pudo iniciar sesión tras el registro.' });
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
                 }
                 return res.status(201).json(toPublicUser(user));
             });
         } catch (error) {
-            console.error('Error en registro local:', error);
-            return res.status(500).json({ error: 'Error al registrar usuario' });
+            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
         }
     });
 
@@ -384,7 +304,7 @@ function start_server() {
         const password = String(req.body?.password ?? '');
 
         if (!username || !password) {
-            return res.status(400).json({ error: 'Usuario y contraseña son obligatorios.' });
+            return res.status(400).json(formatErrorJson(400, "Bad Request", "Username and password can't be blank"));
         }
 
         try {
@@ -392,27 +312,26 @@ function start_server() {
             const user = result.rows[0];
 
             if (!user || !verifyPassword(password, user.password_hash)) {
-                return res.status(401).json({ error: 'Credenciales inválidas.' });
+                return res.status(401).json(formatErrorJson(401, "Unauthorized", "Wrong password or username"));
             }
 
             req.login(user, (error) => {
                 if (error) {
-                    return res.status(500).json({ error: 'Error al iniciar sesión' });
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
                 }
                 return res.json(toPublicUser(user));
             });
         } catch (error) {
-            console.error('Error en login local:', error);
-            return res.status(500).json({ error: 'Error al iniciar sesión' });
+            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
         }
     });
 
     app.post('/api/auth/logout', (req, res) => {
         req.logout((err) => {
             if (err) {
-                return res.status(500).json({ error: 'Error al cerrar sesión' });
+                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${error}`));
             }
-            res.json({ message: 'Sesión cerrada' });
+            res.status(204);
         });
     });
 
@@ -422,27 +341,19 @@ function start_server() {
         const avatarUrl = normalizeText(req.body?.avatarUrl);
 
         if (containsProfanity(profession)) {
-            return res.status(400).json({
-                error: 'La profesión contiene palabras no permitidas.'
-            });
+            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Profession contains vulgar words'));
         }
 
         if (containsProfanity(description)) {
-            return res.status(400).json({
-                error: 'La descripción contiene palabras no permitidas.'
-            });
+            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Profession contains vulgar words'));
         }
 
         if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
-            return res.status(400).json({
-                error: `La profesión no puede superar ${PROFILE_PROFESSION_MAX_LENGTH} caracteres.`
-            });
+            return res.status(400).json(formatErrorJson(400, "Bad request", `Profession must be less than ${PROFILE_PROFESSION_MAX_LENGTH} characters long`));
         }
 
         if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
-            return res.status(400).json({
-                error: `La descripción no puede superar ${PROFILE_DESCRIPTION_MAX_LENGTH} caracteres.`
-            });
+            return res.status(400).json(formatErrorJson(400, "Bad request", `Profession must be less than ${PROFILE_DESCRIPTION_MAX_LENGTH} characters long`));
         }
 
         const allowedAvatars = [
@@ -451,15 +362,11 @@ function start_server() {
         ];
 
         if (!req.user.is_intra_user && avatarUrl && !allowedAvatars.includes(avatarUrl)) {
-            return res.status(400).json({
-                error: 'Avatar no válido.'
-            });
+            return res.status(400).json(formatErrorJson(400, "Bad request", "Not a valid avatar"));
         }
 
         if (req.user.is_intra_user && avatarUrl) {
-            return res.status(403).json({
-                error: 'Los usuarios de 42 no pueden cambiar su avatar.'
-            });
+            return res.status(403).json(formatErrorJson(403, "Forbidden", "42 Users can't change the avatar"));
         }
 
         try {
@@ -485,15 +392,13 @@ function start_server() {
 
             return res.json(toPublicUser(result.rows[0]));
         } catch (error) {
-            console.error('Error al actualizar el perfil:', error);
-            return res.status(500).json({
-                error: 'Error al actualizar el perfil.'
-            });
+            console.error('Error updating profile:', error);
+            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on updating user: ${error}`));
         }
     });
 
     app.get('/', (req, res) => {
-        res.json({ message: 'API de Transcendence funcionando!' });
+        res.json({ message: 'Transcendence API working!' });
     });
 
     app.get('/api/users', async (req, res) => {
@@ -501,8 +406,8 @@ function start_server() {
             const result = await pool.query('SELECT * FROM users');
             res.json(result.rows.map(toPublicUser));
         } catch (error) {
-            console.error('Error al obtener usuarios:', error);
-            res.status(500).json({ error: 'Error al obtener usuarios' });
+            console.error(`Error on user retrieval: ${error}`);
+            res.status(500).json(formatErrorJson(500, "Internal server error", `Error on user retrieval: ${error}`));
         }
     });
 
@@ -513,7 +418,7 @@ function start_server() {
             await pool.query('SELECT 1');
             res.json({ status: 'ok', database: 'connected' });
         } catch (error) {
-            res.status(500).json({ status: 'error', database: 'disconnected' });
+            res.status(500).json(formatErrorJson(500, "Internal server error", `Database disconnected`));
         }
     });
 
@@ -521,16 +426,16 @@ function start_server() {
     app.use("/api/messages", chat_endpoints);
     app.use("/api/friends", friends_endpoints);
 
-    ensureAuthSchema(pool)
-        .then(() => {
-            app.listen(PORT, '0.0.0.0', () => {
-                console.log(`Servidor corriendo en ${BACKEND_URL}`);
-            });
-        })
-        .catch((error) => {
-            console.error('Error preparando el esquema de autenticación:', error);
-            process.exit(1);
+
+    try {
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Backend running on ${BACKEND_URL}`);
         });
+
+    } catch(error) {
+        console.error('Error:', error);
+        process.exit(1);
+    };
 }
 
 export default start_server
