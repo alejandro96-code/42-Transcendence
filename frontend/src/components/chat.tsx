@@ -2,14 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAppSelector } from '../store/hooks'
 import { chatAPI, type ChatMessage } from '../services/chatAPI'
-import { useI18n } from '../hooks/useI18n'
+import { useTranslation } from 'react-i18next'
 
 interface ChatProps {
   activeFriend?: { id: number; name: string } | null
 }
  
 export function Chat({ activeFriend = null }: ChatProps) {
-  const { t } = useI18n()
+  const { t } = useTranslation()
   const currentUser = useAppSelector((state) => state.auth.user)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [messageText, setMessageText] = useState('')
@@ -17,7 +17,6 @@ export function Chat({ activeFriend = null }: ChatProps) {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
-
 
   useEffect(() => {
     if (!activeFriend) {
@@ -86,12 +85,12 @@ export function Chat({ activeFriend = null }: ChatProps) {
           </section>
         </div>
         <form onSubmit={handleSubmit}>
-          <label htmlFor="send-message" className="sr-only">{t('chat_input_aria_label   ')}</label>
+          <label htmlFor="send-message" className="sr-only">{t('chat_input_aria_label')}</label>
           <input
             id="send-message"
             type="text"
             className="send-text p-inputtext"
-            placeholder={activeFriend ? t('chat_active_friend') : t('chat_select_friend')}
+            placeholder={activeFriend ? t('chat_input_placeholder') : t('chat_select_friend')}
             value={messageText}
             onChange={(event) => setMessageText(event.target.value)}
             disabled={!activeFriend || isSending}
