@@ -17,11 +17,10 @@ async function readErrorMessage(response: Response, fallbackMessage: string): Pr
 }
 
 export const authAPI = {
-  // Obtener usuario actual
   async getCurrentUser(): Promise<User | null> {
     try {
       const response = await fetch(`${API_URL}/api/auth/me`, {
-        credentials: 'include', // Importante para enviar cookies de sesión
+        credentials: 'include',
       })
 
       if (!response.ok) {
@@ -102,12 +101,10 @@ export const authAPI = {
     return await response.json()
   },
 
-  // Iniciar login con 42
   initiateLogin() {
     window.location.href = `${API_URL}/api/auth/42`
   },
 
-  // Cerrar sesión
   async logout(): Promise<void> {
     try {
       await fetch(`${API_URL}/api/auth/logout`, {

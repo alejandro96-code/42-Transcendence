@@ -254,10 +254,6 @@ export function PersonalData({
             </h3>
           </div>
         </div>
-
-        
-
-        {/* DATOS DEL PERFIL */}
         <div className='profile-details'>
           <section className='profile-header-section'>
             <div className='profile-details-title'>
@@ -336,8 +332,6 @@ export function PersonalData({
                 </>
               )}
             </div>
-
-            {/* BOTONES DEL PERFIL */}
             {!readOnly && (
               <div className='profile-actions'>
                 {!isEditing ? (

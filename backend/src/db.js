@@ -1,6 +1,6 @@
 import pg from 'pg';
 
-pg.types.setTypeParser(20, BigInt); // Type Id 20 = BIGINT | BIGSERIAL
+pg.types.setTypeParser(20, BigInt);
 
 export const pool = new pg.Pool({
         host: process.env.DB_HOST || 'localhost',

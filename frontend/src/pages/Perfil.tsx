@@ -103,7 +103,6 @@ export function Perfil() {
 
         <div className="grid content-grid">
 
-          {/* PERFIL */}
           <div className="col-12 lg:col-3 left-pane">
           <PersonalData
             profileUser={profileUser ?? undefined}
@@ -116,7 +115,6 @@ export function Perfil() {
           />
           </div>
 
-          {/* PUBLICACIONES */}
           <div className="col-12 lg:col-6 middle-pane">
             <PostFeed
               readOnly={isFriendProfile}
@@ -128,7 +126,6 @@ export function Perfil() {
             />
           </div>
 
-          {/* AMIGOS + CHAT */}
           <div className="col-12 lg:col-3 right-pane">
 
             <div className="right-pane-item">

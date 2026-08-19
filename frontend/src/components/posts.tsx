@@ -61,16 +61,6 @@ export function PostFeed({
     setFirst(event.first)
   }
 
-  /*
-   * Detecta si el usuario está escribiendo una mención.
-   *
-   * Ejemplos:
-   *   "@"
-   *   "@ale"
-   *   "Hola @ale"
-   *
-   * Solo se buscan amigos mediante friendsAPI.searchFriends().
-   */
   const handleTextChange = async (
     e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
@@ -106,10 +96,6 @@ export function PostFeed({
       setShowMentionSuggestions(false)
     }
   }
-
-  /*
-   * Inserta la mención seleccionada en la posición donde estaba @texto.
-   */
   const handleMentionSelect = (user: MentionUser) => {
     if (mentionStart === null) return
 
@@ -143,9 +129,6 @@ export function PostFeed({
     })
   }
 
-  /*
-   * Selección de imagen.
-   */
   const handleImageSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -174,17 +157,11 @@ export function PostFeed({
 
     reader.onloadend = () => {
       setImage(reader.result as string)
-
-      // Permite volver a seleccionar el mismo archivo.
       e.target.value = ''
     }
 
     reader.readAsDataURL(file)
   }
-
-  /*
-   * Crear publicación.
-   */
   const handlePost = async () => {
     const content = text.trim()
 
@@ -244,18 +221,6 @@ export function PostFeed({
     }
   }
 
-  /*
-   * Cargar publicaciones.
-   *
-   * En un perfil propio:
-   *   GET /api/posts
-   *
-   * En el perfil de un amigo:
-   *   GET /api/posts?user=ID
-   *
-   * En "Menciones":
-   *   GET /api/posts?filter=mentions
-   */
   useEffect(() => {
     const loadPosts = async () => {
       setImageError('')
@@ -309,11 +274,6 @@ export function PostFeed({
     void loadPosts()
   }, [userId, filter, readOnly, i18n.language])
 
-  /*
-   * Los posts ya vienen filtrados desde el backend.
-   *
-   * Por eso no filtramos aquí por "mentions".
-   */
   const filteredPosts = posts
 
   const orderedPosts =
@@ -326,10 +286,6 @@ export function PostFeed({
     first + POSTS_PER_PAGE,
   )
 
-  /*
-   * Mantener la página actual válida cuando cambia
-   * el número de publicaciones.
-   */
   useEffect(() => {
     const lastValidFirst = Math.max(
       0,
@@ -531,7 +487,6 @@ export function PostFeed({
           </div>
         )}
 
-        {/* Lista de publicaciones */}
         <div className="posts-list">
 
           {filteredPosts.length === 0 && (
