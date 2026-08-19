@@ -346,7 +346,6 @@ export function PersonalData({
 
                     <Button
                       label={t('personal_data_save_changes')}
-                      icon='pi pi-check'
                       className='p-button-sm'
                       loading={isSaving}
                       onClick={handleSave}
