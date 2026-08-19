@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
@@ -120,11 +120,13 @@ export function Header() {
       <div className='header-bar'>
         <div className='header-nav'>
           <div className='header-brand'>
-            <img
-              src={logo42}
-              alt={t('header_logo_alt')}
-              className='header-brand-logo'
-            />
+            <Link to='/perfil' className='header-brand'>
+              <img
+                src={logo42}
+                alt={t('header_logo_alt')}
+                className='header-brand-logo'
+              />
+            </Link>
           </div>
         </div>
 
