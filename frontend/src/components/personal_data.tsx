@@ -260,65 +260,80 @@ export function PersonalData({
         {/* DATOS DEL PERFIL */}
         <div className='profile-details'>
           <section className='profile-header-section'>
-
             <div className='profile-details-title'>
-              <label
-                className='profile-title text-sm'
-                htmlFor='profession'
-              >
-                {t('personal_data_headline_label')}
-              </label>
-
               {isEditing && !readOnly ? (
-                <InputText
-                  id='profession'
-                  className='profile-input w-full'
-                  placeholder={t('personal_data_headline_placeholder')}
-                  value={form.profession}
-                  onChange={(e) =>
-                    handleChange(
-                      'profession',
-                      e.target.value,
-                    )
-                  }
-                  maxLength={80}
-                />
+                <>
+                  <label
+                    className='profile-title text-sm'
+                    htmlFor='profession'
+                  >
+                    {t('personal_data_headline_label')}
+                  </label>
+
+                  <InputText
+                    id='profession'
+                    className='profile-input w-full'
+                    placeholder={t('personal_data_headline_placeholder')}
+                    value={form.profession}
+                    onChange={(e) =>
+                      handleChange(
+                        'profession',
+                        e.target.value,
+                      )
+                    }
+                    maxLength={80}
+                  />
+                </>
               ) : (
-                <p className='profile-value'>
-                  {activeUser.profession?.trim() ||
-                    t('personal_data_no_profession')}
-                </p>
+                <>
+                  <span className='profile-title text-sm'>
+                    {t('personal_data_headline_label')}
+                  </span>
+
+                  <p className='profile-value'>
+                    {activeUser.profession?.trim() ||
+                      t('personal_data_no_profession')}
+                  </p>
+                </>
               )}
             </div>
 
             <div className='profile-details-free-text'>
-              <label
-                className='profile-free-text text-sm'
-                htmlFor='about'
-              >
-                {t('personal_data_about_label')}
-              </label>
-
               {isEditing && !readOnly ? (
-                <InputTextarea
-                  className='profile-input-textarea w-full'
-                  id='about'
-                  placeholder={t('personal_data_about_placeholder')}
-                  value={form.description}
-                  onChange={(e) =>
-                    handleChange(
-                      'description',
-                      e.target.value.slice(0, 200),
-                    )
-                  }
-                  rows={6}
-                  maxLength={200}
-                />
+                <>
+                  <label
+                    className='profile-free-text text-sm'
+                    htmlFor='about'
+                  >
+                    {t('personal_data_about_label')}
+                  </label>
+
+                  <InputTextarea
+                    className='profile-input-textarea w-full'
+                    id='about'
+                    placeholder={t('personal_data_about_placeholder')}
+                    value={form.description}
+                    onChange={(e) =>
+                      handleChange(
+                        'description',
+                        e.target.value.slice(0, 200),
+                      )
+                    }
+                    rows={6}
+                    maxLength={200}
+                  />
+                </>
               ) : (
-                <p className='profile-value profile-description'>
-                  {activeUser.description?.trim() ||
-                    t('personal_data_no_description')}
-                </p>
+                <>
+                  <span className='profile-free-text text-sm'>
+                    {t('personal_data_about_label')}
+                  </span>
+
+                  <p className='profile-value profile-description'>
+                    {activeUser.description?.trim() ||
+                      t('personal_data_no_description')}
+                  </p>
+                </>
               )}
             </div>
 

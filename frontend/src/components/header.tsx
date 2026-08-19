@@ -133,10 +133,12 @@ export function Header() {
         <div className='header-mobile-controls'>
           <div className='header-mobile-language'>
             <Dropdown
+              inputId='language-select'
               value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
               className='p-inputtext-sm'
+              aria-label={t('language_selector')}
             />
           </div>
 
@@ -169,10 +171,12 @@ export function Header() {
         <div className='header-actions'>
           <div className='header-languages-wrapper'>
             <Dropdown
+              inputId='language-select'
               value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
               className='p-inputtext-sm'
+              aria-label={t('language_selector')}
             />
           </div>
 
