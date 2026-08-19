@@ -1,11 +1,9 @@
-# Dependencies (monorepo)
 node_modules/
 frontend/node_modules/
 backend/node_modules/
 package-lock.json
 frontend/package-lock.json
 backend/package-lock.json
-# nginx/certs/server.key
-# nginx/certs/server.crt
-# backend/.env
-# backend/.env.example
+nginx/certs/server.key
+nginx/certs/server.crt
+backend/.env
