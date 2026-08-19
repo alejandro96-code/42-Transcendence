@@ -1,4 +1,4 @@
-.PHONY: install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean mock-admin
+.PHONY: setup install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean mock-admin
 
 GREEN = \033[0;32m
 BLUE = \033[0;34m
@@ -7,6 +7,26 @@ NC = \033[0m
 
 DOCKER_COMPOSE ?= $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
 SERVER_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '{print $$7; exit}')
+
+
+setup:
+	@if [ -f backend/.env ]; then \
+		echo "$(YELLOW)backend/.env ya existe; no se ha modificado.$(NC)"; \
+		exit 0; \
+	fi
+	@if ! command -v openssl >/dev/null 2>&1; then \
+		echo "$(YELLOW)openssl es necesario para generar los secretos.$(NC)"; \
+		exit 1; \
+	fi
+	@db_password=$$(openssl rand -hex 24); \
+	 session_secret=$$(openssl rand -hex 32); \
+	 sed \
+		-e "s|^DB_PASSWORD=.*|DB_PASSWORD=$$db_password|" \
+		-e "s|^SESSION_SECRET=.*|SESSION_SECRET=$$session_secret|" \
+		backend/.env.example > backend/.env; \
+	 chmod 600 backend/.env
+	@echo "$(GREEN)✓ backend/.env creado con secretos locales aleatorios$(NC)"
+	@echo "$(BLUE)Completa FORTYTWO_CLIENT_ID y FORTYTWO_CLIENT_SECRET antes de usar el inicio de sesión de 42.$(NC)"
 
 
 install:
@@ -34,6 +54,7 @@ docker-build:
 		exit 1; \
 	fi
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.yml \
 		-f docker-compose.db.yml \
 		build --no-cache
@@ -52,6 +73,7 @@ docker-up:
 	@echo "$(BLUE)Backend: https://$(SERVER_IP):4000$(NC)"
 
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.yml \
 		-f docker-compose.db.yml \
 		up -d --remove-orphans
@@ -94,6 +116,7 @@ mock-admin:
 docker-down:
 	@echo "$(YELLOW)Deteniendo frontend y backend (PostgreSQL sigue corriendo)...$(NC)"
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.yml \
 		down --remove-orphans
 
@@ -102,10 +125,12 @@ docker-down-all:
 	@echo "$(YELLOW)Deteniendo todos los servicios...$(NC)"
 
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.yml \
 		down --remove-orphans
 
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.db.yml \
 		down --remove-orphans
 
@@ -118,6 +143,7 @@ docker-restart:
 	fi
 
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.yml \
 		-f docker-compose.db.yml \
 		restart frontend backend
@@ -130,10 +156,12 @@ docker-clean:
 	@echo "$(YELLOW)Deteniendo servicios y eliminando volúmenes...$(NC)"
 
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.yml \
 		down -v --remove-orphans
 
 	@SERVER_IP=$(SERVER_IP) $(DOCKER_COMPOSE) \
+		--env-file backend/.env \
 		-f docker-compose.db.yml \
 		down -v --remove-orphans
 
