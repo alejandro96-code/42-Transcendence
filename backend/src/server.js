@@ -329,9 +329,15 @@ function start_server() {
     app.post('/api/auth/logout', (req, res) => {
         req.logout((err) => {
             if (err) {
-                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${error}`));
+                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${err}`));
             }
-            res.status(204);
+            req.session.destroy((sessionError) => {
+                if (sessionError) {
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error destroying session: ${sessionError}`));
+                }
+                res.clearCookie('connect.sid');
+                return res.status(204).end();
+            });
         });
     });
 

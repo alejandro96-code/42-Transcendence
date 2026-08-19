@@ -258,6 +258,8 @@ export function PostFeed({
    */
   useEffect(() => {
     const loadPosts = async () => {
+      setImageError('')
+
       try {
         const postFilter =
           !readOnly && filter === 'mentions'
@@ -291,6 +293,7 @@ export function PostFeed({
         )
 
         setPosts(loadedPosts)
+        setImageError('')
         setFirst(0)
       } catch (error) {
         if (error instanceof Error) {
