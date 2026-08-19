@@ -214,8 +214,9 @@ amigos agregados
 solicitudes de amigos
 chat individual con cada amigo
 
-pasos para ejecutar le proyecto anda mas clonarlp
-make clean
-make install
-make docker-build
-make docker-up
+1º clona el proyecto
+2º vamos a la creaccion de la app de 42 y creamos 1 app nueva
+3º make install (para instalar las dependencias del node)
+4º make setup (genera el el archivo .env y genera tambien DB_PASSWORD y SESSION_SECRET)
+5º colocamos FORTYTWO_CLIENT_ID y FORTYTWO_CLIENT_SECRET que se han generado en la app de 42 creda en el paso 1
+6º make docker-up y levantamos nuestro proyecto
