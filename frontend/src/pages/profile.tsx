@@ -10,7 +10,7 @@ import { friendsAPI, type FriendProfile } from '../services/friendsAPI'
 import { authAPI } from '../services/authAPI'
 import type { User } from '../types/auth'
 
-export function Perfil() {
+export function Profile() {
   const { friendId } = useParams()
 
   const [activeChatFriend, setActiveChatFriend] = useState<{
@@ -95,11 +95,11 @@ export function Perfil() {
   }
 
   return (
-    <div className="app-shell perfil-layout">
+    <div className="app-shell profile-layout">
       <Header />
 
       <main className="app-content">
-        <h1 className="sr-only">Perfil de Transcendence</h1>
+        <h1 className="sr-only">Profile de Transcendence</h1>
 
         <div className="grid content-grid">
 

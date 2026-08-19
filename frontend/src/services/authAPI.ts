@@ -4,13 +4,17 @@ const SERVER_IP = import.meta.env.VITE_SERVER_IP || window.location.hostname
 const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 
 async function readErrorMessage(response: Response, fallbackMessage: string): Promise<string> {
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    return fallbackMessage
+  }
+
   try {
     const data = await response.json()
     if (typeof data?.error === 'string' && data.error.length > 0) {
       return data.error
     }
   } catch {
-    // Ignore parse errors and use fallback message.
+    return fallbackMessage
   }
 
   return fallbackMessage
@@ -92,7 +96,7 @@ export const authAPI = {
     if (!response.ok) {
       const message = await readErrorMessage(
         response,
-        'No se pudo guardar el perfil.',
+        'No se pudo guardar el profile.',
       )
 
       throw new Error(message)

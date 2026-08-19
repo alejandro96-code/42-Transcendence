@@ -231,7 +231,7 @@ function start_server() {
             failureRedirect: `${FRONTEND_URL}/`,
         }),
         (req, res) => {
-            res.redirect(`${FRONTEND_URL}/perfil`);
+            res.redirect(`${FRONTEND_URL}/profile`);
         }
     );
 

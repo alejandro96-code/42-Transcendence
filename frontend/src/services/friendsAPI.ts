@@ -30,11 +30,15 @@ export interface FriendProfile {
 }
 
 async function getError(response: Response, fallback: string) {
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    return fallback
+  }
+
   try {
     const data = await response.json()
     if (typeof data?.error === 'string') return data.error
   } catch {
-    // Use the fallback for non-JSON responses.
+    return fallback
   }
   return fallback
 }
@@ -118,7 +122,7 @@ async searchFriends(query: string) {
     })
 
     if (!response.ok) {
-      throw new Error(await getError(response, 'No se pudo obtener el perfil.'))
+      throw new Error(await getError(response, 'No se pudo obtener el profile.'))
     }
 
     return response.json()

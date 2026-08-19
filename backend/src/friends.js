@@ -138,13 +138,13 @@ router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Perfil no encontrado.' });
+            return res.status(404).json({ error: 'Profile no encontrado.' });
         }
 
         return res.json(result.rows[0]);
     } catch (error) {
-        console.error('Error al obtener el perfil del amigo:', error);
-        return res.status(500).json({ error: 'No se pudo obtener el perfil.' });
+        console.error('Error al obtener el profile del amigo:', error);
+        return res.status(500).json({ error: 'No se pudo obtener el profile.' });
     }
 });
 

@@ -26,7 +26,7 @@ export function Header() {
 
   const searchTimeout = useRef<number | null>(null)
 
-  const isFriendProfile = /^\/perfil\/\d+$/.test(location.pathname)
+  const isFriendProfile = /^\/profile\/\d+$/.test(location.pathname)
 
   const { user } = useAppSelector((state) => state.auth)
 
@@ -85,12 +85,12 @@ export function Header() {
   const handleOpenFriendProfile = (friendId: number) => {
     setShowResults(false)
     setSearchValue('')
-    navigate(`/perfil/${friendId}`)
+    navigate(`/profile/${friendId}`)
     setIsMenuOpen(false)
   }
 
   const handleOpenMyProfile = () => {
-    navigate('/perfil')
+    navigate('/profile')
     setIsMenuOpen(false)
   }
 
@@ -120,7 +120,7 @@ export function Header() {
       <div className='header-bar'>
         <div className='header-nav'>
           <div className='header-brand'>
-            <Link to='/perfil' className='header-brand'>
+            <Link to='/profile' className='header-brand'>
               <img
                 src={logo42}
                 alt={t('header_logo_alt')}
