@@ -123,7 +123,7 @@ Se han seleccionado módulos major (2 puntos) y minor (1 punto) para cubrir la e
 
 ## Resources
 
-- [Documentación de React](https://react.dev/), [Vite](https://vite.dev/), [Express](https://expressjs.com/) y [PostgreSQL](https://www.postgresql.org/docs/): consulta de APIs, configuración y prácticas de implementación.
+- [Documentación de React](https://react.dev/), [Primereact](https://primereact.dev/), [Vite](https://vite.dev/), [Express](https://expressjs.com/) y [PostgreSQL](https://www.postgresql.org/docs/): consulta de APIs, configuración y prácticas de implementación.
 - [Passport](https://www.passportjs.org/) y [passport-42](https://www.npmjs.com/package/passport-42): integración de autenticación OAuth con la intra de 42.
 - [Docker Compose](https://docs.docker.com/compose/) y [Nginx](https://nginx.org/en/docs/): definición de contenedores, red interna y proxy HTTPS.
 - [Redux Toolkit](https://redux-toolkit.js.org/) e [i18next](https://www.i18next.com/): gestión del estado de autenticación e internacionalización de la interfaz.
