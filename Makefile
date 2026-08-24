@@ -134,40 +134,56 @@ setup:
 
 
 docker-up: install setup
-	@echo "$(BLUE)Levantando PostgreSQL, frontend, backend y Nginx...$(NC)"
+	@echo "$(BLUE)Detectando SERVER_IP...$(NC)"
 
-	@SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-) $(DOCKER_COMPOSE) \
+	@SERVER_IP=$$(ip route get 1.1.1.1 2>/dev/null | awk '{print $$7; exit}'); \
+	if [ -z "$$SERVER_IP" ]; then \
+		echo "$(YELLOW)No se pudo detectar automáticamente la IP.$(NC)"; \
+		read -p "Introduce SERVER_IP: " SERVER_IP; \
+	fi; \
+	\
+	if [ -z "$$SERVER_IP" ]; then \
+		echo "$(YELLOW)Error: SERVER_IP no puede estar vacío.$(NC)"; \
+		exit 1; \
+	fi; \
+	\
+	echo "$(GREEN)✓ SERVER_IP=$$SERVER_IP$(NC)"; \
+	\
+	sed -i "s|^SERVER_IP=.*|SERVER_IP=$$SERVER_IP|" backend/.env; \
+	sed -i "s|^FRONTEND_URL=.*|FRONTEND_URL=https://$$SERVER_IP:8443|" backend/.env; \
+	sed -i "s|^FORTYTWO_CALLBACK_URL=.*|FORTYTWO_CALLBACK_URL=https://$$SERVER_IP:8443/api/auth/42/callback|" backend/.env; \
+	\
+	echo "$(BLUE)Levantando PostgreSQL, frontend, backend y Nginx...$(NC)"; \
+	SERVER_IP=$$SERVER_IP $(DOCKER_COMPOSE) \
 		--env-file backend/.env \
 		-f docker-compose.yml \
 		-f docker-compose.db.yml \
-		up -d --build --remove-orphans
-
-	@echo "$(BLUE)Esperando a PostgreSQL...$(NC)"
-
-	@until docker exec transcendence-postgres pg_isready -U postgres >/dev/null 2>&1; do \
+		up -d --build --remove-orphans; \
+	\
+	if [ $$? -ne 0 ]; then \
+		echo "$(YELLOW)✗ Error al levantar los servicios$(NC)"; \
+		exit 1; \
+	fi; \
+	\
+	echo "$(BLUE)Esperando a PostgreSQL...$(NC)"; \
+	until docker exec transcendence-postgres pg_isready -U postgres >/dev/null 2>&1; do \
 		sleep 1; \
-	done
-
-	@echo "$(BLUE)PostgreSQL está listo$(NC)"
-
-	@echo "$(BLUE)Inicializando base de datos...$(NC)"
-
-	@docker exec -i transcendence-postgres \
+	done; \
+	\
+	echo "$(BLUE)PostgreSQL está listo$(NC)"; \
+	echo "$(BLUE)Inicializando base de datos...$(NC)"; \
+	docker exec -i transcendence-postgres \
 		psql -q -v ON_ERROR_STOP=1 \
 		--set=client_min_messages=warning \
 		-U postgres \
 		-d transcendence \
-		< backend/init.sql
-
-	@echo ""
-
-	@echo "$(GREEN)✓ Proyecto levantado correctamente$(NC)"
-
-	@echo "$(GREEN)✓ SERVER_IP: $$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-)$(NC)"
-
-	@echo "$(GREEN)✓ Frontend: https://$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-):8443$(NC)"
-
-	@echo "$(GREEN)✓ Nginx activo en el puerto 8443$(NC)"
+		< backend/init.sql; \
+	\
+	echo ""; \
+	echo "$(GREEN)✓ Proyecto levantado correctamente$(NC)"; \
+	echo "$(GREEN)✓ SERVER_IP=$$SERVER_IP$(NC)"; \
+	echo "$(GREEN)✓ Frontend: https://$$SERVER_IP:8443$(NC)"; \
+	echo "$(GREEN)✓ Nginx activo en el puerto 8443$(NC)"
 
 
 dev:

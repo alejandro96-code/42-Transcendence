@@ -19,7 +19,7 @@ Getting started.
     git clone <repository_url>
     cd <repository_directory>
 
-2. Create an application in the API section of the 42 intra. Configure the callback as:
+2. Create an application in the API section of the 42 intra. Configure the callback as (in Redirect URI):
 
     `https://<SERVER_IP>:8443/api/auth/42/callback`
 

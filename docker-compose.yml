@@ -13,9 +13,6 @@ services:
     volumes:
       - ./nginx/certs:/etc/nginx/certs:ro
 
-    environment:
-      - SERVER_IP=${SERVER_IP}
-
     depends_on:
       - frontend
       - backend
@@ -84,5 +81,5 @@ services:
 
 networks:
   transcendence-network:
-    external: false
     name: transcendence-network
+    driver: bridge
