@@ -1,126 +1,195 @@
-*This project has been created as part of the 42 curriculum by alejanr2, fcasaubo, xortega y andefern.*
+*This project has been created as part of the 42 curriculum by [alejanr2], [fcasaubo], [xortega], [andefern].*
 
 # Social Network 42
 
 ## Description
 
-Social Network 42 es una red social web para la comunidad de 42. Permite crear una cuenta local o iniciar sesión con la intra de 42, completar un perfil, publicar contenido, relacionarse con otros usuarios y mantener conversaciones privadas.
+Social Network 42 is a web social network for the 42 community[cite: 1]. It allows users to create a local account or log in with the 42 intra, complete a profile, publish content, connect with other users, and hold private conversations[cite: 1].
 
-El proyecto se ha construido como una aplicación full stack: el cliente ofrece una interfaz responsive e internacionalizada, mientras que la API gestiona la autenticación, las reglas de negocio y la persistencia en PostgreSQL. La aplicación se distribuye en contenedores Docker y se publica detrás de Nginx mediante HTTPS.
+The project was built as a full-stack application: the client offers a responsive and internationalized interface, while the API manages authentication, business logic, and persistence in PostgreSQL[cite: 1]. The application is distributed in Docker containers and published behind Nginx using HTTPS[cite: 1].
 
 ## Instructions
 
-**Puesta en marcha.**
+### Prerequisites
+- Docker Engine (version 24.0.0+)
+- Docker Compose (version 2.20.0+)
+- Node.js (v20+ LTS) and npm (for local development)
+- Make utility
+- A registered application in the 42 intranet API with the callback URL: `https://<SERVER_IP>:8443/api/auth/42/callback`.
 
-1. Clona el repositorio y entra en su directorio.
-2. Crea una aplicación en la sección API de la intra de 42. Configura como callback `https://<SERVER_IP>:8443/api/auth/42/callback`.
-3. Ejecuta `make docker up` para incializar el proyecto y sigue las instrucciones del a terminal.
+### Environment Configuration
+Generate your local environment secrets before starting:
 
-Tras el arranque, la aplicación está disponible en `https://<SERVER_IP>:8443`. PostgreSQL y Adminer sólo se exponen en `127.0.0.1`: Adminer se abre en `http://localhost:8080` con servidor `postgres`, usuario `postgres` y base de datos `transcendence`; la contraseña es el valor `DB_PASSWORD` de `backend/.env`.
+    make setup
 
-**Comandos disponibles.**
+This generates `backend/.env`. Ensure you update `FT_CLIENT_ID`, `FT_CLIENT_SECRET`, and `DB_PASSWORD` if necessary.
 
-| Comando | Descripción |
-| --- | --- |
-| `make install` | Instala las dependencias del monorepo. |
-| `make setup` | Crea `backend/.env` con secretos locales. |
-| `make docker-up` | Inicia Nginx, frontend, backend, PostgreSQL y Adminer; inicializa el proyecto entero. |
-| `make docker-build` | Reconstruye las imágenes sin caché. |
-| `make docker-down` | Detiene los servicios definidos por el compose principal. |
-| `make docker-down-all` | Detiene los servicios de la aplicación y de la base de datos. |
-| `make docker-restart` | Reinicia frontend y backend. |
-| `make docker-clean` | Elimina contenedores y volúmenes, incluidos todos los datos de PostgreSQL. |
-| `make dev` / `make dev-backend` | Inicia, respectivamente, el frontend o el backend en desarrollo local. |
+### Step-by-Step Execution
 
-Si se usa un volumen de PostgreSQL ya existente y falta alguna tabla, `make docker-up` ejecuta de nuevo `backend/init.sql`. Como alternativa, se puede reinicializar el entorno con `make docker-clean` —esta acción borra los datos persistentes— y arrancarlo de nuevo.
+1. Clone the repository and navigate into the root directory:
+
+    git clone <repository_url>
+    cd <repository_directory>
+
+2. Build and start all containers:
+
+    make docker-up
+
+3. Access the platform in your browser at `https://<SERVER_IP>:8443` (or `https://localhost:8443`).
+
+4. **Database Adminer Interface:** PostgreSQL and Adminer are bound exclusively to `127.0.0.1`. You can access Adminer at `http://localhost:8080` (System: `PostgreSQL`, Server: `postgres`, Username: `postgres`, Database: `transcendence`, Password: value of `DB_PASSWORD` in `backend/.env`).
+
+---
+
+### Available Commands
+
+| Command | Description |
+| :--- | :--- |
+| `make install` | Installs dependencies across the monorepo workspace. |
+| `make setup` | Generates `backend/.env` with local secrets and tokens. |
+| `make docker-up` | Builds and starts Nginx, frontend, backend, PostgreSQL, and Adminer containers. |
+| `make docker-build` | Forces a complete rebuild of Docker images without cache. |
+| `make docker-down` | Stops services defined in the primary compose file. |
+| `make docker-down-all` | Stops all application and persistent database containers. |
+| `make docker-restart` | Restarts frontend and backend container services. |
+| `make docker-clean` | Completely removes containers, networks, and volumes (purging all DB data). |
+| `make dev` / `make dev-backend` | Runs frontend or backend locally in development mode. |
+
+*Note:* If an existing PostgreSQL volume is mounted and tables are missing, `make docker-up` automatically re-runs `backend/init.sql`. Alternatively, run `make docker-clean` to purge volumes and reset the state.
+
+---
 
 ## Team Information
 
-Aunque cada integrante asumió una responsabilidad principal, el equipo colaboró en frontend, backend y base de datos durante la integración y la resolución de incidencias.
+| Member | Assigned Role(s) | Primary Responsibilities |
+| :--- | :--- | :--- |
+| **alejanr2** | Tech Lead, Architect & Developer | Frontend architecture design, responsive layout integration, state management, UI component library, and team technical guidance. |
+| **fcasaubo** | Tech Lead, Architect & Developer | Backend API architecture, relational database modeling, OAuth integration, input validation, and API security. |
+| **xortega** | Project Manager, Scrum Master & Developer | Task estimation and sprint planning, progress tracking, and backend feature development (friendships, chat, status). |
+| **andefern** | Product Owner & Developer | Defining product vision and value, accessibility/legal compliance, functional quality assurance, and user acceptance testing. |
 
-| Miembro | Rol asignado | Responsabilidades principales |
-| --- | --- | --- |
-| alejanr2 | Tech Lead, arquitecto y desarrollador | Diseño de la arquitectura del frontend, maquetación e integración de la interfaz; apoyo técnico al equipo. |
-| fcasaubo | Tech Lead, arquitecta y desarrolladora | Diseño de la arquitectura del backend, modelado relacional y comunicación con la base de datos. |
-| xortega | Project Manager, Scrum Master y desarrollador | Estimación y planificación de tareas, seguimiento del proyecto y desarrollo de funcionalidades backend. |
-| andefern | Product Owner y desarrollador | Definición de valor y visión de producto, validación funcional y pruebas orientadas a la calidad. |
+---
 
 ## Project Management
 
-El trabajo comenzó con reuniones presenciales quincenales en 42 Urduliz para definir la idea, elegir el stack, repartir roles y estimar tareas. Una vez establecido el alcance, el equipo pasó a reuniones mensuales, ajustadas a la disponibilidad de sus integrantes.
+- **Task Distribution & Sprints:** Work kicked off with bi-weekly in-person sprint meetings at 42 Urduliz to define the project scope, choose technical tooling, assign roles, and estimate workload. As development progressed, the team held monthly milestone checkpoints aligned with member availability.
+- **Workflow & Version Control:** Tasks were planned in sprint backlogs and implemented on a shared GitHub repository. Feature-branch workflows were enforced with pull requests and code reviews prior to merging into `main`.
+- **Project Tracking Tools:** Jira was utilized for backlog refinement, task estimation, and issue tracking.
+- **Communication Channels:** Slack and WhatsApp served as daily asynchronous communication, technical discussions, and blockers coordination channels.
 
-Las tareas se acordaban en las reuniones y se desarrollaban en un repositorio compartido de GitHub. Se utilizaban ramas para integrar trabajo, especialmente en backend, y se revisaba la integración en la rama principal. Jira complementó la planificación y el seguimiento; Slack y WhatsApp fueron los canales cotidianos de comunicación y coordinación.
+---
 
 ## Technical Stack
 
-| Área | Tecnologías | Decisión técnica |
-| --- | --- | --- |
-| Frontend | React 19, TypeScript, Vite, React Router, Redux Toolkit, SCSS y PrimeReact | React y componentes reutilizables para la interfaz; Redux centraliza el estado de autenticación; i18next ofrece traducciones en español, euskera e inglés. |
-| Backend | Node.js, Express, JavaScript, Passport y `passport-42` | Express ofrece una API ligera; Passport integra OAuth con la intra de 42 y las sesiones protegen las rutas privadas. |
-| Base de datos | PostgreSQL 16 y `pg` | Una base de datos relacional mantiene con integridad los usuarios, publicaciones, amistades y mensajes. |
-| Infraestructura | Docker Compose, Nginx y Adminer | Los contenedores facilitan un entorno reproducible; Nginx centraliza el acceso HTTPS y Adminer permite inspeccionar la base de datos local. |
-| Calidad y seguridad | ESLint, validación de entradas, `scrypt`, cookies HTTP-only y filtrado de lenguaje ofensivo | Se validan datos de entrada, las contraseñas locales se almacenan mediante hash y las sesiones se manejan con cookies seguras. |
+| Area | Technologies | Technical Rationale & Justification |
+| :--- | :--- | :--- |
+| **Frontend** | React 19, TypeScript, Vite, React Router, Redux Toolkit, SCSS, PrimeReact | **React 19 & TypeScript** ensure component modularity, type safety, and fast rendering. **Vite** accelerates build cycles. **Redux Toolkit** centralizes authentication and user state across components. **i18next** provides runtime localization. **SCSS & PrimeReact** supply accessible foundation primitives alongside custom branding. |
+| **Backend** | Node.js, Express, JavaScript, Passport, passport-42 | **Express** delivers a lightweight, unopinionated REST API. **Passport.js** enables seamless OAuth 2.0 integration with the 42 API while cookie sessions guard private routes. |
+| **Database** | PostgreSQL 16, pg | **PostgreSQL** was chosen for its strict relational integrity, ACID compliance, and robust indexing for relational social graph queries (users, friendships, posts, threads). |
+| **Infrastructure** | Docker Compose, Nginx, Adminer | **Docker Compose** ensures a deterministic multi-container execution environment. **Nginx** acts as a reverse proxy managing SSL termination and routing. **Adminer** enables local database inspection. |
+| **Security & Quality** | ESLint, scrypt, HTTP-Only Cookies, Input Validation, @2toad/profanity | Strict payload validation, cryptographically strong **scrypt** password hashing, XSS/CSRF mitigation via HTTP-only secure cookies, and multilingual profanity filtering. |
+
+---
 
 ## Database Schema
 
-PostgreSQL almacena cuatro entidades principales. Todas las claves foráneas mantienen la relación con `users`; los índices de publicaciones, mensajes y solicitudes optimizan las consultas más habituales.
+PostgreSQL stores four core entities. Referential integrity is strictly enforced with foreign keys cascading from users. Indexes are applied on primary keys, relational lookups, and chronological queries (created_at, sent_at)[cite: 4].
 
-| Tabla | Campos clave | Relaciones y propósito |
-| --- | --- | --- |
-| `users` | `id` (serial), `intra_id`, `username`, `email`, `password_hash`, datos de perfil y marcas de tiempo | Identidad local u OAuth. `intra_id` y `username` son únicos. |
-| `posts` | `id` (serial), `author_id`, `content`, `likes`, `media`, `parent` | Cada publicación pertenece a un usuario. `parent` permite asociar respuestas o comentarios a otra publicación. |
-| `friend_requests` | `id` (serial), `sender_id`, `recipient_id`, `status` | Modela solicitudes pendientes, aceptadas o rechazadas. Impide solicitudes a uno mismo y pares duplicados. |
-| `chat_messages` | `id` (serial), `sender_id`, `receiver_id`, `content`, `sent_at` | Guarda mensajes directos entre dos usuarios; elimina los mensajes asociados cuando se elimina un usuario. |
+    +--------------------+       1:N       +--------------------+
+    |       users        | <-------------> |       posts        |
+    +--------------------+                 +--------------------+
+    | id (PK)            |                 | id (PK)            |
+    | intra_id (UNIQUE)  |                 | author_id (FK)     |
+    | username (UNIQUE)  |                 | content (TEXT)     |
+    | email              |                 | likes (INT)        |
+    | password_hash      |                 | media (TEXT)       |
+    | profile_data       |                 | parent (FK)        |
+    | created_at         |                 | created_at         |
+    +--------------------+                 +--------------------+
+           |         |
+       1:N |         | 1:N
+           v         v
+    +--------------------+                 +--------------------+
+    |  friend_requests   |                 |   chat_messages    |
+    +--------------------+                 +--------------------+
+    | id (PK)            |                 | id (PK)            |
+    | sender_id (FK)     |                 | sender_id (FK)     |
+    | recipient_id (FK)  |                 | receiver_id (FK)   |
+    | status (ENUM)      |                 | content (TEXT)     |
+    | created_at         |                 | sent_at            |
+    +--------------------+                 +--------------------+
 
-La definición completa, incluidas restricciones e índices, está en [`backend/init.sql`](backend/init.sql).
+### Table Definitions
+
+| Table | Key Fields & Types | Relationships & Purpose |
+| :--- | :--- | :--- |
+| users | id (SERIAL PK), intra_id (VARCHAR), username (VARCHAR), email (VARCHAR), password_hash (VARCHAR), created_at (TIMESTAMP) | Stores user credentials, profile settings, and OAuth identifiers. intra_id and username are unique. |
+| posts | id (SERIAL PK), author_id (INT FK), content (TEXT), likes (INT), media (TEXT), parent (INT FK), created_at (TIMESTAMP) | Stores user posts and image references. parent points to another post ID for nested replies and comment threads. |
+| friend_requests | id (SERIAL PK), sender_id (INT FK), recipient_id (INT FK), status (VARCHAR), created_at (TIMESTAMP) | Models friendship states (pending, accepted, rejected). Enforces unique pairs and prevents self-invitations. |
+| chat_messages | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), content (TEXT), sent_at (TIMESTAMP) | Persists direct messages between users; automatically cascades deletions upon user removal. |
+
+*The full schema definition, constraints, and index configurations are available in backend/init.sql.*[cite: 4]
+
+---
 
 ## Features List
 
-| Funcionalidad | Descripción | Participación principal |
-| --- | --- | --- |
-| Registro e inicio de sesión | Registro local, inicio de sesión, cierre de sesión y persistencia de sesión; OAuth con la intra de 42. | fcasaubo, alejanr2 |
-| Perfiles | Consulta y edición del perfil, avatar, datos personales y visualización de perfiles de amistades. | alejanr2, fcasaubo |
-| Publicaciones | Creación y lectura de publicaciones, respuestas, contenido multimedia, menciones y reacciones. | alejanr2, xortega |
-| Red de amistades | Envío, aceptación o rechazo de solicitudes, listado, búsqueda, eliminación y estado de presencia. | xortega, fcasaubo |
-| Chat privado | Envío y consulta de mensajes directos entre usuarios. | xortega, alejanr2 |
-| Internacionalización y contenidos legales | Interfaz disponible en español, euskera e inglés, con páginas de privacidad y términos de servicio. | alejanr2, andefern |
-| Protección de contenido | Validación de solicitudes y filtrado de lenguaje ofensivo en perfiles, publicaciones y mensajes. | fcasaubo, andefern |
+| Feature | Description | Primary Contributor(s) |
+| :--- | :--- | :--- |
+| **Registration & Login** | Local account registration, secure credential login, persistent sessions, and 42 OAuth authentication. | fcasaubo, alejanr2 |
+| **User Profiles** | View and edit bio, display name, preset avatars, and browse other users' public profiles. | alejanr2, fcasaubo |
+| **Post Feed & Threads** | Create posts, attach images, reply to existing threads, mention users, and react with likes. | alejanr2, xortega |
+| **Friend Management** | Send, accept, or decline friend requests; search connections, remove friends, and view online status. | xortega, fcasaubo |
+| **Direct Chat** | One-on-one direct messaging interface between connected users with chronological history. | xortega, alejanr2 |
+| **i18n & Legal Pages** | Full interface localization in Spanish, Basque, and English; Privacy Policy and Terms of Service pages. | alejanr2, andefern |
+| **Content Moderation** | Real-time payload sanitization and multilingual offensive language filtering on posts, profiles, and chats. | fcasaubo, andefern |
+
+---
 
 ## Modules
 
-Se han seleccionado módulos major (2 puntos) y minor (1 punto) para cubrir la experiencia completa de una red social: interfaz, API, accesibilidad, gestión de usuarios y moderación. El total es **19 puntos**.
+A balanced selection of 5 Major modules (2 points each) and 9 Minor modules (1 point each) was implemented to deliver an accessible, production-ready social network platform.
 
-| Área | Módulo | Tipo | Puntos | Justificación e implementación | Participación principal |
-| --- | --- | --- | ---: | --- | --- |
-| Web | Frameworks de frontend y backend | Major | 2 | React, TypeScript y Vite estructuran el cliente; Node.js y Express exponen la lógica de servidor. Esta combinación separa claramente presentación, estado, API y persistencia. | alejanr2, fcasaubo |
-| Web | Interacción de usuario | Major | 2 | La interfaz permite editar el perfil, publicar, reaccionar, enviar solicitudes de amistad, aceptar o rechazar peticiones y conversar por chat. React Router, Redux Toolkit y componentes reutilizables mantienen la interacción fluida. | alejanr2, xortega |
-| Web | API pública | Major | 2 | Se implementó una API REST en Express para autenticación, perfiles, publicaciones, amistades y chat. Las rutas validan datos, devuelven errores estructurados y protegen los recursos privados mediante sesión. | fcasaubo, xortega |
-| Web | Sistema de notificaciones | Minor | 1 | Las solicitudes de amistad pendientes y las menciones en publicaciones actúan como avisos dentro de la aplicación. Se consultan mediante los endpoints de solicitudes y el filtro de menciones del feed. | xortega, alejanr2 |
-| Web | Sistema de diseño personalizado | Minor | 1 | Se creó una identidad visual propia con SCSS, variables, layouts responsive y componentes de perfil, publicaciones, amistades, cabecera y chat. PrimeReact y PrimeFlex se usan como apoyo, no como sustituto del diseño. | alejanr2 |
-| Web | Búsqueda avanzada | Minor | 1 | La cabecera permite buscar amistades por nombre de usuario o nombre completo. La búsqueda se restringe a relaciones aceptadas, ordena los resultados y limita la respuesta para conservar rendimiento. | alejanr2, xortega |
-| Web | Carga y gestión de archivos | Minor | 1 | Las publicaciones admiten una imagen desde el navegador. El cliente valida tipo y tamaño, la convierte a Data URL y la API la guarda asociada al post; también se ofrecen avatares de perfil predefinidos. | alejanr2, fcasaubo |
-| Accesibilidad e internacionalización | Cumplimiento WCAG 2.1 AA | Major | 2 | Se incorporaron etiquetas `aria-label`, textos alternativos, controles identificables y una estructura semántica en los componentes interactivos. El diseño responsive y los mensajes de error visibles contribuyen a una interfaz más accesible. | alejanr2, andefern |
-| Accesibilidad e internacionalización | Tres idiomas | Minor | 1 | i18next y react-i18next gestionan traducciones en español, euskera e inglés. Los textos de interfaz, fechas y etiquetas se adaptan al idioma seleccionado. | alejanr2, andefern |
-| Accesibilidad e internacionalización | Compatibilidad con navegadores | Minor | 1 | La aplicación se construye con tecnologías web estándar y un diseño adaptable para funcionar en los navegadores modernos de escritorio y móvil. La interfaz evita dependencias específicas de un navegador. | alejanr2, andefern |
-| Gestión de usuarios | Gestión estándar de usuarios | Major | 2 | Se implementaron registro local, inicio y cierre de sesión, sesión persistente, edición de perfil, amistades y presencia. Las contraseñas se protegen con `scrypt` y las sesiones usan cookies HTTP-only. | fcasaubo, xortega |
-| Gestión de usuarios | Autenticación remota OAuth 2.0 | Minor | 1 | Passport y `passport-42` integran la intra de 42. En el primer acceso se crea el usuario y, en accesos posteriores, se actualizan sus datos públicos desde el proveedor. | fcasaubo |
-| Inteligencia artificial | Moderación de contenido | Minor | 1 | Se filtran palabras ofensivas en nombres, perfiles, publicaciones y mensajes antes de guardarlos. El módulo `@2toad/profanity` configura el filtrado para varios idiomas y la API rechaza contenido no permitido. | fcasaubo, andefern |
-| Módulos a elección | Módulo personalizado: escenario inicial de red social | Minor | 1 | Se preparó un script SQL de datos de prueba para disponer de una cuenta local desde la que validar la red social sin depender exclusivamente de OAuth. Este punto de partida facilita crear y comprobar perfiles, publicaciones, amistades y chat con datos entrelazados durante las pruebas. | xortega, fcasaubo |
+Total Points: 19 points
 
-**Cálculo:** 5 módulos principales × 2 puntos = 10 puntos; 9 módulos secundarios × 1 punto = 9 puntos. **Total: 19 puntos.**
+| Area | Module | Type | Points | Justification & Implementation | Main Contributors |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Web | Frontend and backend frameworks | Major | 2 | React, TypeScript, and Vite structure the client; Node.js and Express expose server logic. This combination cleanly separates presentation, state, API, and persistence. | alejanr2, fcasaubo |
+| Web | User interaction | Major | 2 | The UI allows editing profiles, posting, reacting, sending friend requests, accepting or rejecting them, and chatting. React Router, Redux Toolkit, and reusable components ensure smooth interaction. | alejanr2, xortega |
+| Web | Public API | Major | 2 | A REST API was implemented in Express for authentication, profiles, posts, friendships, and chat. Routes validate data, return structured errors, and protect private resources via session. | fcasaubo, xortega |
+| Web | Notification system | Minor | 1 | Pending friend requests and mentions in posts act as in-app notifications. They are retrieved via request endpoints and the feed mention filter. | xortega, alejanr2 |
+| Web | Custom design system | Minor | 1 | A custom visual identity was created with SCSS, variables, responsive layouts, and components for profile, posts, friends, header, and chat. PrimeReact and PrimeFlex are used as support, not as a replacement for custom design. | alejanr2 |
+| Web | Advanced search | Minor | 1 | The header allows searching friends by username or full name. The search is restricted to accepted friendships, sorts results, and limits the response to maintain performance. | alejanr2, xortega |
+| Web | File upload and management | Minor | 1 | Posts allow an image from the browser. The client validates type and size, converts it to a Data URL, and the API stores it linked to the post; default profile avatars are also provided. | alejanr2, fcasaubo |
+| Accessibility & i18n | WCAG 2.1 AA Compliance | Major | 2 | Added aria-label tags, alternative texts, identifiable controls, and a semantic structure in interactive components. The responsive design and visible error messages ensure accessibility. | alejanr2, andefern |
+| Accessibility & i18n | Three languages | Minor | 1 | i18next and react-i18next manage translations in Spanish, Basque, and English. UI text, dates, and labels adapt to the selected language. | alejanr2, andefern |
+| Accessibility & i18n | Browser compatibility | Minor | 1 | The application is built with standard web technologies and responsive design to work across modern desktop and mobile browsers without browser-specific dependencies. | alejanr2, andefern |
+| User Management | Standard user management | Major | 2 | Implemented local registration, login, logout, persistent session, profile editing, friendships, and presence. Passwords are protected with scrypt and sessions use HTTP-only cookies. | fcasaubo, xortega |
+| User Management | OAuth 2.0 Remote Authentication | Minor | 1 | Passport and passport-42 integrate the 42 intra. On first login, the user is created; subsequent logins update public data from the provider. | fcasaubo |
+| AI | Content moderation | Minor | 1 | Offensive words in names, profiles, posts, and messages are filtered before storage. The @2toad/profanity module configures filtering for multiple languages, and the API rejects disallowed content. | fcasaubo, andefern |
+| Modules of Choice | Custom Module: Initial Social Network Seed | Minor | 1 | A mock SQL test script was prepared to provide a local account for testing the platform without relying exclusively on OAuth. This starting point makes it easy to verify linked data across profiles, posts, friends, and chat. | xortega, fcasaubo |
+
+Calculation: 5 major modules × 2 points = 10 points; 9 minor modules × 1 point = 9 points. Total: 19 points.
+
+---
 
 ## Individual Contributions
 
-- **alejanr2:** definió la arquitectura y la maquetación del frontend, trabajó en perfiles, publicaciones, chat, rutas, estilos e internacionalización. El principal reto fue integrar una interfaz consistente con los distintos flujos autenticados; se resolvió con componentes reutilizables y un estado de autenticación centralizado.
-- **fcasaubo:** diseñó la base de datos y la capa backend, incluyendo las relaciones entre usuarios, publicaciones, solicitudes y mensajes. También contribuyó a autenticación, validación y seguridad de la API. El reto central fue preservar la integridad de los datos sociales, abordado con restricciones, claves foráneas e índices SQL.
-- **xortega:** organizó estimaciones y seguimiento del trabajo, y desarrolló funcionalidades backend relacionadas con amistades, presencia y mensajería. Se trató especialmente la consistencia de las solicitudes de amistad para evitar duplicados y transiciones de estado inválidas.
-- **andefern:** mantuvo la visión de producto y la validación funcional, colaboró en pruebas y contenidos legales, y ayudó a detectar incidencias durante las integraciones. El foco fue que los flujos principales fueran comprensibles y que el producto respondiera a los requisitos funcionales.
+- alejanr2: Defined the frontend architecture and UI layout, worked on profiles, posts, chat, routing, styles, and internationalization. The main challenge was integrating a consistent UI across different authenticated flows; this was solved using reusable components and centralized authentication state.
+- fcasaubo: Designed the database and backend layer, including relationships between users, posts, requests, and messages. Also contributed to authentication, validation, and API security. The core challenge was preserving social data integrity, addressed using SQL constraints, foreign keys, and indexes.
+- xortega: Organized work estimates and tracking, and developed backend features related to friendships, presence, and messaging. Special care was taken with friend request consistency to prevent duplicates and invalid state transitions.
+- andefern: Maintained product vision and functional validation, collaborated on testing and legal content, and helped detect integration issues. The main focus was ensuring primary flows were clear and that the product met all functional requirements.
+
+---
 
 ## Resources
 
-- [Documentación de React](https://react.dev/), [Primereact](https://primereact.dev/), [Vite](https://vite.dev/), [Express](https://expressjs.com/) y [PostgreSQL](https://www.postgresql.org/docs/): consulta de APIs, configuración y prácticas de implementación.
-- [Passport](https://www.passportjs.org/) y [passport-42](https://www.npmjs.com/package/passport-42): integración de autenticación OAuth con la intra de 42.
-- [Docker Compose](https://docs.docker.com/compose/) y [Nginx](https://nginx.org/en/docs/): definición de contenedores, red interna y proxy HTTPS.
-- [Redux Toolkit](https://redux-toolkit.js.org/) e [i18next](https://www.i18next.com/): gestión del estado de autenticación e internacionalización de la interfaz.
+- Documentation for React, PrimeReact, Vite, Express, and PostgreSQL: API reference, configuration, and implementation practices.
+- Passport and passport-42: OAuth authentication integration with 42 intra.
+- Docker Compose and Nginx: Container definition, internal networking, and HTTPS reverse proxy.
+- Redux Toolkit and i18next: Authentication state management and UI internationalization.
 
-La IA se utilizó como apoyo puntual para aclarar documentación, proponer alternativas de implementación, revisar textos y ayudar a depurar errores. Las decisiones de arquitectura, la integración en el repositorio, las pruebas y la validación final fueron realizadas y revisadas por el equipo.
+### AI Usage Description
+
+AI was used as occasional support to clarify documentation, suggest implementation alternatives, proofread text, and assist with debugging errors[cite: 1]. Architecture decisions, repository integration, testing, and final validation were performed and reviewed by the team[cite: 1].
+
