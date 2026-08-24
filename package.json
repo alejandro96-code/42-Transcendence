@@ -21,6 +21,7 @@
     "express-json-validator-middleware": "^3.0.0",
     "express-session": "^1.17.3",
     "i18next": "^26.3.6",
+    "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
     "passport-42": "^1.2.6",
     "pg": "^8.11.3",
