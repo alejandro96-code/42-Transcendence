@@ -5,14 +5,13 @@ import pg from 'pg';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as FortyTwoStrategy } from 'passport-42';
-import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
+import token_endpoints from "./token.js"
 import { isAuthenticated, formatErrorJson, hashPassword } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
-import { format } from 'path';
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
@@ -400,7 +399,7 @@ function start_server() {
     app.use("/api/posts", posts_endpoints);
     app.use("/api/messages", chat_endpoints);
     app.use("/api/friends", friends_endpoints);
-
+    app.use("/api/token", token_endpoints);
 
     try {
         app.listen(PORT, '0.0.0.0', () => {

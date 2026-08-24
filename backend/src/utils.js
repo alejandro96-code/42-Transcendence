@@ -1,4 +1,5 @@
 import express, { response } from 'express';
+import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { Validator } from "express-json-validator-middleware";
 
 // Middleware to verify authentication
@@ -43,6 +44,14 @@ export function verifyPassword(password, passwordHash) {
     } catch {
         return false;
     }
+}
+
+// Date doesn't have a method to add n amount of hours
+// For some reason
+// This implements it
+Date.prototype.addHours = function(h) {
+  this.setTime(this.getTime() + (h*60*60*1000));
+  return this;
 }
 
 export const { validate } = new Validator({ allErrors: true });
