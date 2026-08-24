@@ -133,7 +133,7 @@ export function Header() {
         <div className='header-mobile-controls'>
           <div className='header-mobile-language'>
             <Dropdown
-              inputId='language-select'
+              inputId='language-select-mobile'
               value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
@@ -171,7 +171,7 @@ export function Header() {
         <div className='header-actions'>
           <div className='header-languages-wrapper'>
             <Dropdown
-              inputId='language-select'
+              inputId='language-select-normal'
               value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
