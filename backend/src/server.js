@@ -75,7 +75,7 @@ function start_server() {
     dotenv.config();
     const app = express();
     const PORT = process.env.PORT || 4000;
-    const SERVER_IP = process.env.SERVER_IP || 'localhost';
+    const SERVER_IP = process.env.SERVER_IP;
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
     const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
@@ -84,7 +84,6 @@ function start_server() {
 
     const allowedOrigins = [
         `https://${SERVER_IP}:8443`,
-        'http://localhost:3000'
     ].filter(Boolean);
 
     app.use(cors({
