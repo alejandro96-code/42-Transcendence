@@ -4,42 +4,30 @@
 
 ## Description
 
-Social Network 42 is a web social network for the 42 community[cite: 1]. It allows users to create a local account or log in with the 42 intra, complete a profile, publish content, connect with other users, and hold private conversations[cite: 1].
+Social Network 42 is a web social network for the 42 community. It allows users to create a local account or log in with the 42 intra, complete a profile, publish content, connect with other users, and hold private conversations.
 
-The project was built as a full-stack application: the client offers a responsive and internationalized interface, while the API manages authentication, business logic, and persistence in PostgreSQL[cite: 1]. The application is distributed in Docker containers and published behind Nginx using HTTPS[cite: 1].
+The project was built as a full-stack application: the client offers a responsive and internationalized interface, while the API manages authentication, business logic, and persistence in PostgreSQL. The application is distributed in Docker containers and published behind Nginx using HTTPS.
 
 ## Instructions
 
-### Prerequisites
-- Docker Engine (version 24.0.0+)
-- Docker Compose (version 2.20.0+)
-- Node.js (v20+ LTS) and npm (for local development)
-- Make utility
-- A registered application in the 42 intranet API with the callback URL: `https://<SERVER_IP>:8443/api/auth/42/callback`.
-
-### Environment Configuration
-Generate your local environment secrets before starting:
-
-    make setup
-
-This generates `backend/.env`. Ensure you update `FT_CLIENT_ID`, `FT_CLIENT_SECRET`, and `DB_PASSWORD` if necessary.
-
 ### Step-by-Step Execution
+
+Getting started.
 
 1. Clone the repository and navigate into the root directory:
 
     git clone <repository_url>
     cd <repository_directory>
 
-2. Build and start all containers:
+2. Create an application in the API section of the 42 intra. Configure the callback as:
+
+    `https://<SERVER_IP>:8443/api/auth/42/callback`
+
+3. Build and start all containers and follow the terminal instructions:
 
     make docker-up
 
-3. Access the platform in your browser at `https://<SERVER_IP>:8443` (or `https://localhost:8443`).
-
-4. **Database Adminer Interface:** PostgreSQL and Adminer are bound exclusively to `127.0.0.1`. You can access Adminer at `http://localhost:8080` (System: `PostgreSQL`, Server: `postgres`, Username: `postgres`, Database: `transcendence`, Password: value of `DB_PASSWORD` in `backend/.env`).
-
----
+After startup, the application is available at `https://<SERVER_IP>:8443`. PostgreSQL and Adminer are only exposed on `127.0.0.1`: Adminer opens at `http://localhost:8080` with server `postgres`, user `postgres`, and database `transcendence`; the password is the `DB_PASSWORD` value in `backend/.env`.
 
 ### Available Commands
 
@@ -57,8 +45,6 @@ This generates `backend/.env`. Ensure you update `FT_CLIENT_ID`, `FT_CLIENT_SECR
 
 *Note:* If an existing PostgreSQL volume is mounted and tables are missing, `make docker-up` automatically re-runs `backend/init.sql`. Alternatively, run `make docker-clean` to purge volumes and reset the state.
 
----
-
 ## Team Information
 
 | Member | Assigned Role(s) | Primary Responsibilities |
@@ -68,16 +54,12 @@ This generates `backend/.env`. Ensure you update `FT_CLIENT_ID`, `FT_CLIENT_SECR
 | **xortega** | Project Manager, Scrum Master & Developer | Task estimation and sprint planning, progress tracking, and backend feature development (friendships, chat, status). |
 | **andefern** | Product Owner & Developer | Defining product vision and value, accessibility/legal compliance, functional quality assurance, and user acceptance testing. |
 
----
-
 ## Project Management
 
 - **Task Distribution & Sprints:** Work kicked off with bi-weekly in-person sprint meetings at 42 Urduliz to define the project scope, choose technical tooling, assign roles, and estimate workload. As development progressed, the team held monthly milestone checkpoints aligned with member availability.
 - **Workflow & Version Control:** Tasks were planned in sprint backlogs and implemented on a shared GitHub repository. Feature-branch workflows were enforced with pull requests and code reviews prior to merging into `main`.
 - **Project Tracking Tools:** Jira was utilized for backlog refinement, task estimation, and issue tracking.
 - **Communication Channels:** Slack and WhatsApp served as daily asynchronous communication, technical discussions, and blockers coordination channels.
-
----
 
 ## Technical Stack
 
@@ -88,8 +70,6 @@ This generates `backend/.env`. Ensure you update `FT_CLIENT_ID`, `FT_CLIENT_SECR
 | **Database** | PostgreSQL 16, pg | **PostgreSQL** was chosen for its strict relational integrity, ACID compliance, and robust indexing for relational social graph queries (users, friendships, posts, threads). |
 | **Infrastructure** | Docker Compose, Nginx, Adminer | **Docker Compose** ensures a deterministic multi-container execution environment. **Nginx** acts as a reverse proxy managing SSL termination and routing. **Adminer** enables local database inspection. |
 | **Security & Quality** | ESLint, scrypt, HTTP-Only Cookies, Input Validation, @2toad/profanity | Strict payload validation, cryptographically strong **scrypt** password hashing, XSS/CSRF mitigation via HTTP-only secure cookies, and multilingual profanity filtering. |
-
----
 
 ## Database Schema
 
@@ -119,8 +99,6 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
     | created_at         |                 | sent_at            |
     +--------------------+                 +--------------------+
 
-### Table Definitions
-
 | Table | Key Fields & Types | Relationships & Purpose |
 | :--- | :--- | :--- |
 | users | id (SERIAL PK), intra_id (VARCHAR), username (VARCHAR), email (VARCHAR), password_hash (VARCHAR), created_at (TIMESTAMP) | Stores user credentials, profile settings, and OAuth identifiers. intra_id and username are unique. |
@@ -129,8 +107,6 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
 | chat_messages | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), content (TEXT), sent_at (TIMESTAMP) | Persists direct messages between users; automatically cascades deletions upon user removal. |
 
 *The full schema definition, constraints, and index configurations are available in backend/init.sql.*[cite: 4]
-
----
 
 ## Features List
 
@@ -143,8 +119,6 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
 | **Direct Chat** | One-on-one direct messaging interface between connected users with chronological history. | xortega, alejanr2 |
 | **i18n & Legal Pages** | Full interface localization in Spanish, Basque, and English; Privacy Policy and Terms of Service pages. | alejanr2, andefern |
 | **Content Moderation** | Real-time payload sanitization and multilingual offensive language filtering on posts, profiles, and chats. | fcasaubo, andefern |
-
----
 
 ## Modules
 
@@ -171,16 +145,12 @@ Total Points: 19 points
 
 Calculation: 5 major modules × 2 points = 10 points; 9 minor modules × 1 point = 9 points. Total: 19 points.
 
----
-
 ## Individual Contributions
 
 - alejanr2: Defined the frontend architecture and UI layout, worked on profiles, posts, chat, routing, styles, and internationalization. The main challenge was integrating a consistent UI across different authenticated flows; this was solved using reusable components and centralized authentication state.
 - fcasaubo: Designed the database and backend layer, including relationships between users, posts, requests, and messages. Also contributed to authentication, validation, and API security. The core challenge was preserving social data integrity, addressed using SQL constraints, foreign keys, and indexes.
 - xortega: Organized work estimates and tracking, and developed backend features related to friendships, presence, and messaging. Special care was taken with friend request consistency to prevent duplicates and invalid state transitions.
 - andefern: Maintained product vision and functional validation, collaborated on testing and legal content, and helped detect integration issues. The main focus was ensuring primary flows were clear and that the product met all functional requirements.
-
----
 
 ## Resources
 
@@ -191,5 +161,5 @@ Calculation: 5 major modules × 2 points = 10 points; 9 minor modules × 1 point
 
 ### AI Usage Description
 
-AI was used as occasional support to clarify documentation, suggest implementation alternatives, proofread text, and assist with debugging errors[cite: 1]. Architecture decisions, repository integration, testing, and final validation were performed and reviewed by the team[cite: 1].
+AI was used as occasional support to clarify documentation, suggest implementation alternatives, proofread text, and assist with debugging errors. Architecture decisions, repository integration, testing, and final validation were performed and reviewed by the team.
 
