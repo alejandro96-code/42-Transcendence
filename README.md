@@ -14,11 +14,7 @@ El proyecto se ha construido como una aplicación full stack: el cliente ofrece 
 
 1. Clona el repositorio y entra en su directorio.
 2. Crea una aplicación en la sección API de la intra de 42. Configura como callback `https://<SERVER_IP>:8443/api/auth/42/callback`.
-3. Ejecuta `make install` para instalar las dependencias del proyecto.
-4. Ejecuta `make setup`. El comando crea `backend/.env`, genera `DB_PASSWORD` y `SESSION_SECRET`, y restringe los permisos del archivo.
-5. Edita `backend/.env` e introduce `FORTYTWO_CLIENT_ID`, `FORTYTWO_CLIENT_SECRET` y `SERVER_IP`, que es la direccion ip de tu puesto donde estas sentado. El resto de valores generados no debe compartirse ni subirse al repositorio.
-6. Ejecuta `make docker-up`.
-
+3. Ejecuta `make docker up` para incializar el proyecto y sigue las instrucciones del a terminal.
 
 Tras el arranque, la aplicación está disponible en `https://<SERVER_IP>:8443`. PostgreSQL y Adminer sólo se exponen en `127.0.0.1`: Adminer se abre en `http://localhost:8080` con servidor `postgres`, usuario `postgres` y base de datos `transcendence`; la contraseña es el valor `DB_PASSWORD` de `backend/.env`.
 
@@ -28,13 +24,12 @@ Tras el arranque, la aplicación está disponible en `https://<SERVER_IP>:8443`.
 | --- | --- |
 | `make install` | Instala las dependencias del monorepo. |
 | `make setup` | Crea `backend/.env` con secretos locales. |
-| `make docker-up` | Inicia Nginx, frontend, backend, PostgreSQL y Adminer; inicializa el esquema de la base de datos. |
+| `make docker-up` | Inicia Nginx, frontend, backend, PostgreSQL y Adminer; inicializa el proyecto entero. |
 | `make docker-build` | Reconstruye las imágenes sin caché. |
 | `make docker-down` | Detiene los servicios definidos por el compose principal. |
 | `make docker-down-all` | Detiene los servicios de la aplicación y de la base de datos. |
 | `make docker-restart` | Reinicia frontend y backend. |
 | `make docker-clean` | Elimina contenedores y volúmenes, incluidos todos los datos de PostgreSQL. |
-| `make mock-admin` | Crea o actualiza el usuario local de prueba definido en `backend/mock-user.sql`. |
 | `make dev` / `make dev-backend` | Inicia, respectivamente, el frontend o el backend en desarrollo local. |
 
 Si se usa un volumen de PostgreSQL ya existente y falta alguna tabla, `make docker-up` ejecuta de nuevo `backend/init.sql`. Como alternativa, se puede reinicializar el entorno con `make docker-clean` —esta acción borra los datos persistentes— y arrancarlo de nuevo.
