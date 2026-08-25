@@ -10,7 +10,7 @@ import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
 import token_endpoints from "./token.js"
-import { isAuthenticated, formatErrorJson, hashPassword } from "./utils.js"
+import { isAuthenticated, formatErrorJson, hashPassword, verifyPassword } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
 
 const MIN_PASSWORD_LENGTH = 6;

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import express, { response } from 'express';
-import { formatErrorJson } from './utils.js';
+import { formatErrorJson, isAuthenticated } from './utils.js';
 import { pool } from "./db.js";
 
 const router = express.Router();
@@ -45,6 +45,6 @@ export function verify_token(req, res) {
     res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token"));
 }
 
-router.post("/", get_token);
+router.post("/", isAuthenticated, get_token);
 
 export default router;
