@@ -34,27 +34,36 @@ async function get_token(req, res) {
         admin: user_rows.rows[0].user_role == "admin" ? true : false,
     }
 
-    console.log(token_data)
-
     res.status(200).json({"token": jwt.sign(token_data, jwt_secret, {expiresIn: token_expiry + "h"})});
 }
 
-export function verify_token(req, res) {
-    const token = req.header["Authentication"] &&
-    req.header["Authentication"].split(" ").length == 2 &&
-    req.header["Authentication"].split(" ")[0] == "Bearer" ?
-    req.header["Authentication"].split(" ")[1] : ""
+export function verify_token(req, res, next) {
+    // Bypass token verification if already in session
+    if (req.isAuthenticated()) {
+        return next();
+    }
+
+    const auth_header = req.headers["authentication"];
+    const token = auth_header &&
+    auth_header.split(" ").length == 2 &&
+    auth_header.split(" ")[0] == "Bearer" ?
+    auth_header.split(" ")[1].trim() : ""
     const jwt_secret = process.env.JWT_SECRET;
 
     if (!token) {
         res.status(400).json(formatErrorJson(400, "Bad Request", "Bad token header format"));
+        return;
     }
 
-    if (jwt.verify(token, jwtSecretKey)) {
+    try {
+        res.locals.decoded_token = jwt.verify(token, jwt_secret);
         return next();
+    } catch {
+        res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token"));
     }
-    res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token"));
 }
+
+router.use(express.json())
 
 router.post("/", get_token);
 

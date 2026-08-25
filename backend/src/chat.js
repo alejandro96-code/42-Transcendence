@@ -2,6 +2,7 @@ import express from 'express';
 import { formatErrorJson, isAuthenticated } from './utils.js';
 import { pool } from './db.js';
 import { containsProfanity } from './profanity.js';
+import { verify_token } from './token.js';
 
 function getRecipientId(value) {
     const recipientId = Number(value);
@@ -137,7 +138,7 @@ const router = express.Router();
 
 router.use(express.json());
 
-router.get('/:recipientId', isAuthenticated, read_messages);
-router.post('/:recipientId', isAuthenticated, create_message);
+router.get('/:recipientId', verify_token, read_messages);
+router.post('/:recipientId', verify_token, create_message);
 
 export default router;

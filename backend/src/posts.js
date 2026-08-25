@@ -3,6 +3,7 @@ import { formatErrorJson, isAuthenticated, validate } from './utils.js';
 import { postsCreateSchema } from "./classes.js";
 import { pool } from "./db.js";
 import { containsProfanity } from './profanity.js';
+import { verify_token } from './token.js';
 
 async function remove_likes(req, res) {
 
@@ -278,13 +279,11 @@ async function delete_post(req, res) {
 
 const router = express.Router();
 
-router.use(isAuthenticated);
-
-router.delete("/likes", remove_likes);
-router.patch("/likes", update_likes);
-router.delete("/", delete_post);
-router.get("/", read_posts);
-router.get("/comments", read_comments);
-router.post("/", create_post);
+router.delete("/likes", verify_token, remove_likes);
+router.patch("/likes", verify_token, update_likes);
+router.delete("/", verify_token, delete_post);
+router.get("/", verify_token, read_posts);
+router.get("/comments", verify_token, read_comments);
+router.post("/", verify_token, create_post);
 
 export default router;

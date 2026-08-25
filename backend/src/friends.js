@@ -1,10 +1,11 @@
 import express from 'express';
 import { pool } from './db.js';
 import { formatErrorJson, isAuthenticated } from './utils.js';
+import { verify_token } from './token.js'
 
 const router = express.Router();
 
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', verify_token, async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen,
@@ -35,7 +36,7 @@ router.get('/', isAuthenticated, async (req, res) => {
     }
 });
 
-router.get('/user/:userId', isAuthenticated, async (req, res) => {
+router.get('/user/:userId', verify_token, async (req, res) => {
     const userId = Number.parseInt(req.params.userId, 10);
 
     if (!Number.isInteger(userId)) {
@@ -78,7 +79,7 @@ router.get('/user/:userId', isAuthenticated, async (req, res) => {
     }
 });
 
-router.get('/search', isAuthenticated, async (req, res) => {
+router.get('/search', verify_token, async (req, res) => {
     const query = String(req.query?.q ?? '').trim();
 
     if (!query) {
@@ -111,7 +112,7 @@ router.get('/search', isAuthenticated, async (req, res) => {
     }
 });
 
-router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
+router.get('/:friendId/profile', verify_token, async (req, res) => {
     const friendId = Number.parseInt(req.params.friendId, 10);
 
     if (!Number.isInteger(friendId)) {
@@ -148,7 +149,7 @@ router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
     }
 });
 
-router.get('/requests', isAuthenticated, async (req, res) => {
+router.get('/requests', verify_token, async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT friend_requests.id, users.username, users.email, friend_requests.created_at
@@ -165,7 +166,7 @@ router.get('/requests', isAuthenticated, async (req, res) => {
     }
 });
 
-router.post('/heartbeat', isAuthenticated, async (req, res) => {
+router.post('/heartbeat', verify_token, async (req, res) => {
     try {
         await pool.query(
             `UPDATE users
@@ -183,7 +184,7 @@ router.post('/heartbeat', isAuthenticated, async (req, res) => {
     }
 })
 
-router.post('/requests', isAuthenticated, async (req, res) => {
+router.post('/requests', verify_token, async (req, res) => {
     const username = String(req.body?.username ?? '').trim();
     if (!username) return res.status(400).json({ error: 'A nick is mandatory.' });
 
@@ -227,7 +228,7 @@ router.post('/requests', isAuthenticated, async (req, res) => {
     }
 });
 
-router.patch('/requests/:requestId', isAuthenticated, async (req, res) => {
+router.patch('/requests/:requestId', verify_token, async (req, res) => {
     const requestId = Number.parseInt(req.params.requestId, 10);
     const action = String(req.body?.status ?? '').trim();
     
@@ -264,7 +265,7 @@ if (action !== 'accepted' && action !== 'rejected') {
     }
 });
 
-router.delete('/:friendId', isAuthenticated, async (req, res) => {
+router.delete('/:friendId', verify_token, async (req, res) => {
     const friendId = Number.parseInt(req.params.friendId, 10);
     if (!Number.isInteger(friendId)) return res.status(400).json({ error: 'Invalid friend.' });
 
