@@ -10,11 +10,15 @@ export interface ChatMessage {
 }
 
 async function readError(response: Response, fallback: string) {
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    return fallback
+  }
+
   try {
     const data = await response.json()
     if (typeof data?.error === 'string') return data.error
   } catch {
-    // Use the fallback if the server response is not JSON.
+    return fallback
   }
   return fallback
 }

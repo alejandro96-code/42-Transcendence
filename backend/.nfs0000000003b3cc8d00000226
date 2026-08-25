@@ -53,9 +53,11 @@ CREATE INDEX IF NOT EXISTS chat_messages_idx
 
 CREATE TABLE IF NOT EXISTS friend_requests (
     id SERIAL PRIMARY KEY,
-    sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+    sender_id INT,
+    recipient_id INT,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(10) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT friend_requests_different_users CHECK (sender_id <> recipient_id),

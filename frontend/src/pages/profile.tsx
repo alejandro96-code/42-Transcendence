@@ -10,7 +10,7 @@ import { friendsAPI, type FriendProfile } from '../services/friendsAPI'
 import { authAPI } from '../services/authAPI'
 import type { User } from '../types/auth'
 
-export function Perfil() {
+export function Profile() {
   const { friendId } = useParams()
 
   const [activeChatFriend, setActiveChatFriend] = useState<{
@@ -95,15 +95,14 @@ export function Perfil() {
   }
 
   return (
-    <div className="app-shell perfil-layout">
+    <div className="app-shell profile-layout">
       <Header />
 
       <main className="app-content">
-        <h1 className="sr-only">Perfil de Transcendence</h1>
+        <h1 className="sr-only">Profile de Transcendence</h1>
 
         <div className="grid content-grid">
 
-          {/* PERFIL */}
           <div className="col-12 lg:col-3 left-pane">
           <PersonalData
             profileUser={profileUser ?? undefined}
@@ -116,7 +115,6 @@ export function Perfil() {
           />
           </div>
 
-          {/* PUBLICACIONES */}
           <div className="col-12 lg:col-6 middle-pane">
             <PostFeed
               readOnly={isFriendProfile}
@@ -128,7 +126,6 @@ export function Perfil() {
             />
           </div>
 
-          {/* AMIGOS + CHAT */}
           <div className="col-12 lg:col-3 right-pane">
 
             <div className="right-pane-item">

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
@@ -26,7 +26,7 @@ export function Header() {
 
   const searchTimeout = useRef<number | null>(null)
 
-  const isFriendProfile = /^\/perfil\/\d+$/.test(location.pathname)
+  const isFriendProfile = /^\/profile\/\d+$/.test(location.pathname)
 
   const { user } = useAppSelector((state) => state.auth)
 
@@ -85,12 +85,12 @@ export function Header() {
   const handleOpenFriendProfile = (friendId: number) => {
     setShowResults(false)
     setSearchValue('')
-    navigate(`/perfil/${friendId}`)
+    navigate(`/profile/${friendId}`)
     setIsMenuOpen(false)
   }
 
   const handleOpenMyProfile = () => {
-    navigate('/perfil')
+    navigate('/profile')
     setIsMenuOpen(false)
   }
 
@@ -120,21 +120,25 @@ export function Header() {
       <div className='header-bar'>
         <div className='header-nav'>
           <div className='header-brand'>
-            <img
-              src={logo42}
-              alt={t('header_logo_alt')}
-              className='header-brand-logo'
-            />
+            <Link to='/profile' className='header-brand'>
+              <img
+                src={logo42}
+                alt={t('header_logo_alt')}
+                className='header-brand-logo'
+              />
+            </Link>
           </div>
         </div>
 
         <div className='header-mobile-controls'>
           <div className='header-mobile-language'>
             <Dropdown
+              inputId='language-select-mobile'
               value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
               className='p-inputtext-sm'
+              aria-label={t('language_selector')}
             />
           </div>
 
@@ -167,10 +171,12 @@ export function Header() {
         <div className='header-actions'>
           <div className='header-languages-wrapper'>
             <Dropdown
+              inputId='language-select-normal'
               value={currentLanguage}
               options={languageOptions}
               onChange={handleLanguageChange}
               className='p-inputtext-sm'
+              aria-label={t('language_selector')}
             />
           </div>
 

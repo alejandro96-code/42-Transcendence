@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import express, { response } from 'express';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { Validator } from "express-json-validator-middleware";
 
 // Middleware to verify authentication
+=======
+import { Validator } from "express-json-validator-middleware";
+
+>>>>>>> cc6844000b2b1a0af5cadadad7d55a507458d1cd
 export const isAuthenticated = (req, res, next) => {
     if (req.isAuthenticated()) {
         return next();

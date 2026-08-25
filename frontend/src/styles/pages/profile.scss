@@ -1,7 +1,7 @@
 
 @use '../variables' as *;
 
-.perfil-layout {
+.profile-layout {
   height: 100vh;
   overflow: hidden;
   display: grid;
@@ -52,7 +52,7 @@
 }
 
 
-.perfil-layout{
+.profile-layout{
   .content-grid {
     padding-inline: 0;
   }
@@ -63,7 +63,7 @@
 }
 
 @media (max-width: $bp-lg) {
-  .perfil-layout {
+  .profile-layout {
     height: auto;
     min-height: 100vh;
     overflow: visible;
@@ -91,7 +91,7 @@
     }
   }
 
-  .perfil-layout{
+  .profile-layout{
     .content-grid > [class*='col-'] {
       padding: 0.45rem;
     }
@@ -99,7 +99,7 @@
 }
 
 @media (max-width: $bp-md) {
-  .perfil-layout{
+  .profile-layout{
     .content-grid > [class*='col-'] {
       padding: 0.35rem;
     }

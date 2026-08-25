@@ -48,7 +48,7 @@ function start_server() {
     dotenv.config();
     const app = express();
     const PORT = process.env.PORT || 4000;
-    const SERVER_IP = process.env.SERVER_IP || 'localhost';
+    const SERVER_IP = process.env.SERVER_IP;
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
     const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
@@ -57,7 +57,6 @@ function start_server() {
 
     const allowedOrigins = [
         `https://${SERVER_IP}:8443`,
-        'http://localhost:3000'
     ].filter(Boolean);
 
     app.use(cors({
@@ -204,8 +203,12 @@ function start_server() {
             failureRedirect: `${FRONTEND_URL}/`,
         }),
         (req, res) => {
+<<<<<<< HEAD
             res.redirect(`${FRONTEND_URL}/perfil`);
             //TODO: if i change this to  /profile is going to break everything?
+=======
+            res.redirect(`${FRONTEND_URL}/profile`);
+>>>>>>> cc6844000b2b1a0af5cadadad7d55a507458d1cd
         }
     );
 
@@ -303,9 +306,15 @@ function start_server() {
     app.post('/api/auth/logout', (req, res) => {
         req.logout((err) => {
             if (err) {
-                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${error}`));
+                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${err}`));
             }
-            res.status(204);
+            req.session.destroy((sessionError) => {
+                if (sessionError) {
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error destroying session: ${sessionError}`));
+                }
+                res.clearCookie('connect.sid');
+                return res.status(204).end();
+            });
         });
     });
 

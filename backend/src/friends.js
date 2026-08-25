@@ -138,13 +138,22 @@ router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
         );
 
         if (result.rows.length === 0) {
+<<<<<<< HEAD
             return res.status(404).json({ error: 'Profile not found.' });
+=======
+            return res.status(404).json({ error: 'Profile no encontrado.' });
+>>>>>>> cc6844000b2b1a0af5cadadad7d55a507458d1cd
         }
 
         return res.json(result.rows[0]);
     } catch (error) {
+<<<<<<< HEAD
         console.error('Error retrieving friend profile:', error);
         return res.status(500).json({ error: 'Error retrieving profile.' });
+=======
+        console.error('Error al obtener el profile del amigo:', error);
+        return res.status(500).json({ error: 'No se pudo obtener el profile.' });
+>>>>>>> cc6844000b2b1a0af5cadadad7d55a507458d1cd
     }
 });
 

@@ -10,7 +10,7 @@ export default defineConfig({
         port: 3000,
         strictPort: true,
         open: false,
-        allowedHosts: ['localhost', SERVER_IP],
+        allowedHosts: [SERVER_IP],
         watch: {
             usePolling: true
         }
