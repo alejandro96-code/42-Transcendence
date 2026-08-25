@@ -1,11 +1,11 @@
 import express from 'express';
-import { formatErrorJson, isAuthenticated, validate } from './utils.js';
+import { formatErrorJson, isAuthenticated } from './utils.js';
 import { pool } from './db.js';
 import { containsProfanity } from './profanity.js';
 
 function getRecipientId(value) {
-    const recipientId = Number.parseInt(value, 10);
-    return Number.isInteger(recipientId) && recipientId > 0 ? recipientId : null;
+    const recipientId = Number(value);
+    return Number.isSafeInteger(recipientId) && recipientId > 0 ? recipientId : null;
 }
 
 async function update_message(req, res) {
@@ -40,8 +40,13 @@ async function read_messages(req, res) {
         return;
     }
 
+    const user_row = await pool.query('SELECT id FROM users WHERE id = $1', [recipientId]);
+    if (!user_row || user_row.length == 0) {
+        return res.status(404).json(formatErrorJson(404, 'Not Found', 'Recipient not found'));
+    }
+
     const messages_lists = await pool.query(
-        `SELECT * 
+        `SELECT id, sender_id, receiver_id AS recipient_id, content, sent_at AS created_at 
             FROM chat_messages
             WHERE (sender_id = $1 AND recipient_id = $2) 
             OR (sender_id = $2 AND recipient_id = $1)
@@ -58,7 +63,6 @@ async function read_messages(req, res) {
     } else {
         res.json(messages_lists.rows);
     }
-    
 }
 
 async function create_message(req, res) {
@@ -72,12 +76,17 @@ async function create_message(req, res) {
         let responseBody = formatErrorJson(413, "Content Too Large", "Content must be between 1 and 1000 characters long");
         res.status(413).json(responseBody);
     }
+
+    if (!recipientId || recipientId === req.user.id) {
+        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Wrong recipientId'));
+    }
+    if (!content || content.length > 1000) {
+        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Content must be between 1 and 1000 characters long'));
+    }
     
     if (containsProfanity(content)) {
-    return res.status(400).json({
-        error: 'El mensaje contiene palabras no permitidas.'
-    });
-}
+        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'The message contains non allowed or vulgar words.'));
+    }
 
     const chat_users = await pool.query(
             'SELECT id FROM users WHERE (id = $1) OR (id = $2)',
@@ -91,23 +100,19 @@ async function create_message(req, res) {
         res.status(404).json(responseBody);
         return;
     }
-
-    const new_post = await pool.query(
-            `INSERT INTO posts (sender_id, recipient_id, content)
-            VALUES($1, $2, $3) RETURNING *
-            `,
-            [
-                chat_users, chat_users.rows[0].username, content
-            ]
+        const result = await pool.query(
+            `INSERT INTO chat_messages (sender_id, receiver_id, content)
+             VALUES ($1, $2, $3)
+             RETURNING id, sender_id, receiver_id AS recipient_id, content, sent_at AS created_at`,
+            [req.user.id, recipientId, content],
         );
 
     if (!new_post || new_post.rows.length === 0) {
         let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
         res.status(500).json(responseBody);
     } else {
-        res.json(new_post.rows);
+        return res.status(201).json(result.rows[0]);
     }
-    
 }
 
 async function delete_message(req, res) {
@@ -132,21 +137,7 @@ const router = express.Router();
 
 router.use(express.json());
 
-router.get("/", read_messages);
-
-router.patch("/", async (req, res) => {
-    const responseBody = await update_message(req, res);
-    res.json(responseBody);
-});
-
-router.post("/", async (req, res) => {
-    const responseBody = await create_message(req, res);
-    res.json(responseBody);
-});
-
-router.delete("/", async (req, res) => {
-    const responseBody = await delete_message(req, res);
-    res.json(responseBody);
-});
+router.get('/:recipientId', isAuthenticated, read_messages);
+router.post('/:recipientId', isAuthenticated, create_message);
 
 export default router;

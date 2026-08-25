@@ -72,7 +72,7 @@ try {
       )
 
   dispatch(setUser(user))
-  navigate('/perfil')
+  navigate('/profile')
 } catch (error) {
   setErrorMessage(
     error instanceof Error

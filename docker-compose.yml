@@ -1,62 +1,85 @@
 services:
+
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+
     container_name: transcendence-nginx
+
     ports:
-      - "8443:8443"
+      - "${SERVER_IP}:8443:8443"
+
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/certs:/etc/nginx/certs:ro
+
     depends_on:
       - frontend
       - backend
+
     networks:
       - transcendence-network
+
 
   frontend:
     build:
       context: .
       dockerfile: ./frontend/Dockerfile
+
     container_name: transcendence-frontend
+
     expose:
       - "3000"
+
     volumes:
       - .:/app
       - /app/node_modules
+
     environment:
       - NODE_ENV=development
-      - SERVER_IP=${SERVER_IP:?SERVER_IP is required}
-      - VITE_SERVER_IP=${SERVER_IP:?SERVER_IP is required}
-      - VITE_API_URL=https://${SERVER_IP:?SERVER_IP is required}:8443
+      - SERVER_IP=${SERVER_IP}
+      - VITE_SERVER_IP=${SERVER_IP}
+      - VITE_API_URL=https://${SERVER_IP}:8443
+
     stdin_open: true
     tty: true
+
     networks:
       - transcendence-network
+
 
   backend:
     build:
       context: .
       dockerfile: ./backend/Dockerfile
+
     container_name: transcendence-backend
+
     expose:
       - "4000"
+
     volumes:
       - .:/app
       - /app/node_modules
+
     env_file:
       - ./backend/.env
+
     environment:
       - NODE_ENV=development
-      - SERVER_IP=${SERVER_IP:?SERVER_IP is required}
-      - FRONTEND_URL=https://${SERVER_IP:?SERVER_IP is required}:8443
-      - FORTYTWO_CALLBACK_URL=https://${SERVER_IP:?SERVER_IP is required}:8443/api/auth/42/callback
+      - SERVER_IP=${SERVER_IP}
+      - FRONTEND_URL=https://${SERVER_IP}:8443
+      - FORTYTWO_CALLBACK_URL=https://${SERVER_IP}:8443/api/auth/42/callback
       - DB_HOST=postgres
+
     stdin_open: true
     tty: true
+
     networks:
       - transcendence-network
 
+
 networks:
   transcendence-network:
-    external: false
     name: transcendence-network
+    driver: bridge

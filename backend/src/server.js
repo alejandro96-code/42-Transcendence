@@ -5,14 +5,13 @@ import pg from 'pg';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as FortyTwoStrategy } from 'passport-42';
-import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
-import { isAuthenticated, formatErrorJson } from "./utils.js"
+import token_endpoints from "./token.js"
+import { isAuthenticated, formatErrorJson, hashPassword, verifyPassword } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
-import { format } from 'path';
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
@@ -26,32 +25,6 @@ function normalizeUsername(value) {
 
 function normalizeText(value) {
     return String(value ?? '').trim();
-}
-
-function hashPassword(password) {
-    const salt = randomBytes(16).toString('hex');
-    const hash = scryptSync(password, salt, 64).toString('hex');
-    return `${salt}:${hash}`;
-}
-
-function verifyPassword(password, passwordHash) {
-    if (!passwordHash || !passwordHash.includes(':')) {
-        return false;
-    }
-
-    try {
-        const [salt, hash] = passwordHash.split(':');
-        const storedBuffer = Buffer.from(hash, 'hex');
-        const computedBuffer = Buffer.from(scryptSync(password, salt, 64).toString('hex'), 'hex');
-
-        if (storedBuffer.length !== computedBuffer.length) {
-            return false;
-        }
-
-        return timingSafeEqual(storedBuffer, computedBuffer);
-    } catch {
-        return false;
-    }
 }
 
 function toPublicUser(user) {
@@ -75,7 +48,7 @@ function start_server() {
     dotenv.config();
     const app = express();
     const PORT = process.env.PORT || 4000;
-    const SERVER_IP = process.env.SERVER_IP || 'localhost';
+    const SERVER_IP = process.env.SERVER_IP;
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
     const BACKEND_URL = process.env.BACKEND_URL || `http://${SERVER_IP}:${PORT}`;
     const FORTYTWO_CALLBACK_URL = process.env.FORTYTWO_CALLBACK_URL || `${BACKEND_URL}/api/auth/42/callback`;
@@ -84,7 +57,6 @@ function start_server() {
 
     const allowedOrigins = [
         `https://${SERVER_IP}:8443`,
-        'http://localhost:3000'
     ].filter(Boolean);
 
     app.use(cors({
@@ -231,7 +203,7 @@ function start_server() {
             failureRedirect: `${FRONTEND_URL}/`,
         }),
         (req, res) => {
-            res.redirect(`${FRONTEND_URL}/perfil`);
+            res.redirect(`${FRONTEND_URL}/profile`);
         }
     );
 
@@ -259,7 +231,7 @@ function start_server() {
             return res.status(400).json(formatErrorJson(400, "Bad request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
         }
         if (!fullName || fullName.length > 100) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters lonng'));
+            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters long'));
         }
         if (!EMAIL_REGEX.test(email) || email.length > 100) {
             return res.status(400).json(formatErrorJson(400, "Bad request", 'Invalid email'));
@@ -329,9 +301,15 @@ function start_server() {
     app.post('/api/auth/logout', (req, res) => {
         req.logout((err) => {
             if (err) {
-                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${error}`));
+                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${err}`));
             }
-            res.status(204);
+            req.session.destroy((sessionError) => {
+                if (sessionError) {
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error destroying session: ${sessionError}`));
+                }
+                res.clearCookie('connect.sid');
+                return res.status(204).end();
+            });
         });
     });
 
@@ -412,8 +390,6 @@ function start_server() {
     });
 
     app.get('/api/health', async (req, res) => {
-        console.log("After all this time, it's still you")
-
         try {
             await pool.query('SELECT 1');
             res.json({ status: 'ok', database: 'connected' });
@@ -425,7 +401,7 @@ function start_server() {
     app.use("/api/posts", posts_endpoints);
     app.use("/api/messages", chat_endpoints);
     app.use("/api/friends", friends_endpoints);
-
+    app.use("/api/token", token_endpoints);
 
     try {
         app.listen(PORT, '0.0.0.0', () => {

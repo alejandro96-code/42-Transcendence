@@ -1,221 +1,165 @@
-*This project has been created as part of the 42 curriculum by alejanr2, fcasaubo, xortega y andefern*
+*This project has been created as part of the 42 curriculum by [alejanr2], [fcasaubo], [xortega], [andefern].*
 
 # Social Network 42
 
 ## Description
 
-Una sección de «Descripción» que presenta claramente el proyecto, incluyendo su objetivo y una breve reseña general.
+Social Network 42 is a web social network for the 42 community. It allows users to create a local account or log in with the 42 intra, complete a profile, publish content, connect with other users, and hold private conversations.
+
+The project was built as a full-stack application: the client offers a responsive and internationalized interface, while the API manages authentication, business logic, and persistence in PostgreSQL. The application is distributed in Docker containers and published behind Nginx using HTTPS.
 
 ## Instructions
 
-Una sección de «Instrucciones» que contenga cualquier información relevante sobre la compilación, instalación y/o ejecución.
+### Step-by-Step Execution
+
+Getting started.
+
+1. Clone the repository and navigate into the root directory:
+
+    git clone <repository_url>
+    cd <repository_directory>
+
+2. Create an application in the API section of the 42 intra. Configure the callback as (in Redirect URI):
+
+    `https://<SERVER_IP>:8443/api/auth/42/callback`
+
+3. Build and start all containers and follow the terminal instructions:
+
+    make docker-up
+
+After startup, the application is available at `https://<SERVER_IP>:8443`. PostgreSQL and Adminer are only exposed on `127.0.0.1`: Adminer opens at `http://localhost:8080` with server `postgres`, user `postgres`, and database `transcendence`; the password is the `DB_PASSWORD` value in `backend/.env`.
+
+### Available Commands
+
+| Command | Description |
+| :--- | :--- |
+| `make install` | Installs dependencies across the monorepo workspace. |
+| `make setup` | Generates `backend/.env` with local secrets and tokens. |
+| `make docker-up` | Builds and starts Nginx, frontend, backend, PostgreSQL, and Adminer containers. |
+| `make docker-build` | Forces a complete rebuild of Docker images without cache. |
+| `make docker-down` | Stops services defined in the primary compose file. |
+| `make docker-down-all` | Stops all application and persistent database containers. |
+| `make docker-restart` | Restarts frontend and backend container services. |
+| `make docker-clean` | Completely removes containers, networks, and volumes (purging all DB data). |
+| `make dev` / `make dev-backend` | Runs frontend or backend locally in development mode. |
+
+*Note:* If an existing PostgreSQL volume is mounted and tables are missing, `make docker-up` automatically re-runs `backend/init.sql`. Alternatively, run `make docker-clean` to purge volumes and reset the state.
 
 ## Team Information
 
-Este proyecto se ha distribuido con los siguientes roles
-
-alejanr2: Technical lead / Architect & Developer
-fcasaubo: Technical lead / Architect & Developer
-xortega:  Project Manager & Scrum master & Developer
-andenfern: Product Owner & Developer
-
-Funcione de cada miembro del equipo:
-
-alejanr2: Encargado de diseñar la arquitectura del software del frontend, maquetador del proyecto y resolucion de dudas y problemas técnicos.
-fcasaubo: Encargada de diseñar la arquitectura del software del backend, creacion de tablas relacionales y comunicacion con la BBDD.
-xortega:  Encargado de las estimaciones de tiempo, realización de estimar los modulos del proyecto y programar a nivel de backend.
-andefern: Encargado del valor del negocio, la vision del producto y responsable de pruebas para un producto sin fallos.
-
-A pesar de que cada miembro tenia su rol asignado todos los mimbros del grupo han trabajado como desarroladores tnato en el frontend, backend y BBDD.
-
-
-Info del apartado luego borrar:
-{
-
-    Para cada miembro del equipo mencionado al inicio del archivo README.md, debes proporcionar:
-
-    ◦ Rol(es) asignado(s): PO, PM, Tech Lead, desarrolladores, etc.
-    ◦ Breve descripción de sus responsabilidades
-
-}
+| Member | Assigned Role(s) | Primary Responsibilities |
+| :--- | :--- | :--- |
+| **alejanr2** | Tech Lead, Architect & Developer | Frontend architecture design, responsive layout integration, state management, UI component library, and team technical guidance. |
+| **fcasaubo** | Tech Lead, Architect & Developer | Backend API architecture, relational database modeling, OAuth integration, input validation, and API security. |
+| **xortega** | Project Manager, Scrum Master & Developer | Task estimation and sprint planning, progress tracking, and backend feature development (friendships, chat, status). |
+| **andefern** | Product Owner & Developer | Defining product vision and value, accessibility/legal compliance, functional quality assurance, and user acceptance testing. |
 
 ## Project Management
 
-La organización del grupo ha sido sencilla:
-
-Se han realizado una reunion cada 2 semanas inicialmente en el edificio de 42 urduliz para la ejecucion incial del proyecto:
-
-    ◦ Brainstorming de ideas de proyectos a realizar
-    ◦ Stack tecnologico a usar
-    ◦ Roles asignados 
-    ◦ Distribución del trabajo y tareas
-
-Al ser 4 miembros ya activos en trabajo laboral el proyecto se ha realizado con calma, realizando una reunión al mes y alargando el tiempo de entrega.
-Para tener mejor comunicación entre nosotros, se ha decidido trabajar en un repositorio de github. Utilizando branch nuevas para la incorporacion del backend
-y commits en master para la visualizacion del proyecto en frontend. 
-
-La asignacion de tareas se realizaron directamente en las reuniones y el canal principal de comunicación para reuniones e informacion fue tanto slack como washapp
-
-Info del apartado luego borrar:
-{
-
-    ◦ Cómo organizó el equipo el trabajo (distribución de tareas, reuniones, etc.).
-    ◦ Herramientas utilizadas para la gestión del proyecto (GitHub Issues, Trello, etc.).
-    ◦ Canales de comunicación utilizados (Discord, Slack, etc.).
-}
+- **Task Distribution & Sprints:** Work kicked off with bi-weekly in-person sprint meetings at 42 Urduliz to define the project scope, choose technical tooling, assign roles, and estimate workload. As development progressed, the team held monthly milestone checkpoints aligned with member availability.
+- **Workflow & Version Control:** Tasks were planned in sprint backlogs and implemented on a shared GitHub repository. Feature-branch workflows were enforced with pull requests and code reviews prior to merging into `main`.
+- **Project Tracking Tools:** Jira was utilized for backlog refinement, task estimation, and issue tracking.
+- **Communication Channels:** Slack and WhatsApp served as daily asynchronous communication, technical discussions, and blockers coordination channels.
 
 ## Technical Stack
 
-    ◦ Tecnologías y frameworks de frontend utilizados. ◦ Tecnologías y frameworks de backend utilizados.
-    ◦ Sistema de base de datos y motivo de su elección.
-    ◦ Otras tecnologías o librerías relevantes.
-    ◦ Justificación de las principales decisiones técnicas.
+| Area | Technologies | Technical Rationale & Justification |
+| :--- | :--- | :--- |
+| **Frontend** | React 19, TypeScript, Vite, React Router, Redux Toolkit, SCSS, PrimeReact | **React 19 & TypeScript** ensure component modularity, type safety, and fast rendering. **Vite** accelerates build cycles. **Redux Toolkit** centralizes authentication and user state across components. **i18next** provides runtime localization. **SCSS & PrimeReact** supply accessible foundation primitives alongside custom branding. |
+| **Backend** | Node.js, Express, JavaScript, Passport, passport-42 | **Express** delivers a lightweight, unopinionated REST API. **Passport.js** enables seamless OAuth 2.0 integration with the 42 API while cookie sessions guard private routes. |
+| **Database** | PostgreSQL 16, pg | **PostgreSQL** was chosen for its strict relational integrity, ACID compliance, and robust indexing for relational social graph queries (users, friendships, posts, threads). |
+| **Infrastructure** | Docker Compose, Nginx, Adminer | **Docker Compose** ensures a deterministic multi-container execution environment. **Nginx** acts as a reverse proxy managing SSL termination and routing. **Adminer** enables local database inspection. |
+| **Security & Quality** | ESLint, scrypt, HTTP-Only Cookies, Input Validation, @2toad/profanity | Strict payload validation, cryptographically strong **scrypt** password hashing, XSS/CSRF mitigation via HTTP-only secure cookies, and multilingual profanity filtering. |
 
 ## Database Schema
 
-Representación visual o descripción de la estructura de la base de datos.
-    ◦ Tablas/colecciones y sus relaciones.
-    ◦ Campos clave y tipos de datos.
+PostgreSQL stores four core entities. Referential integrity is strictly enforced with foreign keys cascading from users. Indexes are applied on primary keys, relational lookups, and chronological queries (created_at, sent_at)[cite: 4].
+
+    +--------------------+       1:N       +--------------------+
+    |       users        | <-------------> |       posts        |
+    +--------------------+                 +--------------------+
+    | id (PK)            |                 | id (PK)            |
+    | intra_id (UNIQUE)  |                 | author_id (FK)     |
+    | username (UNIQUE)  |                 | content (TEXT)     |
+    | email              |                 | likes (INT)        |
+    | password_hash      |                 | media (TEXT)       |
+    | profile_data       |                 | parent (FK)        |
+    | created_at         |                 | created_at         |
+    +--------------------+                 +--------------------+
+           |         |
+       1:N |         | 1:N
+           v         v
+    +--------------------+                 +--------------------+
+    |  friend_requests   |                 |   chat_messages    |
+    +--------------------+                 +--------------------+
+    | id (PK)            |                 | id (PK)            |
+    | sender_id (FK)     |                 | sender_id (FK)     |
+    | recipient_id (FK)  |                 | receiver_id (FK)   |
+    | status (ENUM)      |                 | content (TEXT)     |
+    | created_at         |                 | sent_at            |
+    +--------------------+                 +--------------------+
+
+| Table | Key Fields & Types | Relationships & Purpose |
+| :--- | :--- | :--- |
+| users | id (SERIAL PK), intra_id (VARCHAR), username (VARCHAR), email (VARCHAR), password_hash (VARCHAR), created_at (TIMESTAMP) | Stores user credentials, profile settings, and OAuth identifiers. intra_id and username are unique. |
+| posts | id (SERIAL PK), author_id (INT FK), content (TEXT), likes (INT), media (TEXT), parent (INT FK), created_at (TIMESTAMP) | Stores user posts and image references. parent points to another post ID for nested replies and comment threads. |
+| friend_requests | id (SERIAL PK), sender_id (INT FK), recipient_id (INT FK), status (VARCHAR), created_at (TIMESTAMP) | Models friendship states (pending, accepted, rejected). Enforces unique pairs and prevents self-invitations. |
+| chat_messages | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), content (TEXT), sent_at (TIMESTAMP) | Persists direct messages between users; automatically cascades deletions upon user removal. |
+
+*The full schema definition, constraints, and index configurations are available in backend/init.sql.*[cite: 4]
 
 ## Features List
 
-    ◦ Lista completa de las funcionalidades implementadas.
-    ◦ Qué miembro(s) del equipo trabajó/trabajaron en cada funcionalidad.
-    ◦ Breve descripción de la funcionalidad de cada característica.
+| Feature | Description | Primary Contributor(s) |
+| :--- | :--- | :--- |
+| **Registration & Login** | Local account registration, secure credential login, persistent sessions, and 42 OAuth authentication. | fcasaubo, alejanr2 |
+| **User Profiles** | View and edit bio, display name, preset avatars, and browse other users' public profiles. | alejanr2, fcasaubo |
+| **Post Feed & Threads** | Create posts, attach images, reply to existing threads, mention users, and react with likes. | alejanr2, xortega |
+| **Friend Management** | Send, accept, or decline friend requests; search connections, remove friends, and view online status. | xortega, fcasaubo |
+| **Direct Chat** | One-on-one direct messaging interface between connected users with chronological history. | xortega, alejanr2 |
+| **i18n & Legal Pages** | Full interface localization in Spanish, Basque, and English; Privacy Policy and Terms of Service pages. | alejanr2, andefern |
+| **Content Moderation** | Real-time payload sanitization and multilingual offensive language filtering on posts, profiles, and chats. | fcasaubo, andefern |
 
 ## Modules
 
-    ◦ Lista de todos los módulos seleccionados (principales y secundarios).
-    ◦ Cálculo de puntos (módulo principal = 2 puntos, módulo secundario = 1 punto).
-    ◦ Justificación de la elección de cada módulo, especialmente en el caso de los «módulos a elección» personalizados.
-    ◦ Forma en que se implementó cada módulo.
-    ◦ Miembro(s) del equipo que trabajó/trabajaron en cada módulo.
+A balanced selection of 5 Major modules (2 points each) and 9 Minor modules (1 point each) was implemented to deliver an accessible, production-ready social network platform.
+
+Total Points: 19 points
+
+| Area | Module | Type | Points | Justification & Implementation | Main Contributors |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Web | Frontend and backend frameworks | Major | 2 | React, TypeScript, and Vite structure the client; Node.js and Express expose server logic. This combination cleanly separates presentation, state, API, and persistence. | alejanr2, fcasaubo |
+| Web | User interaction | Major | 2 | The UI allows editing profiles, posting, reacting, sending friend requests, accepting or rejecting them, and chatting. React Router, Redux Toolkit, and reusable components ensure smooth interaction. | alejanr2, xortega |
+| Web | Public API | Major | 2 | A REST API was implemented in Express for authentication, profiles, posts, friendships, and chat. Routes validate data, return structured errors, and protect private resources via session. | fcasaubo, xortega |
+| Web | Notification system | Minor | 1 | Pending friend requests and mentions in posts act as in-app notifications. They are retrieved via request endpoints and the feed mention filter. | xortega, alejanr2 |
+| Web | Custom design system | Minor | 1 | A custom visual identity was created with SCSS, variables, responsive layouts, and components for profile, posts, friends, header, and chat. PrimeReact and PrimeFlex are used as support, not as a replacement for custom design. | alejanr2 |
+| Web | Advanced search | Minor | 1 | The header allows searching friends by username or full name. The search is restricted to accepted friendships, sorts results, and limits the response to maintain performance. | alejanr2, xortega |
+| Web | File upload and management | Minor | 1 | Posts allow an image from the browser. The client validates type and size, converts it to a Data URL, and the API stores it linked to the post; default profile avatars are also provided. | alejanr2, fcasaubo |
+| Accessibility & i18n | WCAG 2.1 AA Compliance | Major | 2 | Added aria-label tags, alternative texts, identifiable controls, and a semantic structure in interactive components. The responsive design and visible error messages ensure accessibility. | alejanr2, andefern |
+| Accessibility & i18n | Three languages | Minor | 1 | i18next and react-i18next manage translations in Spanish, Basque, and English. UI text, dates, and labels adapt to the selected language. | alejanr2, andefern |
+| Accessibility & i18n | Browser compatibility | Minor | 1 | The application is built with standard web technologies and responsive design to work across modern desktop and mobile browsers without browser-specific dependencies. | alejanr2, andefern |
+| User Management | Standard user management | Major | 2 | Implemented local registration, login, logout, persistent session, profile editing, friendships, and presence. Passwords are protected with scrypt and sessions use HTTP-only cookies. | fcasaubo, xortega |
+| User Management | OAuth 2.0 Remote Authentication | Minor | 1 | Passport and passport-42 integrate the 42 intra. On first login, the user is created; subsequent logins update public data from the provider. | fcasaubo |
+| AI | Content moderation | Minor | 1 | Offensive words in names, profiles, posts, and messages are filtered before storage. The @2toad/profanity module configures filtering for multiple languages, and the API rejects disallowed content. | fcasaubo, andefern |
+| Modules of Choice | Custom Module: Initial Social Network Seed | Minor | 1 | A mock SQL test script was prepared to provide a local account for testing the platform without relying exclusively on OAuth. This starting point makes it easy to verify linked data across profiles, posts, friends, and chat. | xortega, fcasaubo |
+
+Calculation: 5 major modules × 2 points = 10 points; 9 minor modules × 1 point = 9 points. Total: 19 points.
 
 ## Individual Contributions
 
-    ◦ Desglose detallado de la contribución de cada miembro del equipo.
-    ◦ Funcionalidades, módulos o componentes específicos implementados por cada persona.
-    ◦ Desafíos encontrados y cómo se superaron.
+- alejanr2: Defined the frontend architecture and UI layout, worked on profiles, posts, chat, routing, styles, and internationalization. The main challenge was integrating a consistent UI across different authenticated flows; this was solved using reusable components and centralized authentication state.
+- fcasaubo: Designed the database and backend layer, including relationships between users, posts, requests, and messages. Also contributed to authentication, validation, and API security. The core challenge was preserving social data integrity, addressed using SQL constraints, foreign keys, and indexes.
+- xortega: Organized work estimates and tracking, and developed backend features related to friendships, presence, and messaging. Special care was taken with friend request consistency to prevent duplicates and invalid state transitions.
+- andefern: Maintained product vision and functional validation, collaborated on testing and legal content, and helped detect integration issues. The main focus was ensuring primary flows were clear and that the product met all functional requirements.
 
 ## Resources
 
-Una sección de «Recursos» que enumera referencias clásicas relacionadas con el tema (documentación, artículos, tutoriales, etc.), así como una descripción de cómo se utilizó la IA, especificando para qué tareas y en qué partes del proyecto.
+- Documentation for React, PrimeReact, Vite, Express, and PostgreSQL: API reference, configuration, and implementation practices.
+- Passport and passport-42: OAuth authentication integration with 42 intra.
+- Docker Compose and Nginx: Container definition, internal networking, and HTTPS reverse proxy.
+- Redux Toolkit and i18next: Authentication state management and UI internationalization.
 
+### AI Usage Description
 
+AI was used as occasional support to clarify documentation, suggest implementation alternatives, proofread text, and assist with debugging errors. Architecture decisions, repository integration, testing, and final validation were performed and reviewed by the team.
 
-
-
-
-## Info para añadir a los modulos de arriba
-
-Proyecto fullstack con React + Node.js + JS + PostgreSQL
-
-# How to build = Instructions
-
-1º Logeate en la intra de 42
-2º Vete a la Api
-3º Create una app
-
-Inicio rápido
-
-Esto levanta:
-1. Frontend (http://localhost:3000)
-2. Backend (http://localhost:4000)
-3. BBDD (http://localhost:8080)
-    3.1 Sistema: PostgreSQL
-    3.2 Servidor: postgres
-    3.3 Usuario: postgres
-    3.4 Contraseña: postgres
-    3.5 Base de datos: transcendence
-
-Servidor pivote (`SERVER_IP`)
-
-`SERVER_IP` debe ser la IP real del ordenador donde levantas Docker (no `localhost`).
-
-`make docker-up` intenta detectarla automaticamente con `ip route`.
-
-Si quieres forzar una IP concreta:
-
-```bash
-export SERVER_IP=192.168.1.50
-make docker-up
-```
-
-`docker-compose.yml` usará esa IP para:
-- Frontend `VITE_API_URL`
-- Backend `FRONTEND_URL`
-- Backend `FORTYTWO_CALLBACK_URL`
-
-Si la deteccion automatica falla, `make docker-up` se detendra y te pedira definir `SERVER_IP` manualmente.
-
-
-
-Solucion error por version de paquetes con backend
-
-docker compose build --no-cache backend
-docker compose up -d --force-recreate backend
-docker compose logs -f backend
-
-si persiste el error:
-
-docker compose stop backend
-docker rm transcendence-backend
-docker compose up -d --build backend
-
-Comandos disponibles
-
-Primera vez todo desde la raiz del proyecto
-
-make install  # Instalar todas las dependencias (monorepo)
-
-make docker-up        # Levantar frontend + backend (levanta BD automáticamente)
-
-
-Las demas:
-make docker-db        # Levantar solo PostgreSQL (se mantiene corriendo)
-make mock-user        # Crear/actualizar el usuario local de prueba
-make docker-down      # Detener frontend + backend (BD sigue corriendo)
-make docker-down-all  # Detener TODO incluyendo PostgreSQL
-make docker-clean     # Eliminar TODO (incluyendo datos de BD)
-make clean            # Limpiar node_modules y lock files
-```
-
-El usuario de prueba creado por `make mock-user` tiene estas credenciales:
-
-```
-Usuario: mockuser
-Contraseña: mockpass123
-```
-
-## ⚠️ Base de datos: tabla users no existe
-
-Si al hacer login con la intra de 42 aparece el error `relation "users" does not exist`, es porque el volumen de PostgreSQL ya existía cuando se creó el contenedor y el `init.sql` no se ejecutó automáticamente.
-
-**Solución**: ejecutar el script manualmente:
-docker exec transcendence-postgres psql -U postgres -d transcendence -f /docker-entrypoint-initdb.d/init.sql
-
-`init.sql` solo se ejecuta automáticamente cuando el volumen `postgres_data` está vacío (primera vez). Si borras el volumen con `make docker-clean` y lo recreás, se ejecuta solo.
-
-## 🔗 Enlaces
-
-Jira: https://transcendence-42-network.atlassian.net
-Drive modulos: https://docs.google.com/spreadsheets/d/1tWkKrj_4rcdVpjzi3vXjxSJlyZc2YZTWs9tetwJPIOQ/edit?gid=0#gid=0
-
-informacion que guardar para cada usuario en la bbdd:
-
-nombre completo
-nombre de usuario
-correo electronico
-profesion
-texto libre
-numero de post
-info de post
-amigos agregados
-solicitudes de amigos
-chat individual con cada amigo
-
-pasos para ejecutar le proyecto anda mas clonarlp
-make clean
-make install
-make docker-build
-make docker-up

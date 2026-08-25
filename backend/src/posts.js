@@ -123,13 +123,13 @@ async function read_posts(req, res) {
                     ON fr.status = 'accepted'
                     AND (
                         (
-                            fr.requester_id = p.author_id
+                            fr.sender_id = p.author_id
                             AND fr.recipient_id = $1
                         )
                         OR
                         (
                             fr.recipient_id = p.author_id
-                            AND fr.requester_id = $1
+                            AND fr.sender_id = $1
                         )
                     )
                 WHERE p.content ~ (
@@ -176,7 +176,7 @@ async function create_post(req, res) {
                 formatErrorJson(
                     400,
                     "Bad Request",
-                    "El contenido contiene palabras no permitidas"
+                    "The media contains vulgar words"
                 )
             );
         }
@@ -230,12 +230,12 @@ async function create_post(req, res) {
         return res.json(new_post.rows);
 
     } catch (error) {
-        return res.status(500).json({
-            error: 'Error al crear el post.',
-            details: error.message
-        });
+        // return res.status(500).json({
+        //     error: 'Error creating the post.',
+        //     details: error.message
+        // });
     }
-
+//something is wrong here
     const parent = req.body.parent ? req.body.parent : 0
 
     const new_post = await pool.query(
@@ -285,10 +285,6 @@ router.patch("/likes", update_likes);
 router.delete("/", delete_post);
 router.get("/", read_posts);
 router.get("/comments", read_comments);
-router.post(
-    "/",
-    validate({ body: postsCreateSchema }),
-    create_post
-);
+router.post("/", create_post);
 
 export default router;

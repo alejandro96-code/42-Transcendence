@@ -8,6 +8,10 @@ async function readErrorMessage(
   response: Response,
   fallbackMessage: string,
 ): Promise<string> {
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    return fallbackMessage
+  }
+
   try {
     const data = await response.json()
 
@@ -33,8 +37,7 @@ async function readErrorMessage(
       return data.error
     }
   } catch {
-    // Si la respuesta no contiene JSON,
-    // usamos el mensaje por defecto.
+    return fallbackMessage
   }
 
   return fallbackMessage
