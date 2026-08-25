@@ -203,12 +203,7 @@ function start_server() {
             failureRedirect: `${FRONTEND_URL}/`,
         }),
         (req, res) => {
-<<<<<<< HEAD
-            res.redirect(`${FRONTEND_URL}/perfil`);
-            //TODO: if i change this to  /profile is going to break everything?
-=======
             res.redirect(`${FRONTEND_URL}/profile`);
->>>>>>> cc6844000b2b1a0af5cadadad7d55a507458d1cd
         }
     );
 
@@ -395,8 +390,6 @@ function start_server() {
     });
 
     app.get('/api/health', async (req, res) => {
-        console.log("After all this time, it's still you")
-
         try {
             await pool.query('SELECT 1');
             res.json({ status: 'ok', database: 'connected' });
