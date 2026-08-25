@@ -39,21 +39,25 @@ async function get_token(req, res) {
     res.status(200).json({"token": jwt.sign(token_data, jwt_secret, {expiresIn: token_expiry + "h"})});
 }
 
-export function verify_token(req, res) {
-    const token = req.header["Authentication"] &&
-    req.header["Authentication"].split(" ").length == 2 &&
-    req.header["Authentication"].split(" ")[0] == "Bearer" ?
-    req.header["Authentication"].split(" ")[1] : ""
+export function verify_token(req, res, next) {
+    const auth_header = req.headers["authentication"];
+    const token = auth_header &&
+    auth_header.split(" ").length == 2 &&
+    auth_header.split(" ")[0] == "Bearer" ?
+    auth_header.split(" ")[1].trim() : ""
     const jwt_secret = process.env.JWT_SECRET;
 
     if (!token) {
         res.status(400).json(formatErrorJson(400, "Bad Request", "Bad token header format"));
     }
 
-    if (jwt.verify(token, jwtSecretKey)) {
-        return next();
+    try {
+        console.log(`[${token}] secret: ${jwt_secret}`)
+        res.locals.decoded_token = jwt.verify(token, jwt_secret);
+        next();
+    } catch {
+        res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token"));
     }
-    res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token"));
 }
 
 router.post("/", get_token);
