@@ -6,7 +6,7 @@ import { pool } from "./db.js";
 const router = express.Router();
 
 async function get_token(req, res) {
-    const username = req.body?.username.trim();
+    const username = req.body?.username?.trim();
     const password = String(req.body?.password ?? '');
 
     if (!username || !password) {
@@ -43,7 +43,7 @@ export function verify_token(req, res, next) {
         return next();
     }
 
-    const auth_header = req.headers["authentication"];
+    const auth_header = req.headers["authorization"];
     const token = auth_header &&
     auth_header.split(" ").length == 2 &&
     auth_header.split(" ")[0] == "Bearer" ?
@@ -57,6 +57,7 @@ export function verify_token(req, res, next) {
 
     try {
         res.locals.decoded_token = jwt.verify(token, jwt_secret);
+        req.user = {"id": res.locals.decoded_token.userId};
         return next();
     } catch {
         res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token"));

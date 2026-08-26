@@ -4,6 +4,7 @@ import { postsCreateSchema } from "./classes.js";
 import { pool } from "./db.js";
 import { containsProfanity } from './profanity.js';
 import { verify_token } from './token.js';
+import { format } from 'path';
 
 async function remove_likes(req, res) {
 
@@ -171,6 +172,10 @@ async function create_post(req, res) {
         const media = req.body.image ? [req.body.image] : [];
         const authorId = req.user.id;
         const content = String(req.body?.content ?? '').trim();
+
+        if (!content || content.length == 0) {
+            return res.status(400).json(formatErrorJson(400, "Bad request", "Message content can't be empty!"))
+        }
 
         if (containsProfanity(content)) {
             return res.status(400).json(
