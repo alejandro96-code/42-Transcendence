@@ -5,7 +5,10 @@ import { verify_token } from './token.js'
 
 const router = express.Router();
 
-router.get('/', verify_token, async (req, res) => {
+router.use(express.json());
+
+
+async function read_friends(req, res) {
     try {
         const result = await pool.query(
             `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen,
@@ -34,9 +37,9 @@ router.get('/', verify_token, async (req, res) => {
         console.error('Error retrieving friends: ', error);
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", `Error retrieving friends: ${error}`));
     }
-});
+}
 
-router.get('/user/:userId', verify_token, async (req, res) => {
+async function read_friends_by_user(req, res) {
     const userId = Number.parseInt(req.params.userId, 10);
 
     if (!Number.isInteger(userId)) {
@@ -77,9 +80,9 @@ router.get('/user/:userId', verify_token, async (req, res) => {
         console.error('Error retrieving the friends of this user:', error);
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", `Error retrieving friends: ${error}`));
     }
-});
+}
 
-router.get('/search', verify_token, async (req, res) => {
+async function read_friends_search(req, res) {
     const query = String(req.query?.q ?? '').trim();
 
     if (!query) {
@@ -110,9 +113,9 @@ router.get('/search', verify_token, async (req, res) => {
         console.error('Error while finding friends:', error);
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", 'Error searching your friends'));
     }
-});
+}
 
-router.get('/:friendId/profile', verify_token, async (req, res) => {
+async function read_friend_profile(req, res) {
     const friendId = Number.parseInt(req.params.friendId, 10);
 
     if (!Number.isInteger(friendId)) {
@@ -147,9 +150,9 @@ router.get('/:friendId/profile', verify_token, async (req, res) => {
         console.error('Error retrieving friend profile:', error);
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", 'Error retrieving profile'));
     }
-});
+}
 
-router.get('/requests', verify_token, async (req, res) => {
+async function read_friend_requests(req, res) {
     try {
         const result = await pool.query(
             `SELECT friend_requests.id, users.username, users.email, friend_requests.created_at
@@ -164,9 +167,9 @@ router.get('/requests', verify_token, async (req, res) => {
         console.error('Error while retrieving fried requests:', error);
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", 'Error retrieving friend request'));
     }
-});
+}
 
-router.post('/heartbeat', verify_token, async (req, res) => {
+async function create_heartbeat(req, res) {
     try {
         await pool.query(
             `UPDATE users
@@ -182,9 +185,9 @@ router.post('/heartbeat', verify_token, async (req, res) => {
             error: 'Error updating presence.'
         })
     }
-})
+}
 
-router.post('/requests', verify_token, async (req, res) => {
+async function create_friend_request(req, res) {
     const username = String(req.body?.username ?? '').trim();
     if (!username) return res.status(400).json(formatErrorJson(400, "Bad Request", "Nick is mandatory"));
 
@@ -226,9 +229,9 @@ router.post('/requests', verify_token, async (req, res) => {
         console.error('Error while creating the friend request:', error);
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", 'Error sending the fiend request'));
     }
-});
+}
 
-router.patch('/requests/:requestId', verify_token, async (req, res) => {
+async function update_friend_request(req, res) {
     const requestId = Number.parseInt(req.params.requestId, 10);
     const action = String(req.body?.status ?? '').trim();
     
@@ -237,11 +240,11 @@ router.patch('/requests/:requestId', verify_token, async (req, res) => {
         return res.status(400).json(formatErrorJson(400, "Bad Request", 'Invalid friend request.'));
     }
 
-if (action !== 'accepted' && action !== 'rejected') {
-    return res.status(400).json({
-        error: 'Invalid action. Must be accepted o rejected.'
-    });
-}
+    if (action !== 'accepted' && action !== 'rejected') {
+        return res.status(400).json({
+            error: 'Invalid action. Must be accepted o rejected.'
+        });
+    }
 
     try {
         const requestCheck = await pool.query(
@@ -263,9 +266,9 @@ if (action !== 'accepted' && action !== 'rejected') {
         console.error('Error processing the friend request:', error);
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", 'Error processing the friend request'));
     }
-});
+}
 
-router.delete('/:friendId', verify_token, async (req, res) => {
+async function delete_friend(req, res) {
     const friendId = Number.parseInt(req.params.friendId, 10);
     if (!Number.isInteger(friendId)) return res.status(400).json(formatErrorJson(400, "Bad Request", 'Invalid friend'));
 
@@ -298,8 +301,16 @@ router.delete('/:friendId', verify_token, async (req, res) => {
     } finally {
         client.release();
     }
-});
+}
 
-router.use(express.json());
+router.get('/', verify_token, read_friends);
+router.get('/user/:userId', verify_token, read_friends_by_user);
+router.get('/search', verify_token, read_friends_search);
+router.get('/:friendId/profile', verify_token, read_friend_profile);
+router.get('/requests', verify_token, read_friend_requests);
+router.post('/heartbeat', verify_token, create_heartbeat);
+router.post('/requests', verify_token, create_friend_request);
+router.patch('/requests/:requestId', verify_token, update_friend_request);
+router.delete('/:friendId', verify_token, delete_friend);
 
 export default router;

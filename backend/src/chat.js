@@ -40,7 +40,7 @@ async function read_messages(req, res) {
     }
 
     const user_row = await pool.query('SELECT id FROM users WHERE id = $1', [recipientId]);
-    if (!user_row || user_row.length == 0) {
+    if (!user_row || user_row.rows.length == 0) {
         return res.status(404).json(formatErrorJson(404, 'Not Found', 'Recipient not found'));
     }
 
@@ -94,14 +94,14 @@ async function create_message(req, res) {
         let responseBody = formatErrorJson(404, "Not found", "Message sender or receiver not found in Database");
         return res.status(404).json(responseBody);
     }
-        const result = await pool.query(
-            `INSERT INTO chat_messages (sender_id, receiver_id, content)
-             VALUES ($1, $2, $3)
-             RETURNING id, sender_id, receiver_id AS recipient_id, content, sent_at AS created_at`,
-            [req.user.id, recipientId, content],
-        );
+    const new_message = await pool.query(
+        `INSERT INTO chat_messages (sender_id, receiver_id, content)
+            VALUES ($1, $2, $3)
+            RETURNING id, sender_id, receiver_id AS recipient_id, content, sent_at AS created_at`,
+        [req.user.id, recipientId, content],
+    );
 
-    if (!new_post || new_post.rows.length === 0) {
+    if (!new_message || new_message.rows.length === 0) {
         let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
         return res.status(500).json(responseBody);
     }
@@ -111,7 +111,7 @@ async function create_message(req, res) {
 async function delete_message(req, res) {
 
     const deleted_post = await pool.query(
-            `DELETE FROM chat_messages where id = $1`,
+            `DELETE FROM chat_messages where id = $1 RETURNING *`,
             [
                 req.body.id
             ]

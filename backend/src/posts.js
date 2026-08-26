@@ -257,7 +257,7 @@ async function create_comment(req, res) {
 async function delete_post(req, res) {
 
     const deleted_post = await pool.query(
-            `DELETE FROM posts where id = $1`,
+            `DELETE FROM posts where id = $1 RETURNING *`,
             [
                 req.body.id
             ]
