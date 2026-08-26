@@ -24,12 +24,18 @@ async function update_message(req, res) {
     }
 
     const updated_message = await pool.query(
-        'UPDATE * FROM chat_messages WHERE id = $1',
+        'UPDATE * FROM chat_messages WHERE id = $1RETURNING *',
         [
             req.body.id, req.body.new_body, req.body.amount || 20
         ]
     );
-    
+
+    if (!updated_message || updated_message.rows.length === 0) {
+        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
+        return res.status(500).json(responseBody);
+    }
+
+    res.status(204).end();
 }
 
 async function read_messages(req, res) {
@@ -131,5 +137,7 @@ router.use(express.json());
 
 router.get('/:recipientId', verify_token, read_messages);
 router.post('/:recipientId', verify_token, create_message);
+router.patch("/", verify_token, update_message);
+router.delete("/", verify_token, delete_message);
 
 export default router;
