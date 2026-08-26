@@ -284,6 +284,8 @@ async function delete_post(req, res) {
 
 const router = express.Router();
 
+router.use(express.json());
+
 router.delete("/likes", verify_token, remove_likes);
 router.patch("/likes", verify_token, update_likes);
 router.delete("/", verify_token, delete_post);

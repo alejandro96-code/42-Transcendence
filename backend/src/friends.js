@@ -300,4 +300,6 @@ router.delete('/:friendId', verify_token, async (req, res) => {
     }
 });
 
+router.use(express.json());
+
 export default router;
