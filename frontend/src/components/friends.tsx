@@ -80,6 +80,8 @@ export function Friends({
     confirmDialog({
       message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${request.username}?`,
       header: t('friends_confirm_header'),
+      message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${request.username}?`,
+      header: t('friends_confirm_header'),
       icon: accepted ? 'pi pi-check' : 'pi pi-times',
       accept: async () => {
         try {
@@ -119,12 +121,15 @@ export function Friends({
     confirmDialog({
       message: t('friends_confirm_remove_msg', { name: friend.username }),
       header: t('friends_confirm_header'),
+      message: t('friends_confirm_remove_msg', { name: friend.username }),
+      header: t('friends_confirm_header'),
       icon: 'pi pi-times',
       accept: async () => {
         try {
           await friendsAPI.removeFriend(friend.id)
           await loadFriends()
           onFriendRemoved?.(friend.id)
+          toast.current?.show({ severity: 'info', summary: t('friends_toast_removed_title'), detail: `${friend.username} ${t('friends_removed_message')}` })
           toast.current?.show({ severity: 'info', summary: t('friends_toast_removed_title'), detail: `${friend.username} ${t('friends_removed_message')}` })
         } catch (error) {
           toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_remove_error') })
@@ -141,12 +146,14 @@ export function Friends({
         <div className="friends-tabs">
           <button type="button" className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
             <span>{t('friends_tab_friends', { count: friendsList.length })}</span>
+            <span>{t('friends_tab_friends', { count: friendsList.length })}</span>
             {!readOnly && (
               <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
             )}
           </button>
           {!readOnly && !ownerUserId && pendingRequests.length > 0 && (
             <button type="button" className={`p-button-friends friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
+              {t('friends_tab_requests', { count: pendingRequests.length })}
               {t('friends_tab_requests', { count: pendingRequests.length })}
             </button>
           )}
@@ -195,6 +202,7 @@ export function Friends({
                   <p>{t('friends_empty_state')}</p>
                 </div>
               )}
+              )}
             </section>
           )}
           {!readOnly && !ownerUserId && activeSection === 'requests' && pendingRequests.length > 0 && (
@@ -229,6 +237,7 @@ export function Friends({
                   </div>
                 ))}
               </div>
+            </section>
             </section>
           )}
         </div>
