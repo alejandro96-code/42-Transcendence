@@ -1,5 +1,3 @@
-# tests/conftest.py
-
 import os
 
 import pytest
@@ -29,3 +27,8 @@ def auth_api(api_client):
 @pytest.fixture
 def friendships_api(api_client):
     return FriendshipsApi(api_client)
+
+
+@pytest.fixture
+def context():
+    return {}
