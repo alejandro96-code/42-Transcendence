@@ -80,8 +80,6 @@ export function Friends({
     confirmDialog({
       message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${request.username}?`,
       header: t('friends_confirm_header'),
-      message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${request.username}?`,
-      header: t('friends_confirm_header'),
       icon: accepted ? 'pi pi-check' : 'pi pi-times',
       accept: async () => {
         try {
@@ -119,8 +117,6 @@ export function Friends({
 
   const handleRemoveFriend = (friend: Friend) => {
     confirmDialog({
-      message: t('friends_confirm_remove_msg', { name: friend.username }),
-      header: t('friends_confirm_header'),
       message: t('friends_confirm_remove_msg', { name: friend.username }),
       header: t('friends_confirm_header'),
       icon: 'pi pi-times',
@@ -202,7 +198,6 @@ export function Friends({
                   <p>{t('friends_empty_state')}</p>
                 </div>
               )}
-              )}
             </section>
           )}
           {!readOnly && !ownerUserId && activeSection === 'requests' && pendingRequests.length > 0 && (
@@ -237,7 +232,6 @@ export function Friends({
                   </div>
                 ))}
               </div>
-            </section>
             </section>
           )}
         </div>
