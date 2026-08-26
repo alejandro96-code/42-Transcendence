@@ -76,7 +76,7 @@ function start_server() {
 
     app.use((error, request, response, next) => {
         if (error instanceof ValidationError) {
-            response.status(400).json(formatErrorJson(400, "Bad request",
+            response.status(400).json(formatErrorJson(400, "Bad Request",
                 error.name + " " + error.validationErrors));
             return;
         }
@@ -228,16 +228,16 @@ function start_server() {
             return res.status(403).json(formatErrorJson(403, "Forbidden", 'Full name contains vulgar words'));
         }
         if (!USERNAME_REGEX.test(username)) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
         }
         if (!fullName || fullName.length > 100) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters long'));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Full name is mandatory and must be at most 100 characters long'));
         }
         if (!EMAIL_REGEX.test(email) || email.length > 100) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", 'Invalid email'));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Invalid email'));
         }
         if (password.length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", `Password must be at least ${MIN_PASSWORD_LENGTH} long`));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", `Password must be at least ${MIN_PASSWORD_LENGTH} long`));
         }
 
         try {
@@ -327,11 +327,11 @@ function start_server() {
         }
 
         if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", `Profession must be less than ${PROFILE_PROFESSION_MAX_LENGTH} characters long`));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", `Profession must be less than ${PROFILE_PROFESSION_MAX_LENGTH} characters long`));
         }
 
         if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", `Profession must be less than ${PROFILE_DESCRIPTION_MAX_LENGTH} characters long`));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", `Profession must be less than ${PROFILE_DESCRIPTION_MAX_LENGTH} characters long`));
         }
 
         const allowedAvatars = [
@@ -340,7 +340,7 @@ function start_server() {
         ];
 
         if (!req.user.is_intra_user && avatarUrl && !allowedAvatars.includes(avatarUrl)) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", "Not a valid avatar"));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", "Not a valid avatar"));
         }
 
         if (req.user.is_intra_user && avatarUrl) {

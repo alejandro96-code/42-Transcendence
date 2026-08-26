@@ -71,6 +71,12 @@ setup:
 			echo "$(YELLOW)Error: FORTYTWO_CLIENT_SECRET no puede estar vacío.$(NC)"; \
 			exit 1; \
 		fi; \
+		read -p "Introduce JWT_SECRET: " jwt_secret; \
+		echo ""; \
+		if [ -z "$$jwt_secret" ]; then \
+			echo "$(YELLOW)Error: JWT_SECRET no puede estar vacío.$(NC)"; \
+			exit 1; \
+		fi; \
 		\
 		callback_url="https://$$server_ip:8443/api/auth/42/callback"; \
 		frontend_url="https://$$server_ip:8443"; \
@@ -114,6 +120,7 @@ setup:
 			-e "s|^SESSION_SECRET=.*|SESSION_SECRET=$$session_secret|" \
 			-e "s|^FORTYTWO_CLIENT_ID=.*|FORTYTWO_CLIENT_ID=$$ft_id|" \
 			-e "s|^FORTYTWO_CLIENT_SECRET=.*|FORTYTWO_CLIENT_SECRET=$$ft_secret|" \
+			-e "s|^JWT_SECRET=.*|JWT_SECRET=$$jwt_secret|" \
 			-e "s|^FORTYTWO_CALLBACK_URL=.*|FORTYTWO_CALLBACK_URL=$$callback_url|" \
 			-e "s|^FRONTEND_URL=.*|FRONTEND_URL=$$frontend_url|" \
 			backend/.env.example > backend/.env; \
@@ -127,6 +134,7 @@ setup:
 		echo "$(GREEN)✓ FORTYTWO_CALLBACK_URL=$$callback_url$(NC)"; \
 		echo "$(GREEN)✓ FORTYTWO_CLIENT_ID configurado$(NC)"; \
 		echo "$(GREEN)✓ FORTYTWO_CLIENT_SECRET configurado$(NC)"; \
+		echo "$(GREEN)✓ JWT_SECRET configurado$(NC)"; \
 		echo "$(GREEN)✓ DB_PASSWORD generado automáticamente$(NC)"; \
 		echo "$(GREEN)✓ SESSION_SECRET generado automáticamente$(NC)"; \
 		echo ""; \
