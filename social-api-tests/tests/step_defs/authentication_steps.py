@@ -11,7 +11,7 @@ def new_user(context):
     context["user"] = {
         "username": "test_user",
         "email": "test_user@example.com",
-        "fullname": "test_user_FullName",
+        "fullName": "test_user_fullName",
         "password": "Password123!",
     }
 
@@ -23,7 +23,7 @@ def register_user(context, auth_api):
     context["response"] = auth_api.register(
         username=user["username"],
         email=user["email"],
-        fullname=user["fullname"],
+        fullName=user["fullName"],
         password=user["password"],
     )
 
