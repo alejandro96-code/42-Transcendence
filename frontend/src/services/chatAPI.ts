@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 export interface ChatMessage {
   id: number
   sender_id: number
-  recipient_id: number
+  receiver_id: number
   content: string
   created_at: string
 }

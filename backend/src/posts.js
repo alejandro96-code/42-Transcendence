@@ -125,11 +125,11 @@ async function read_posts(req, res) {
                     AND (
                         (
                             fr.sender_id = p.author_id
-                            AND fr.recipient_id = $1
+                            AND fr.receiver_id = $1
                         )
                         OR
                         (
-                            fr.recipient_id = p.author_id
+                            fr.receiver_id = p.author_id
                             AND fr.sender_id = $1
                         )
                     )

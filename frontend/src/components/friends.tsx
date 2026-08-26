@@ -142,14 +142,12 @@ export function Friends({
         <div className="friends-tabs">
           <button type="button" className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
             <span>{t('friends_tab_friends', { count: friendsList.length })}</span>
-            <span>{t('friends_tab_friends', { count: friendsList.length })}</span>
             {!readOnly && (
               <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
             )}
           </button>
           {!readOnly && !ownerUserId && pendingRequests.length > 0 && (
             <button type="button" className={`p-button-friends friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
-              {t('friends_tab_requests', { count: pendingRequests.length })}
               {t('friends_tab_requests', { count: pendingRequests.length })}
             </button>
           )}

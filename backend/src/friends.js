@@ -17,13 +17,13 @@ router.get('/', verify_token, async (req, res) => {
              FROM friend_requests
              JOIN users ON users.id = CASE
                  WHEN friend_requests.sender_id = $1
-                 THEN friend_requests.recipient_id
+                 THEN friend_requests.receiver_id
                  ELSE friend_requests.sender_id
              END
              WHERE friend_requests.status = 'accepted'
                AND (
                    friend_requests.sender_id = $1
-                   OR friend_requests.recipient_id = $1
+                   OR friend_requests.receiver_id = $1
                )
              ORDER BY LOWER(users.username)`,
             [req.user.id],
@@ -49,7 +49,7 @@ router.get('/user/:userId', verify_token, async (req, res) => {
                 `SELECT 1
                  FROM friend_requests
                  WHERE status = 'accepted'
-                   AND ((sender_id = $1 AND recipient_id = $2) OR (sender_id = $2 AND recipient_id = $1))
+                   AND ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1))
                  LIMIT 1`,
                 [req.user.id, userId],
             );
@@ -63,11 +63,11 @@ router.get('/user/:userId', verify_token, async (req, res) => {
             `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen
              FROM friend_requests
              JOIN users ON users.id = CASE
-                 WHEN friend_requests.sender_id = $1 THEN friend_requests.recipient_id
+                 WHEN friend_requests.sender_id = $1 THEN friend_requests.receiver_id
                  ELSE friend_requests.sender_id
              END
              WHERE friend_requests.status = 'accepted'
-               AND (friend_requests.sender_id = $1 OR friend_requests.recipient_id = $1)
+               AND (friend_requests.sender_id = $1 OR friend_requests.receiver_id = $1)
              ORDER BY LOWER(users.username)`,
             [userId],
         );
@@ -91,11 +91,11 @@ router.get('/search', verify_token, async (req, res) => {
             `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen
              FROM friend_requests
              JOIN users ON users.id = CASE
-                 WHEN friend_requests.sender_id = $1 THEN friend_requests.recipient_id
+                 WHEN friend_requests.sender_id = $1 THEN friend_requests.receiver_id
                  ELSE friend_requests.sender_id
              END
              WHERE friend_requests.status = 'accepted'
-               AND (friend_requests.sender_id = $1 OR friend_requests.recipient_id = $1)
+               AND (friend_requests.sender_id = $1 OR friend_requests.receiver_id = $1)
                AND (
                  LOWER(users.username) LIKE LOWER($2)
                  OR LOWER(users.full_name) LIKE LOWER($2)
@@ -130,8 +130,8 @@ router.get('/:friendId/profile', verify_token, async (req, res) => {
                      SELECT 1
                      FROM friend_requests
                      WHERE friend_requests.status = 'accepted'
-                       AND ((friend_requests.sender_id = $2 AND friend_requests.recipient_id = users.id)
-                         OR (friend_requests.sender_id = users.id AND friend_requests.recipient_id = $2))
+                       AND ((friend_requests.sender_id = $2 AND friend_requests.receiver_id = users.id)
+                         OR (friend_requests.sender_id = users.id AND friend_requests.receiver_id = $2))
                  )
                )
              LIMIT 1`,
@@ -155,7 +155,7 @@ router.get('/requests', verify_token, async (req, res) => {
             `SELECT friend_requests.id, users.username, users.email, friend_requests.created_at
              FROM friend_requests
              JOIN users ON users.id = friend_requests.sender_id
-             WHERE friend_requests.recipient_id = $1 AND friend_requests.status = 'pending'
+             WHERE friend_requests.receiver_id = $1 AND friend_requests.status = 'pending'
              ORDER BY friend_requests.created_at DESC`,
             [req.user.id],
         );
@@ -199,8 +199,8 @@ router.post('/requests', verify_token, async (req, res) => {
 
         const existing = await pool.query(
             `SELECT id, status FROM friend_requests
-             WHERE (sender_id = $1 AND recipient_id = $2)
-                OR (sender_id = $2 AND recipient_id = $1)
+             WHERE (sender_id = $1 AND receiver_id = $2)
+                OR (sender_id = $2 AND receiver_id = $1)
              LIMIT 1`,
             [req.user.id, recipient.id],
         );
@@ -210,7 +210,7 @@ router.post('/requests', verify_token, async (req, res) => {
             if (request.status === 'pending') return res.status(409).json({ error: 'There is already a pending friend request between these users.' });
             await pool.query(
                 `UPDATE friend_requests
-                 SET sender_id = $1, recipient_id = $2, status = 'pending', updated_at = CURRENT_TIMESTAMP
+                 SET sender_id = $1, receiver_id = $2, status = 'pending', updated_at = CURRENT_TIMESTAMP
                  WHERE id = $3`,
                 [req.user.id, recipient.id, request.id],
             );
@@ -218,7 +218,7 @@ router.post('/requests', verify_token, async (req, res) => {
         }
 
         await pool.query(
-            'INSERT INTO friend_requests (sender_id, recipient_id) VALUES ($1, $2)',
+            'INSERT INTO friend_requests (sender_id, receiver_id) VALUES ($1, $2)',
             [req.user.id, recipient.id],
         );
         return res.status(201).json({ message: 'Friend request sent.' });
@@ -245,7 +245,7 @@ if (action !== 'accepted' && action !== 'rejected') {
 
     try {
         const requestCheck = await pool.query(
-            'SELECT * FROM friend_requests WHERE id = $1 AND recipient_id = $2 AND status = \'pending\'',
+            'SELECT * FROM friend_requests WHERE id = $1 AND receiver_id = $2 AND status = \'pending\'',
             [requestId, req.user.id]
         );
 
@@ -275,7 +275,7 @@ router.delete('/:friendId', verify_token, async (req, res) => {
         const result = await client.query(
             `DELETE FROM friend_requests
              WHERE status = 'accepted'
-               AND ((sender_id = $1 AND recipient_id = $2) OR (sender_id = $2 AND recipient_id = $1))
+               AND ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1))
              RETURNING id`,
             [req.user.id, friendId],
         );
@@ -285,8 +285,8 @@ router.delete('/:friendId', verify_token, async (req, res) => {
         }
         await client.query(
             `DELETE FROM messages
-             WHERE (sender_id = $1 AND recipient_id = $2)
-                OR (sender_id = $2 AND recipient_id = $1)`,
+             WHERE (sender_id = $1 AND receiver_id = $2)
+                OR (sender_id = $2 AND receiver_id = $1)`,
             [req.user.id, friendId],
         );
         await client.query('COMMIT');

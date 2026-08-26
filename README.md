@@ -94,7 +94,7 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
     +--------------------+                 +--------------------+
     | id (PK)            |                 | id (PK)            |
     | sender_id (FK)     |                 | sender_id (FK)     |
-    | recipient_id (FK)  |                 | receiver_id (FK)   |
+    | receiver_id (FK)  |                 | receiver_id (FK)   |
     | status (ENUM)      |                 | content (TEXT)     |
     | created_at         |                 | sent_at            |
     +--------------------+                 +--------------------+
@@ -103,7 +103,7 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
 | :--- | :--- | :--- |
 | users | id (SERIAL PK), intra_id (VARCHAR), username (VARCHAR), email (VARCHAR), password_hash (VARCHAR), created_at (TIMESTAMP) | Stores user credentials, profile settings, and OAuth identifiers. intra_id and username are unique. |
 | posts | id (SERIAL PK), author_id (INT FK), content (TEXT), likes (INT), media (TEXT), parent (INT FK), created_at (TIMESTAMP) | Stores user posts and image references. parent points to another post ID for nested replies and comment threads. |
-| friend_requests | id (SERIAL PK), sender_id (INT FK), recipient_id (INT FK), status (VARCHAR), created_at (TIMESTAMP) | Models friendship states (pending, accepted, rejected). Enforces unique pairs and prevents self-invitations. |
+| friend_requests | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), status (VARCHAR), created_at (TIMESTAMP) | Models friendship states (pending, accepted, rejected). Enforces unique pairs and prevents self-invitations. |
 | chat_messages | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), content (TEXT), sent_at (TIMESTAMP) | Persists direct messages between users; automatically cascades deletions upon user removal. |
 
 *The full schema definition, constraints, and index configurations are available in backend/init.sql.*[cite: 4]
