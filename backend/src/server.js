@@ -5,14 +5,13 @@ import pg from 'pg';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as FortyTwoStrategy } from 'passport-42';
-import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { ValidationError } from "express-json-validator-middleware";
 import posts_endpoints from "./posts.js"
 import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
-import { isAuthenticated, formatErrorJson } from "./utils.js"
+import token_endpoints from "./token.js"
+import { isAuthenticated, formatErrorJson, hashPassword, verifyPassword } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
-import { format } from 'path';
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
@@ -26,32 +25,6 @@ function normalizeUsername(value) {
 
 function normalizeText(value) {
     return String(value ?? '').trim();
-}
-
-function hashPassword(password) {
-    const salt = randomBytes(16).toString('hex');
-    const hash = scryptSync(password, salt, 64).toString('hex');
-    return `${salt}:${hash}`;
-}
-
-function verifyPassword(password, passwordHash) {
-    if (!passwordHash || !passwordHash.includes(':')) {
-        return false;
-    }
-
-    try {
-        const [salt, hash] = passwordHash.split(':');
-        const storedBuffer = Buffer.from(hash, 'hex');
-        const computedBuffer = Buffer.from(scryptSync(password, salt, 64).toString('hex'), 'hex');
-
-        if (storedBuffer.length !== computedBuffer.length) {
-            return false;
-        }
-
-        return timingSafeEqual(storedBuffer, computedBuffer);
-    } catch {
-        return false;
-    }
 }
 
 function toPublicUser(user) {
@@ -258,7 +231,7 @@ function start_server() {
             return res.status(400).json(formatErrorJson(400, "Bad request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
         }
         if (!fullName || fullName.length > 100) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters lonng'));
+            return res.status(400).json(formatErrorJson(400, "Bad request", 'Full name is mandatory and must be at most 100 characters long'));
         }
         if (!EMAIL_REGEX.test(email) || email.length > 100) {
             return res.status(400).json(formatErrorJson(400, "Bad request", 'Invalid email'));
@@ -350,7 +323,7 @@ function start_server() {
         }
 
         if (containsProfanity(description)) {
-            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Profession contains vulgar words'));
+            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Description contains vulgar words'));
         }
 
         if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
@@ -417,8 +390,6 @@ function start_server() {
     });
 
     app.get('/api/health', async (req, res) => {
-        console.log("After all this time, it's still you")
-
         try {
             await pool.query('SELECT 1');
             res.json({ status: 'ok', database: 'connected' });
@@ -430,7 +401,7 @@ function start_server() {
     app.use("/api/posts", posts_endpoints);
     app.use("/api/messages", chat_endpoints);
     app.use("/api/friends", friends_endpoints);
-
+    app.use("/api/token", token_endpoints);
 
     try {
         app.listen(PORT, '0.0.0.0', () => {

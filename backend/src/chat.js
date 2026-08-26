@@ -2,51 +2,81 @@ import express from 'express';
 import { formatErrorJson, isAuthenticated } from './utils.js';
 import { pool } from './db.js';
 import { containsProfanity } from './profanity.js';
-
-const router = express.Router();
-
-router.use(express.json());
+import { verify_token } from './token.js';
 
 function getRecipientId(value) {
     const recipientId = Number(value);
     return Number.isSafeInteger(recipientId) && recipientId > 0 ? recipientId : null;
 }
 
-async function findRecipient(recipientId) {
-    const result = await pool.query('SELECT id FROM users WHERE id = $1', [recipientId]);
-    return result.rows[0] ?? null;
+async function update_message(req, res) {
+
+    const original_message = await pool.query(
+        'SELECT * FROM chat_messages WHERE id = $1',
+        [
+            req.body.sender, req.body.receiver, req.body.amount || 20
+        ]
+    );
+        
+    if (!original_message || original_message.rows.length === 0) {
+        let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");
+        res.status(404).json(responseBody);
+        return;
+    }
+
+    const updated_message = await pool.query(
+        'UPDATE * FROM chat_messages WHERE id = $1',
+        [
+            req.body.id, req.body.new_body, req.body.amount || 20
+        ]
+    );
+    
 }
 
-router.get('/:recipientId', isAuthenticated, async (req, res) => {
+async function read_messages(req, res) {
     const recipientId = getRecipientId(req.params.recipientId);
     if (!recipientId || recipientId === req.user.id) {
-        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Wrong recipientId'));
+        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
+        res.status(400).json(responseBody);
+        return;
     }
 
-    try {
-        if (!await findRecipient(recipientId)) {
-            return res.status(404).json(formatErrorJson(404, 'Not Found', 'Recipient not found'));
-        }
-
-        const result = await pool.query(
-            `SELECT id, sender_id, receiver_id AS recipient_id, content, sent_at AS created_at
-             FROM chat_messages
-             WHERE (sender_id = $1 AND receiver_id = $2)
-                OR (sender_id = $2 AND receiver_id = $1)
-             ORDER BY sent_at ASC, id ASC`,
-            [req.user.id, recipientId],
-        );
-        
-        return res.json(result.rows);
-    } catch (error) {
-        console.error('Error retrieving messages:', error);
-        return res.status(500).json(formatErrorJson(500, 'Internal Server Error', 'Could not retrieve messages'));
+    const user_row = await pool.query('SELECT id FROM users WHERE id = $1', [recipientId]);
+    if (!user_row || user_row.length == 0) {
+        return res.status(404).json(formatErrorJson(404, 'Not Found', 'Recipient not found'));
     }
-});
 
-router.post('/:recipientId', isAuthenticated, async (req, res) => {
+    const messages_lists = await pool.query(
+        `SELECT id, sender_id, receiver_id AS recipient_id, content, sent_at AS created_at 
+            FROM chat_messages
+            WHERE (sender_id = $1 AND recipient_id = $2) 
+            OR (sender_id = $2 AND recipient_id = $1)
+            ORDER BY created_at ASC, id ASC
+            FETCH FIRST $3 ROWS ONLY`,
+        [
+            req.user.id, recipientId, req.body.amount || 20
+        ]
+    );
+
+    if (!messages_lists || messages_lists.rows.length === 0) {
+        let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");
+        res.status(404).json(responseBody);
+    } else {
+        res.json(messages_lists.rows);
+    }
+}
+
+async function create_message(req, res) {
     const recipientId = getRecipientId(req.params.recipientId);
     const content = String(req.body?.content ?? '').trim();
+    if (!recipientId || recipientId === req.user.id) {
+        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
+        res.status(400).json(responseBody);
+        return;
+    } else if (!content || content.length > 1000) {
+        let responseBody = formatErrorJson(413, "Content Too Large", "Content must be between 1 and 1000 characters long");
+        res.status(413).json(responseBody);
+    }
 
     if (!recipientId || recipientId === req.user.id) {
         return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Wrong recipientId'));
@@ -54,15 +84,23 @@ router.post('/:recipientId', isAuthenticated, async (req, res) => {
     if (!content || content.length > 1000) {
         return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Content must be between 1 and 1000 characters long'));
     }
+    
     if (containsProfanity(content)) {
-        return res.status(400).json({ error: 'El mensaje contiene palabras no permitidas.' });
+        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'The message contains non allowed or vulgar words.'));
     }
 
-    try {
-        if (!await findRecipient(recipientId)) {
-            return res.status(404).json(formatErrorJson(404, 'Not Found', 'Recipient not found'));
-        }
+    const chat_users = await pool.query(
+            'SELECT id FROM users WHERE (id = $1) OR (id = $2)',
+            [
+                req.body.sender, req.body.receiver
+            ]
+        );
 
+    if (!chat_users || chat_users.rows.length < 2) {
+        let responseBody = formatErrorJson(404, "Not found", "Message sender or receiver not found in Database");
+        res.status(404).json(responseBody);
+        return;
+    }
         const result = await pool.query(
             `INSERT INTO chat_messages (sender_id, receiver_id, content)
              VALUES ($1, $2, $3)
@@ -70,11 +108,37 @@ router.post('/:recipientId', isAuthenticated, async (req, res) => {
             [req.user.id, recipientId, content],
         );
 
+    if (!new_post || new_post.rows.length === 0) {
+        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
+        res.status(500).json(responseBody);
+    } else {
         return res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.error('Error creating message:', error);
-        return res.status(500).json(formatErrorJson(500, 'Internal Server Error', 'Could not create message'));
     }
-});
+}
+
+async function delete_message(req, res) {
+
+    const deleted_post = await pool.query(
+            `DELETE FROM chat_messages where id = $1`,
+            [
+                req.body.id
+            ]
+        );
+
+    if (!deleted_post || deleted_post.rows.length === 0) {
+        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
+        res.status(500).json(responseBody);
+    } else {
+        res.status(204);
+    }
+    
+}
+
+const router = express.Router();
+
+router.use(express.json());
+
+router.get('/:recipientId', verify_token, read_messages);
+router.post('/:recipientId', verify_token, create_message);
 
 export default router;

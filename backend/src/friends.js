@@ -1,10 +1,11 @@
 import express from 'express';
 import { pool } from './db.js';
 import { formatErrorJson, isAuthenticated } from './utils.js';
+import { verify_token } from './token.js'
 
 const router = express.Router();
 
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', verify_token, async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen,
@@ -35,11 +36,11 @@ router.get('/', isAuthenticated, async (req, res) => {
     }
 });
 
-router.get('/user/:userId', isAuthenticated, async (req, res) => {
+router.get('/user/:userId', verify_token, async (req, res) => {
     const userId = Number.parseInt(req.params.userId, 10);
 
     if (!Number.isInteger(userId)) {
-        return res.status(400).json({ error: 'Usuario inválido.' });
+        return res.status(400).json({ error: 'Invalid user.' });
     }
 
     try {
@@ -54,7 +55,7 @@ router.get('/user/:userId', isAuthenticated, async (req, res) => {
             );
 
             if (allowedResult.rows.length === 0) {
-                return res.status(403).json({ error: 'No puedes ver los amigos de este usuario.' });
+                return res.status(403).json({ error: 'You can not see the friends of this user.' });
             }
         }
 
@@ -73,12 +74,12 @@ router.get('/user/:userId', isAuthenticated, async (req, res) => {
 
         return res.json(result.rows);
     } catch (error) {
-        console.error('Error al obtener los amigos del usuario:', error);
-        return res.status(500).json({ error: 'No se pudieron obtener los amigos del usuario.' });
+        console.error('Error retrieving the friends of this user:', error);
+        return res.status(500).json({ error: 'Error retrieving the friends of this user' });
     }
 });
 
-router.get('/search', isAuthenticated, async (req, res) => {
+router.get('/search', verify_token, async (req, res) => {
     const query = String(req.query?.q ?? '').trim();
 
     if (!query) {
@@ -106,16 +107,16 @@ router.get('/search', isAuthenticated, async (req, res) => {
 
         return res.json(result.rows);
     } catch (error) {
-        console.error('Error al buscar amigos:', error);
-        return res.status(500).json({ error: 'No se pudo buscar entre tus amigos.' });
+        console.error('Error while finding friends:', error);
+        return res.status(500).json({ error: 'Error searching your friends' });
     }
 });
 
-router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
+router.get('/:friendId/profile', verify_token, async (req, res) => {
     const friendId = Number.parseInt(req.params.friendId, 10);
 
     if (!Number.isInteger(friendId)) {
-        return res.status(400).json({ error: 'Amigo inválido.' });
+        return res.status(400).json({ error: 'Invalid friend.' });
     }
 
     try {
@@ -138,17 +139,17 @@ router.get('/:friendId/profile', isAuthenticated, async (req, res) => {
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Profile no encontrado.' });
+            return res.status(404).json({ error: 'Profile not found.' });
         }
 
         return res.json(result.rows[0]);
     } catch (error) {
-        console.error('Error al obtener el profile del amigo:', error);
-        return res.status(500).json({ error: 'No se pudo obtener el profile.' });
+        console.error('Error retrieving friend profile:', error);
+        return res.status(500).json({ error: 'Error retrieving profile.' });
     }
 });
 
-router.get('/requests', isAuthenticated, async (req, res) => {
+router.get('/requests', verify_token, async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT friend_requests.id, users.username, users.email, friend_requests.created_at
@@ -160,12 +161,12 @@ router.get('/requests', isAuthenticated, async (req, res) => {
         );
         return res.json(result.rows);
     } catch (error) {
-        console.error('Error al obtener solicitudes:', error);
-        return res.status(500).json({ error: 'No se pudieron obtener las solicitudes.' });
+        console.error('Error while retrieving fried requests:', error);
+        return res.status(500).json({ error: 'Error retrieving friend request.' });
     }
 });
 
-router.post('/heartbeat', isAuthenticated, async (req, res) => {
+router.post('/heartbeat', verify_token, async (req, res) => {
     try {
         await pool.query(
             `UPDATE users
@@ -176,16 +177,16 @@ router.post('/heartbeat', isAuthenticated, async (req, res) => {
 
         return res.json({ success: true })
     } catch (error) {
-        console.error('Error actualizando presencia:', error)
+        console.error('Error updating presence:', error)
         return res.status(500).json({
-            error: 'No se pudo actualizar la presencia.'
+            error: 'Error updating presence.'
         })
     }
 })
 
-router.post('/requests', isAuthenticated, async (req, res) => {
+router.post('/requests', verify_token, async (req, res) => {
     const username = String(req.body?.username ?? '').trim();
-    if (!username) return res.status(400).json({ error: 'El nick es obligatorio.' });
+    if (!username) return res.status(400).json({ error: 'A nick is mandatory.' });
 
     try {
         const recipientResult = await pool.query(
@@ -193,8 +194,8 @@ router.post('/requests', isAuthenticated, async (req, res) => {
             [username],
         );
         const recipient = recipientResult.rows[0];
-        if (!recipient) return res.status(404).json({ error: 'Ese usuario no existe.' });
-        if (recipient.id === req.user.id) return res.status(400).json({ error: 'No puedes enviarte una solicitud a ti mismo.' });
+        if (!recipient) return res.status(404).json({ error: 'That user does not exist.' });
+        if (recipient.id === req.user.id) return res.status(400).json({ error: 'You can not send a friend request to yourself.' });
 
         const existing = await pool.query(
             `SELECT id, status FROM friend_requests
@@ -205,40 +206,40 @@ router.post('/requests', isAuthenticated, async (req, res) => {
         );
         if (existing.rows.length > 0) {
             const request = existing.rows[0];
-            if (request.status === 'accepted') return res.status(409).json({ error: 'Ya sois amigos.' });
-            if (request.status === 'pending') return res.status(409).json({ error: 'Ya existe una solicitud pendiente entre ambos usuarios.' });
+            if (request.status === 'accepted') return res.status(409).json({ error: 'You are already friends.' });
+            if (request.status === 'pending') return res.status(409).json({ error: 'There is already a pending friend request between these users.' });
             await pool.query(
                 `UPDATE friend_requests
                  SET sender_id = $1, recipient_id = $2, status = 'pending', updated_at = CURRENT_TIMESTAMP
                  WHERE id = $3`,
                 [req.user.id, recipient.id, request.id],
             );
-            return res.status(201).json({ message: 'Solicitud enviada.' });
+            return res.status(201).json({ message: 'Friend request sent.' });
         }
 
         await pool.query(
             'INSERT INTO friend_requests (sender_id, recipient_id) VALUES ($1, $2)',
             [req.user.id, recipient.id],
         );
-        return res.status(201).json({ message: 'Solicitud enviada.' });
+        return res.status(201).json({ message: 'Friend request sent.' });
     } catch (error) {
-        console.error('Error al crear solicitud:', error);
-        return res.status(500).json({ error: 'No se pudo enviar la solicitud.' });
+        console.error('Error while creating the friend request:', error);
+        return res.status(500).json({ error: 'Error sending the fiend request.' });
     }
 });
 
-router.patch('/requests/:requestId', isAuthenticated, async (req, res) => {
+router.patch('/requests/:requestId', verify_token, async (req, res) => {
     const requestId = Number.parseInt(req.params.requestId, 10);
     const action = String(req.body?.status ?? '').trim();
     
 
     if (!Number.isInteger(requestId)) {
-        return res.status(400).json({ error: 'Solicitud inválida.' });
+        return res.status(400).json({ error: 'Invalid friend request.' });
     }
 
 if (action !== 'accepted' && action !== 'rejected') {
     return res.status(400).json({
-        error: 'Acción inválida. Debe ser accepted o rejected.'
+        error: 'Invalid action. Must be accepted o rejected.'
     });
 }
 
@@ -249,7 +250,7 @@ if (action !== 'accepted' && action !== 'rejected') {
         );
 
         if (requestCheck.rows.length === 0) {
-            return res.status(404).json({ error: 'Solicitud de amistad no encontrada o ya procesada.' });
+            return res.status(404).json({ error: 'Friend request not found or already processed.' });
         }
 
         await pool.query(
@@ -257,16 +258,16 @@ if (action !== 'accepted' && action !== 'rejected') {
             [action, requestId]
         );
 
-        return res.json({ message: `Solicitud de amistad ${action === 'accepted' ? 'aceptada' : 'rechazada'} correctamente.` });
+        return res.json({ message: `Friend request ${action === 'accepted' ? 'accepted' : 'rejected'} successfully.` });
     } catch (error) {
-        console.error('Error al procesar la solicitud de amistad:', error);
-        return res.status(500).json({ error: 'No se pudo procesar la solicitud.' });
+        console.error('Error processing the friend request:', error);
+        return res.status(500).json({ error: 'Error processing the friend request.' });
     }
 });
 
-router.delete('/:friendId', isAuthenticated, async (req, res) => {
+router.delete('/:friendId', verify_token, async (req, res) => {
     const friendId = Number.parseInt(req.params.friendId, 10);
-    if (!Number.isInteger(friendId)) return res.status(400).json({ error: 'Amigo inválido.' });
+    if (!Number.isInteger(friendId)) return res.status(400).json({ error: 'Invalid friend.' });
 
     const client = await pool.connect();
     try {
@@ -280,7 +281,7 @@ router.delete('/:friendId', isAuthenticated, async (req, res) => {
         );
         if (result.rows.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ error: 'Amigo no encontrado.' });
+            return res.status(404).json({ error: 'Friend not found.' });
         }
         await client.query(
             `DELETE FROM messages
@@ -292,8 +293,8 @@ router.delete('/:friendId', isAuthenticated, async (req, res) => {
         return res.status(204).end();
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Error al eliminar amigo:', error);
-        return res.status(500).json({ error: 'No se pudo eliminar el amigo.' });
+        console.error('Error deleting friend:', error);
+        return res.status(500).json({ error: 'Error deleting friend.' });
     } finally {
         client.release();
     }

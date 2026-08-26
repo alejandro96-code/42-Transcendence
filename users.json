@@ -1,0 +1,24 @@
+{
+    "users":[
+        {
+            "name": "Xabier",
+            "password": "Xabier123!"
+        },
+        {
+            "name": "ManoloCabezaBolo",
+            "password": "ManoloCabezaBolo123!"
+        },
+        {
+            "name": "Mika",
+            "password": "Mika123!"
+        },
+        {
+            "name": "Farmer",
+            "password": "Farmer123!"
+        },
+        {
+            "name": "Alejandro",
+            "password": "Alejandro123!"
+        }
+    ]
+}

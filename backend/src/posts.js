@@ -3,6 +3,7 @@ import { formatErrorJson, isAuthenticated, validate } from './utils.js';
 import { postsCreateSchema } from "./classes.js";
 import { pool } from "./db.js";
 import { containsProfanity } from './profanity.js';
+import { verify_token } from './token.js';
 
 async function remove_likes(req, res) {
 
@@ -176,7 +177,7 @@ async function create_post(req, res) {
                 formatErrorJson(
                     400,
                     "Bad Request",
-                    "El contenido contiene palabras no permitidas"
+                    "The media contains vulgar words"
                 )
             );
         }
@@ -230,12 +231,12 @@ async function create_post(req, res) {
         return res.json(new_post.rows);
 
     } catch (error) {
-        return res.status(500).json({
-            error: 'Error al crear el post.',
-            details: error.message
-        });
+        // return res.status(500).json({
+        //     error: 'Error creating the post.',
+        //     details: error.message
+        // });
     }
-
+//something is wrong here
     const parent = req.body.parent ? req.body.parent : 0
 
     const new_post = await pool.query(
@@ -278,17 +279,11 @@ async function delete_post(req, res) {
 
 const router = express.Router();
 
-router.use(isAuthenticated);
-
-router.delete("/likes", remove_likes);
-router.patch("/likes", update_likes);
-router.delete("/", delete_post);
-router.get("/", read_posts);
-router.get("/comments", read_comments);
-router.post(
-    "/",
-    validate({ body: postsCreateSchema }),
-    create_post
-);
+router.delete("/likes", verify_token, remove_likes);
+router.patch("/likes", verify_token, update_likes);
+router.delete("/", verify_token, delete_post);
+router.get("/", verify_token, read_posts);
+router.get("/comments", verify_token, read_comments);
+router.post("/", verify_token, create_post);
 
 export default router;
