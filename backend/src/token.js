@@ -22,8 +22,7 @@ async function get_token(req, res) {
     );
 
     if (!user_rows || user_rows.rows.length == 0 || !verifyPassword(password, user_rows.rows[0].password_hash)) {
-        res.status(404).json(formatErrorJson(404, "Not Found", "User not found in database"));
-        return;
+        return res.status(404).json(formatErrorJson(404, "Not Found", "User not found in database"));
     }
 
     const jwt_secret = process.env.JWT_SECRET;

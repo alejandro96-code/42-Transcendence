@@ -20,8 +20,7 @@ async function update_message(req, res) {
         
     if (!original_message || original_message.rows.length === 0) {
         let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");
-        res.status(404).json(responseBody);
-        return;
+        return res.status(404).json(responseBody);
     }
 
     const updated_message = await pool.query(
@@ -37,8 +36,7 @@ async function read_messages(req, res) {
     const recipientId = getRecipientId(req.params.recipientId);
     if (!recipientId || recipientId === req.user.id) {
         let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
-        res.status(400).json(responseBody);
-        return;
+        return res.status(400).json(responseBody);
     }
 
     const user_row = await pool.query('SELECT id FROM users WHERE id = $1', [recipientId]);
@@ -60,10 +58,10 @@ async function read_messages(req, res) {
 
     if (!messages_lists || messages_lists.rows.length === 0) {
         let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");
-        res.status(404).json(responseBody);
-    } else {
-        res.json(messages_lists.rows);
+        return res.status(404).json(responseBody);
     }
+
+    res.json(messages_lists.rows);
 }
 
 async function create_message(req, res) {
@@ -71,18 +69,14 @@ async function create_message(req, res) {
     const content = String(req.body?.content ?? '').trim();
     if (!recipientId || recipientId === req.user.id) {
         let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
-        res.status(400).json(responseBody);
-        return;
+        return res.status(400).json(responseBody);
     } else if (!content || content.length > 1000) {
         let responseBody = formatErrorJson(413, "Content Too Large", "Content must be between 1 and 1000 characters long");
-        res.status(413).json(responseBody);
+        return res.status(413).json(responseBody);
     }
 
     if (!recipientId || recipientId === req.user.id) {
         return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Wrong recipientId'));
-    }
-    if (!content || content.length > 1000) {
-        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Content must be between 1 and 1000 characters long'));
     }
     
     if (containsProfanity(content)) {
@@ -98,8 +92,7 @@ async function create_message(req, res) {
 
     if (!chat_users || chat_users.rows.length < 2) {
         let responseBody = formatErrorJson(404, "Not found", "Message sender or receiver not found in Database");
-        res.status(404).json(responseBody);
-        return;
+        return res.status(404).json(responseBody);
     }
         const result = await pool.query(
             `INSERT INTO chat_messages (sender_id, receiver_id, content)
@@ -110,10 +103,9 @@ async function create_message(req, res) {
 
     if (!new_post || new_post.rows.length === 0) {
         let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        res.status(500).json(responseBody);
-    } else {
-        return res.status(201).json(result.rows[0]);
+        return res.status(500).json(responseBody);
     }
+    return res.status(201).json(result.rows[0]);
 }
 
 async function delete_message(req, res) {
@@ -127,11 +119,10 @@ async function delete_message(req, res) {
 
     if (!deleted_post || deleted_post.rows.length === 0) {
         let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        res.status(500).json(responseBody);
-    } else {
-        res.status(204);
+        return res.status(500).json(responseBody);
     }
-    
+
+    res.status(204).end();
 }
 
 const router = express.Router();

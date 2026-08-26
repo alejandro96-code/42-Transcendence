@@ -17,16 +17,14 @@ async function remove_likes(req, res) {
 
     if (!likes || !likes.rows || !likes.rows[0] || !likes.rows[0].likes) {
         let responseBody = formatErrorJson(404, "Not Found", "Post or likes not found");
-        res.status(404).json(responseBody);
-        return;
+        return res.status(404).json(responseBody);
     } else {
         likes_array = likes.rows[0].likes;
     }
 
     if (likes_array && !likes_array.includes(req.body.id)) {
         let responseBody = formatErrorJson(409, "Conflict", "User already liked that post");
-        res.status(409).json(responseBody);
-        return;
+        return res.status(409).json(responseBody);
     }
 
     const updated_post = await pool.query(
@@ -42,11 +40,10 @@ async function remove_likes(req, res) {
 
     if (!updated_post || updated_post.rowCount === 0) {
         let responseBody = formatErrorJson(500, "Internal server error", "Couldn't UPDATE post");
-        res.status(500).json(responseBody);
-    } else {
-        res.json({"post": req.body.id, "likes": likes_array});
-        res.status(202);
+        return res.status(500).json(responseBody);
     }
+
+    res.status(202).json({"post": req.body.id, "likes": likes_array});
 }
 
 async function update_likes(req, res) {
@@ -64,14 +61,12 @@ async function update_likes(req, res) {
         }
     } else {
         let responseBody = formatErrorJson(404, "Not Found", "Post or likes not found");
-        res.status(404).json(responseBody);
-        return;
+        return res.status(404).json(responseBody);
     }
 
     if (likes_array && likes_array.includes(req.body.id)) {
         let responseBody = formatErrorJson(409, "Conflict", "User already liked that post");
-        res.status(409).json(responseBody);
-        return;
+        return res.status(409).json(responseBody);
     }
 
     const updated_post = await pool.query(
@@ -87,11 +82,10 @@ async function update_likes(req, res) {
 
     if (!updated_post || updated_post.rowCount === 0) {
         let responseBody = formatErrorJson(500, "Internal server error", "Couldn't UPDATE post");
-        res.status(500).json(responseBody);
-    } else {
-        res.json({"post": req.body.id, "likes": likes_array});
-        res.status(202);
+        return res.status(500).json(responseBody);
     }
+
+    res.status(202).json({"post": req.body.id, "likes": likes_array});
 }
 
 async function read_comments(req, res) {
@@ -102,10 +96,10 @@ async function read_comments(req, res) {
 
     if (!posts_lists || posts_lists.rows.length === 0) {
         let responseBody = formatErrorJson(404, "Not Found", "No posts were found in database");
-        res.status(404).json(responseBody);
-    } else {
-        res.json(posts_lists.rows);
+        return res.status(404).json(responseBody);
     }
+
+    res.json(posts_lists.rows);
 }
 
 async function read_posts(req, res) {
@@ -174,7 +168,7 @@ async function create_post(req, res) {
         const content = String(req.body?.content ?? '').trim();
 
         if (!content || content.length == 0) {
-            return res.status(400).json(formatErrorJson(400, "Bad request", "Message content can't be empty!"))
+            return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!"))
         }
 
         if (containsProfanity(content)) {
@@ -233,15 +227,13 @@ async function create_post(req, res) {
             );
         }
 
-        return res.json(new_post.rows);
-
+        return res.status(201).json(new_post.rows);
     } catch (error) {
-        // return res.status(500).json({
-        //     error: 'Error creating the post.',
-        //     details: error.message
-        // });
+        return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation"));
     }
-//something is wrong here
+}
+
+async function create_comment(req, res) {
     const parent = req.body.parent ? req.body.parent : 0
 
     const new_post = await pool.query(
@@ -256,12 +248,10 @@ async function create_post(req, res) {
 
     if (!new_post || new_post.rows.length === 0) {
         let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        res.status(500).json(responseBody);
-    } else {
-        res.json(new_post.rows);
-        res.status(201);
+        return res.status(500).json(responseBody);
     }
-    
+
+    res.status(201).json(new_post.rows);
 }
 
 async function delete_post(req, res) {
@@ -275,11 +265,10 @@ async function delete_post(req, res) {
 
     if (!deleted_post || deleted_post.rows.length === 0) {
         let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        res.status(500).json(responseBody);
-    } else {
-        res.status(204);
+        return res.status(500).json(responseBody);
     }
     
+    res.status(204).end();
 }
 
 const router = express.Router();
@@ -291,6 +280,7 @@ router.patch("/likes", verify_token, update_likes);
 router.delete("/", verify_token, delete_post);
 router.get("/", verify_token, read_posts);
 router.get("/comments", verify_token, read_comments);
+router.post("/comments", verify_token, create_comment);
 router.post("/", verify_token, create_post);
 
 export default router;
