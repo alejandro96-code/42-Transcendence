@@ -20,13 +20,13 @@ async function read_friends(req, res) {
              FROM friend_requests
              JOIN users ON users.id = CASE
                  WHEN friend_requests.sender_id = $1
-                 THEN friend_requests.recipient_id
+                 THEN friend_requests.receiver_id
                  ELSE friend_requests.sender_id
              END
              WHERE friend_requests.status = 'accepted'
                AND (
                    friend_requests.sender_id = $1
-                   OR friend_requests.recipient_id = $1
+                   OR friend_requests.receiver_id = $1
                )
              ORDER BY LOWER(users.username)`,
             [req.user.id],
@@ -52,7 +52,7 @@ async function read_friends_by_user(req, res) {
                 `SELECT 1
                  FROM friend_requests
                  WHERE status = 'accepted'
-                   AND ((sender_id = $1 AND recipient_id = $2) OR (sender_id = $2 AND recipient_id = $1))
+                   AND ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1))
                  LIMIT 1`,
                 [req.user.id, userId],
             );
@@ -66,11 +66,11 @@ async function read_friends_by_user(req, res) {
             `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen
              FROM friend_requests
              JOIN users ON users.id = CASE
-                 WHEN friend_requests.sender_id = $1 THEN friend_requests.recipient_id
+                 WHEN friend_requests.sender_id = $1 THEN friend_requests.receiver_id
                  ELSE friend_requests.sender_id
              END
              WHERE friend_requests.status = 'accepted'
-               AND (friend_requests.sender_id = $1 OR friend_requests.recipient_id = $1)
+               AND (friend_requests.sender_id = $1 OR friend_requests.receiver_id = $1)
              ORDER BY LOWER(users.username)`,
             [userId],
         );
@@ -94,11 +94,11 @@ async function read_friends_search(req, res) {
             `SELECT users.id, users.username, users.full_name, users.avatar_url, users.profession, users.description, users.last_seen
              FROM friend_requests
              JOIN users ON users.id = CASE
-                 WHEN friend_requests.sender_id = $1 THEN friend_requests.recipient_id
+                 WHEN friend_requests.sender_id = $1 THEN friend_requests.receiver_id
                  ELSE friend_requests.sender_id
              END
              WHERE friend_requests.status = 'accepted'
-               AND (friend_requests.sender_id = $1 OR friend_requests.recipient_id = $1)
+               AND (friend_requests.sender_id = $1 OR friend_requests.receiver_id = $1)
                AND (
                  LOWER(users.username) LIKE LOWER($2)
                  OR LOWER(users.full_name) LIKE LOWER($2)
@@ -133,8 +133,8 @@ async function read_friend_profile(req, res) {
                      SELECT 1
                      FROM friend_requests
                      WHERE friend_requests.status = 'accepted'
-                       AND ((friend_requests.sender_id = $2 AND friend_requests.recipient_id = users.id)
-                         OR (friend_requests.sender_id = users.id AND friend_requests.recipient_id = $2))
+                       AND ((friend_requests.sender_id = $2 AND friend_requests.receiver_id = users.id)
+                         OR (friend_requests.sender_id = users.id AND friend_requests.receiver_id = $2))
                  )
                )
              LIMIT 1`,
@@ -158,7 +158,7 @@ async function read_friend_requests(req, res) {
             `SELECT friend_requests.id, users.username, users.email, friend_requests.created_at
              FROM friend_requests
              JOIN users ON users.id = friend_requests.sender_id
-             WHERE friend_requests.recipient_id = $1 AND friend_requests.status = 'pending'
+             WHERE friend_requests.receiver_id = $1 AND friend_requests.status = 'pending'
              ORDER BY friend_requests.created_at DESC`,
             [req.user.id],
         );
@@ -202,8 +202,8 @@ async function create_friend_request(req, res) {
 
         const existing = await pool.query(
             `SELECT id, status FROM friend_requests
-             WHERE (sender_id = $1 AND recipient_id = $2)
-                OR (sender_id = $2 AND recipient_id = $1)
+             WHERE (sender_id = $1 AND receiver_id = $2)
+                OR (sender_id = $2 AND receiver_id = $1)
              LIMIT 1`,
             [req.user.id, recipient.id],
         );
@@ -213,7 +213,7 @@ async function create_friend_request(req, res) {
             if (request.status === 'pending') return res.status(409).json(formatErrorJson(409, "Conflict", 'There is already a pending friend request between these users'));
             await pool.query(
                 `UPDATE friend_requests
-                 SET sender_id = $1, recipient_id = $2, status = 'pending', updated_at = CURRENT_TIMESTAMP
+                 SET sender_id = $1, receiver_id = $2, status = 'pending', updated_at = CURRENT_TIMESTAMP
                  WHERE id = $3`,
                 [req.user.id, recipient.id, request.id],
             );
@@ -221,7 +221,7 @@ async function create_friend_request(req, res) {
         }
 
         await pool.query(
-            'INSERT INTO friend_requests (sender_id, recipient_id) VALUES ($1, $2)',
+            'INSERT INTO friend_requests (sender_id, receiver_id) VALUES ($1, $2)',
             [req.user.id, recipient.id],
         );
         return res.status(201).json({ message: 'Friend request sent.' });
@@ -248,7 +248,7 @@ async function update_friend_request(req, res) {
 
     try {
         const requestCheck = await pool.query(
-            'SELECT * FROM friend_requests WHERE id = $1 AND recipient_id = $2 AND status = \'pending\'',
+            'SELECT * FROM friend_requests WHERE id = $1 AND receiver_id = $2 AND status = \'pending\'',
             [requestId, req.user.id]
         );
 
@@ -278,7 +278,7 @@ async function delete_friend(req, res) {
         const result = await client.query(
             `DELETE FROM friend_requests
              WHERE status = 'accepted'
-               AND ((sender_id = $1 AND recipient_id = $2) OR (sender_id = $2 AND recipient_id = $1))
+               AND ((sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1))
              RETURNING id`,
             [req.user.id, friendId],
         );
@@ -288,8 +288,8 @@ async function delete_friend(req, res) {
         }
         await client.query(
             `DELETE FROM messages
-             WHERE (sender_id = $1 AND recipient_id = $2)
-                OR (sender_id = $2 AND recipient_id = $1)`,
+             WHERE (sender_id = $1 AND receiver_id = $2)
+                OR (sender_id = $2 AND receiver_id = $1)`,
             [req.user.id, friendId],
         );
         await client.query('COMMIT');

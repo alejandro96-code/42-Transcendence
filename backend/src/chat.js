@@ -40,6 +40,7 @@ async function update_message(req, res) {
 
 async function read_messages(req, res) {
     const recipientId = getRecipientId(req.params.recipientId);
+
     if (!recipientId || recipientId === req.user.id) {
         let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
         return res.status(400).json(responseBody);
@@ -51,14 +52,20 @@ async function read_messages(req, res) {
     }
 
     const messages_lists = await pool.query(
-        `SELECT id, sender_id, receiver_id AS recipient_id, content, sent_at AS created_at 
-            FROM chat_messages
-            WHERE (sender_id = $1 AND recipient_id = $2) 
-            OR (sender_id = $2 AND recipient_id = $1)
-            ORDER BY created_at ASC, id ASC
-            FETCH FIRST $3 ROWS ONLY`,
+        `SELECT id,
+                sender_id,
+                receiver_id,
+                content,
+                sent_at AS created_at
+         FROM chat_messages
+         WHERE (sender_id = $1 AND receiver_id = $2)
+            OR (sender_id = $2 AND receiver_id = $1)
+         ORDER BY sent_at ASC, id ASC
+         FETCH FIRST $3 ROWS ONLY`,
         [
-            req.user.id, recipientId, req.body.amount || 20
+            req.user.id,
+            recipientId,
+            req.body?.amount || 20
         ]
     );
 
@@ -67,7 +74,7 @@ async function read_messages(req, res) {
         return res.status(404).json(responseBody);
     }
 
-    res.json(messages_lists.rows);
+    return res.json(messages_lists.rows);
 }
 
 async function create_message(req, res) {
@@ -82,19 +89,35 @@ async function create_message(req, res) {
     }
 
     if (!recipientId || recipientId === req.user.id) {
-        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'Wrong recipientId'));
-    }
-    
-    if (containsProfanity(content)) {
-        return res.status(400).json(formatErrorJson(400, 'Bad Request', 'The message contains non allowed or vulgar words.'));
+        return res.status(400).json(
+            formatErrorJson(400, 'Bad Request', 'Wrong recipientId')
+        );
     }
 
-    const chat_users = await pool.query(
-            'SELECT id FROM users WHERE (id = $1) OR (id = $2)',
-            [
-                req.body.sender, req.body.receiver
-            ]
+    if (!content || content.length > 1000) {
+        return res.status(400).json(
+            formatErrorJson(
+                400,
+                'Bad Request',
+                'Content must be between 1 and 1000 characters long'
+            )
         );
+    }
+
+    if (containsProfanity(content)) {
+        return res.status(400).json(
+            formatErrorJson(
+                400,
+                'Bad Request',
+                'The message contains non allowed or vulgar words.'
+            )
+        );
+    }
+
+    const recipient = await pool.query(
+        'SELECT id FROM users WHERE id = $1',
+        [recipientId]
+    );
 
     if (!chat_users || chat_users.rows.length < 2) {
         let responseBody = formatErrorJson(404, "Not found", "Message sender or receiver not found in Database");

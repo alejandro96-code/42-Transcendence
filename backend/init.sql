@@ -54,13 +54,13 @@ CREATE INDEX IF NOT EXISTS chat_messages_idx
 CREATE TABLE IF NOT EXISTS friend_requests (
     id SERIAL PRIMARY KEY,
     sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    recipient_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT friend_requests_different_users CHECK (sender_id <> recipient_id),
-    CONSTRAINT friend_requests_unique_pair UNIQUE (sender_id, recipient_id)
+    CONSTRAINT friend_requests_different_users CHECK (sender_id <> receiver_id),
+    CONSTRAINT friend_requests_unique_pair UNIQUE (sender_id, receiver_id)
 );
 
 CREATE INDEX IF NOT EXISTS friends_idx
-    ON friend_requests (recipient_id, status, created_at DESC);
+    ON friend_requests (receiver_id, status, created_at DESC);

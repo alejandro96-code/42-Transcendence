@@ -323,7 +323,7 @@ function start_server() {
         }
 
         if (containsProfanity(description)) {
-            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Profession contains vulgar words'));
+            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Description contains vulgar words'));
         }
 
         if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
