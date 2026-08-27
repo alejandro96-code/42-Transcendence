@@ -263,10 +263,18 @@ docker-clean:
 	@echo "$(YELLOW)⚠ WARNING: This will delete ALL database data$(NC)"
 	@echo "$(YELLOW)Stopping services and removing volumes...$(NC)"
 
-	@SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-) $(DOCKER_COMPOSE) \
-		--env-file backend/.env \
-		-f docker-compose.yml \
-		-f docker-compose.db.yml \
-		down -v --remove-orphans
+	@docker rm -f \
+		transcendence-nginx \
+		transcendence-frontend \
+		transcendence-backend \
+		transcendence-adminer \
+		transcendence-postgres \
+		2>/dev/null || true
+
+	@docker volume rm $$(docker volume ls -q --filter name=transcendence) \
+		2>/dev/null || true
+
+	@docker network rm transcendence_default \
+		2>/dev/null || true
 
 	@echo "$(GREEN)✓ Containers and volumes removed$(NC)"
