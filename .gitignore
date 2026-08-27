@@ -4,6 +4,6 @@ backend/node_modules/
 package-lock.json
 frontend/package-lock.json
 backend/package-lock.json
-nginx/certs/server.key
-nginx/certs/server.crt
 backend/.env
+nginx/certs/*
+!nginx/certs/.gitkeep
