@@ -1,173 +1,113 @@
-# Messages API (`/api/messages`)
+# Chat API (`/api/messages`)
 
-Base path: `/api/messages`  
-Authentication: **Required** (`Bearer token`)
+These endpoints let you read, send, edit, and delete direct messages between you and another user.
 
-## Error format
+## Authentication
 
-All error responses follow this format:
+Protected routes under `/api/messages` require **either**:
+- an active login session, **or**
+- a valid Bearer token.
 
+---
+
+## 1) Read conversation
+
+- **Method:** `GET`
+- **Path:** `/api/messages/:recipientId`
+- **Content-Type:** `application/json`
+
+Returns the message history between you and `recipientId` (oldest → newest).
+
+### Path Parameter
+- `recipientId` (number): the other user’s ID.
+
+### Optional limit
+The API supports an optional `amount` limit (default: `20`).
+
+---
+
+## 2) Send message
+
+- **Method:** `POST`
+- **Path:** `/api/messages/:recipientId`
+- **Content-Type:** `application/json`
+
+Creates a new message to `recipientId`.
+
+### Request Body
 ```json
 {
-    "code": 400,
-    "phrase": "Bad Request",
-    "error": "Description of what went wrong"
+  "content": "Hello!"
+}
+```
+
+### Notes
+- Message content must be between 1 and 1000 characters.
+- You cannot message yourself.
+
+---
+
+## 3) Edit message
+
+- **Method:** `PATCH`
+- **Path:** `/api/messages/`
+- **Content-Type:** `application/json`
+
+Updates an existing message.
+
+### Request Body (expected)
+```json
+{
+  "id": 123,
+  "new_body": "Updated text"
 }
 ```
 
 ---
 
-## 1) Read conversation with a recipient
+## 4) Delete message
 
-**GET** `/api/messages/:recipientId`
+- **Method:** `DELETE`
+- **Path:** `/api/messages/`
+- **Content-Type:** `application/json`
 
-Returns the message list between you and `recipientId`, oldest first.
+Deletes a message by id.
 
-### Path parameters
-
-- `recipientId` (required, number): recipient user id
-
-### Body (JSON)
-
+### Request Body
 ```json
 {
-    "amount": 20
-}
-```
-
-- `amount` (optional, number): maximum number of rows returned (default `20`)
-
-### Success response (200)
-
-```json
-[
-    {
-        "id": 1,
-        "sender_id": 12,
-        "recipient_id": 31,
-        "content": "Hey!",
-        "created_at": "2026-08-26T09:00:00.000Z"
-    },
-    {
-        "id": 2,
-        "sender_id": 31,
-        "recipient_id": 12,
-        "content": "Hi!",
-        "created_at": "2026-08-26T09:01:00.000Z"
-    }
-]
-```
-
-### Common errors
-
-**400 Bad Request**
-
-```json
-{
-    "code": 400,
-    "phrase": "Bad Request",
-    "error": "Wrong recipientId"
-}
-```
-
-**404 Not Found**
-
-```json
-{
-    "code": 404,
-    "phrase": "Not Found",
-    "error": "Recipient not found"
-}
-```
-
-```json
-{
-    "code": 404,
-    "phrase": "Not Found",
-    "error": "No messages were found in database"
+  "id": 123
 }
 ```
 
 ---
 
-## 2) Send message to recipient
+## cURL Example (Read conversation)
 
-**POST** `/api/messages/:recipientId`
-
-Creates a message from the authenticated user to `recipientId`.
-
-### Path parameters
-
-- `recipientId` (required, number)
-
-### Body (JSON)
-
-```json
-{
-    "content": "Hello there"
-}
+```bash
+curl -k \
+  -H "Authorization: Bearer <jwt-token>" \
+  https://192.168.1.144:8443/api/messages/42
 ```
 
-- `content` (required, string, 1 to 1000 chars)
+---
 
-### Success response (201)
+## Typical Responses
 
-```json
-{
-    "id": 55,
-    "sender_id": 12,
-    "recipient_id": 31,
-    "content": "Hello there",
-    "created_at": "2026-08-26T09:10:00.000Z"
-}
-```
+### 200 OK
+Returned for successful reads.
 
-### Common errors
+### 201 Created
+Returned when a message is successfully created.
 
-**400 Bad Request**
+### 204 No Content
+Returned when update/delete succeeds without response body.
 
-```json
-{
-    "code": 400,
-    "phrase": "Bad Request",
-    "error": "Wrong recipientId"
-}
-```
+### 400 Bad Request
+Invalid recipient, invalid input, or malformed auth header.
 
-```json
-{
-    "code": 400,
-    "phrase": "Bad Request",
-    "error": "The message contains non allowed or vulgar words."
-}
-```
+### 401 Unauthorized
+Invalid/expired token.
 
-**413 Content Too Large**
-
-```json
-{
-    "code": 413,
-    "phrase": "Content Too Large",
-    "error": "Content must be between 1 and 1000 characters long"
-}
-```
-
-**404 Not Found**
-
-```json
-{
-    "code": 404,
-    "phrase": "Not found",
-    "error": "Message sender or receiver not found in Database"
-}
-```
-
-**500 Internal Server Error**
-
-```json
-{
-    "code": 500,
-    "phrase": "Internal Server Error",
-    "error": "Something went bad on post creation"
-}
-```
+### 404 Not Found
+Conversation/user/message not found.

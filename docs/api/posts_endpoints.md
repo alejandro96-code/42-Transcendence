@@ -1,221 +1,137 @@
 # Posts API (`/api/posts`)
 
-Base path: `/api/posts`  
-Authentication: **Required** (`Bearer token`)
+These endpoints let you create posts, read posts, read comments, add comments, and delete your own posts.
 
-## Error format
+## Authentication
 
-All error responses follow this format:
+Protected routes under `/api/posts` require **either**:
+- an active login session, **or**
+- a valid Bearer token.
 
+---
+
+## 1) Read posts
+
+- **Method:** `GET`
+- **Path:** `/api/posts`
+- **Content-Type:** `application/json`
+
+Returns posts for:
+- the current user (default), or
+- another user via query parameter, or
+- mention feed if `filter=mentions`.
+
+### Query Parameters
+- `user` (optional): user ID to fetch posts for.
+- `amount` (optional): max number of posts (default: `50`).
+- `filter` (optional): currently supports `mentions`.
+
+### Example
+`/api/posts?user=7&amount=20`  
+`/api/posts?filter=mentions`
+
+---
+
+## 2) Create post
+
+- **Method:** `POST`
+- **Path:** `/api/posts`
+- **Content-Type:** `application/json`
+
+Creates a new post by the authenticated user.
+
+### Request Body
 ```json
 {
-    "code": 400,
-    "phrase": "Bad Request",
-    "error": "Description of what went wrong"
+  "content": "My first post",
+  "image": "data-or-url-optional",
+  "parent": 0
+}
+```
+
+### Notes
+- `content` is required.
+- `image` is optional.
+- `parent` can be used for threaded behavior.
+
+---
+
+## 3) Delete post
+
+- **Method:** `DELETE`
+- **Path:** `/api/posts`
+- **Content-Type:** `application/json`
+
+Deletes one of your posts.
+
+### Request Body
+```json
+{
+  "id": 123
 }
 ```
 
 ---
 
-## 1) List posts
+## 4) Read comments
 
-**GET** `/api/posts`
+- **Method:** `GET`
+- **Path:** `/api/posts/comments`
+- **Content-Type:** `application/json`
 
-Returns posts for a target user or filtered posts.
+Returns comments for a parent post/thread.
 
-### Query parameters
-
-- `user` (optional, number): user id to fetch posts from.  
-  If omitted, your own user id is used.
-- `amount` (optional, number): max number of posts to return. Default: `50`.
-- `filter` (optional, string):
-  - `mentions`: returns posts where you are mentioned (from accepted friends).
-
-### Success response (200)
-
-```json
-[
-    {
-        "id": 101,
-        "author_id": 12,
-        "author_username": "alice",
-        "content": "Hello world",
-        "media": [],
-        "parent": 0,
-        "created_at": "2026-08-26T10:00:00.000Z"
-    }
-]
-```
+### Input
+- Parent identifier and optional amount are supported by the API.
 
 ---
 
-## 2) List comments for a parent post
+## 5) Create comment
 
-**GET** `/api/posts/comments`
+- **Method:** `POST`
+- **Path:** `/api/posts/comments`
+- **Content-Type:** `application/json`
 
-Returns posts that are comments of a given parent post.
+Creates a comment under a parent post/thread.
 
-### Body (JSON)
-
+### Request Body (typical)
 ```json
 {
-    "parent": 101,
-    "amount": 50
-}
-```
-
-- `parent` (required, number): parent post id
-- `amount` (optional, number): max number of comments. Default: `50`
-
-### Success response (200)
-
-```json
-[
-    {
-        "id": 203,
-        "author_id": 19,
-        "author_username": "bob",
-        "content": "Nice post!",
-        "media": [],
-        "parent": 101,
-        "created_at": "2026-08-26T10:05:00.000Z"
-    }
-]
-```
-
-### Not found (404)
-
-```json
-{
-    "code": 404,
-    "phrase": "Not Found",
-    "error": "No posts were found in database"
+  "parent": 123,
+  "content": "Nice post!"
 }
 ```
 
 ---
 
-## 3) Create post
+## cURL Example (Create post)
 
-**POST** `/api/posts`
-
-Creates a new post.
-
-### Body (JSON)
-
-```json
-{
-    "content": "My first post",
-    "image": "https://cdn.example.com/pic.jpg",
-    "parent": 0
-}
+```bash
+curl -k -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <jwt-token>" \
+  -d '{"content":"Hello world"}' \
+  https://192.168.1.144:8443/api/posts
 ```
 
-- `content` (required, string): post content
-- `image` (optional, string): image URL
-- `parent` (optional, number): parent post id for comments/replies (default `0`)
+---
 
-### Success response (200)
+## Typical Responses
 
-```json
-[
-    {
-        "id": 301,
-        "author_id": 12,
-        "author_username": "alice",
-        "content": "My first post",
-        "media": [
-            "https://cdn.example.com/pic.jpg"
-        ],
-        "parent": 0,
-        "created_at": "2026-08-26T10:15:00.000Z"
-    }
-]
-```
+### 200 OK
+Successful reads.
 
-### Common errors
+### 201 Created
+Post/comment created successfully.
 
-**400 Bad Request**
+### 204 No Content
+Post deleted successfully.
 
-```json
-{
-    "code": 400,
-    "phrase": "Bad Request",
-    "error": "The media contains vulgar words"
-}
-```
+### 400 Bad Request
+Invalid payload.
 
-**404 Not Found**
+### 401 Unauthorized
+Invalid/expired token.
 
-```json
-{
-    "code": 404,
-    "phrase": "Not found",
-    "error": "Post author not found in Database"
-}
-```
-
-**500 Internal Server Error**
-
-```json
-{
-    "code": 500,
-    "phrase": "Internal Server Error",
-    "error": "Something went bad on post creation"
-}
-```
-
-## 4) Create comment
-
-**POST** `/api/posts/comments`
-
-Creates a comment for an existing post.
-
-### Body (JSON)
-
-```json
-{
-    "content": "Nice post!",
-    "parent": 101
-}
-```
-
-### Common errors
-
-**500 Internal Server Error**
-
-```json
-{
-    "code": 500,
-    "phrase": "Internal Server Error",
-    "error": "Something went bad on post creation"
-}
-```
-
-## 5) Delete post
-
-**DELETE** `/api/posts`
-
-Deletes a post by id.
-
-### Body (JSON)
-
-```json
-{
-    "id": 101
-}
-```
-
-### Success response
-
-- `204 No Content`
-
-### Error response (500)
-
-```json
-{
-    "code": 500,
-    "phrase": "Internal Server Error",
-    "error": "Something went bad on post creation"
-}
-```
+### 404 Not Found
+Requested resource not found.

@@ -1,267 +1,83 @@
 # Friends API (`/api/friends`)
 
-Base path: `/api/friends`  
-Authentication: **Required** (`Bearer token`)
+This section is a user-facing template for your Friends module.
 
-## Error format
+> Your `friends.js` file was not included in the snippet, so the exact endpoints/fields cannot be listed yet.  
+> Use this structure and replace routes/fields with your actual implementation.
 
-Endpoints in this group return either simple error objects (`{"error":"..."}`) or, in some cases, structured errors.  
-When structured errors are used, the format is:
+## Authentication
 
+Most friends endpoints are typically protected and require:
+- an active session, **or**
+- a valid Bearer token.
+
+---
+
+## Typical Friends Actions (example structure)
+
+### Send friend request
+- **Method:** `POST`
+- **Path:** `/api/friends/requests`
+- **Body:**
 ```json
 {
-    "code": 400,
-    "phrase": "Bad Request",
-    "error": "Description of what went wrong"
+  "recipientId": 42
 }
 ```
 
----
+### Accept friend request
+- **Method:** `PATCH`
+- **Path:** `/api/friends/requests/:requestId/accept`
 
-## 1) Get my friends list
+### Decline friend request
+- **Method:** `PATCH`
+- **Path:** `/api/friends/requests/:requestId/decline`
 
-**GET** `/api/friends`
+### Remove friend
+- **Method:** `DELETE`
+- **Path:** `/api/friends/:friendId`
 
-Returns accepted friends of the authenticated user.
+### List friends
+- **Method:** `GET`
+- **Path:** `/api/friends`
 
-### Success response (200)
-
-```json
-[
-    {
-        "id": 31,
-        "username": "bob",
-        "full_name": "Bob Smith",
-        "avatar_url": "https://cdn.example.com/avatar.jpg",
-        "profession": "Developer",
-        "description": "Loves APIs",
-        "last_seen": "2026-08-26T09:20:00.000Z",
-        "is_online": true
-    }
-]
-```
+### List pending requests
+- **Method:** `GET`
+- **Path:** `/api/friends/requests/pending`
 
 ---
 
-## 2) Get friends list of a specific user
+## cURL Example (template)
 
-**GET** `/api/friends/user/:userId`
-
-If `userId` is not your own user id, access is allowed only when you are friends with that user.
-
-### Path parameters
-
-- `userId` (required, integer)
-
-### Success response (200)
-
-```json
-[
-    {
-        "id": 42,
-        "username": "charlie",
-        "full_name": "Charlie Doe",
-        "avatar_url": null,
-        "profession": null,
-        "description": null,
-        "last_seen": "2026-08-26T08:00:00.000Z"
-    }
-]
-```
-
-### Common errors
-
-- `400` `{ "error": "Invalid user." }`
-- `403` `{ "error": "You can not see the friends of this user." }`
-
----
-
-## 3) Search friends
-
-**GET** `/api/friends/search?q=<text>`
-
-Searches accepted friends by `username` or `full_name` (case-insensitive).
-
-### Query parameters
-
-- `q` (optional, string). If empty, returns `[]`.
-
-### Success response (200)
-
-```json
-[
-    {
-        "id": 31,
-        "username": "bob",
-        "full_name": "Bob Smith",
-        "avatar_url": "https://cdn.example.com/avatar.jpg",
-        "profession": "Developer",
-        "description": "Loves APIs",
-        "last_seen": "2026-08-26T09:20:00.000Z"
-    }
-]
+```bash
+curl -k -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <jwt-token>" \
+  -d '{"recipientId":42}' \
+  https://192.168.1.144:8443/api/friends/requests
 ```
 
 ---
 
-## 4) Get friend profile
+## Typical Responses
 
-**GET** `/api/friends/:friendId/profile`
+### 200 OK
+Action/read success.
 
-Returns a user profile when it is your own profile or the user is your accepted friend.
+### 201 Created
+Friend request sent.
 
-### Path parameters
+### 204 No Content
+Delete/remove success.
 
-- `friendId` (required, integer)
+### 400 Bad Request
+Invalid input.
 
-### Success response (200)
+### 401 Unauthorized
+Invalid/expired token.
 
-```json
-{
-    "id": 31,
-    "username": "bob",
-    "email": "bob@example.com",
-    "full_name": "Bob Smith",
-    "avatar_url": "https://cdn.example.com/avatar.jpg",
-    "profession": "Developer",
-    "description": "Loves APIs",
-    "last_seen": "2026-08-26T09:20:00.000Z"
-}
-```
+### 404 Not Found
+User/request/friend relation not found.
 
-### Common errors
-
-- `400` `{ "error": "Invalid friend." }`
-- `404` `{ "error": "Profile not found." }`
-
----
-
-## 5) Get incoming friend requests
-
-**GET** `/api/friends/requests`
-
-Returns pending requests where you are the recipient.
-
-### Success response (200)
-
-```json
-[
-    {
-        "id": 77,
-        "username": "diana",
-        "email": "diana@example.com",
-        "created_at": "2026-08-26T09:00:00.000Z"
-    }
-]
-```
-
----
-
-## 6) Send friend request
-
-**POST** `/api/friends/requests`
-
-Creates a friend request by target username.
-
-### Body (JSON)
-
-```json
-{
-    "username": "diana"
-}
-```
-
-### Success response (201)
-
-```json
-{
-    "message": "Friend request sent."
-}
-```
-
-### Common errors
-
-- `400` `{ "error": "A nick is mandatory." }`
-- `400` `{ "error": "You can not send a friend request to yourself." }`
-- `404` `{ "error": "That user does not exist." }`
-- `409` `{ "error": "You are already friends." }`
-- `409` `{ "error": "There is already a pending friend request between these users." }`
-
----
-
-## 7) Accept or reject friend request
-
-**PATCH** `/api/friends/requests/:requestId`
-
-Updates request status.
-
-### Path parameters
-
-- `requestId` (required, integer)
-
-### Body (JSON)
-
-```json
-{
-    "status": "accepted"
-}
-```
-
-Allowed values for `status`:
-- `accepted`
-- `rejected`
-
-### Success response (200)
-
-```json
-{
-    "message": "Friend request accepted successfully."
-}
-```
-
-### Common errors
-
-- `400` `{ "error": "Invalid friend request." }`
-- `400` `{ "error": "Invalid action. Must be accepted o rejected." }`
-- `404` `{ "error": "Friend request not found or already processed." }`
-
----
-
-## 8) Delete friend
-
-**DELETE** `/api/friends/:friendId`
-
-Removes an accepted friendship and associated direct messages between both users.
-
-### Path parameters
-
-- `friendId` (required, integer)
-
-### Success response
-
-- `204 No Content`
-
-### Common errors
-
-- `400` `{ "error": "Invalid friend." }`
-- `404` `{ "error": "Friend not found." }`
-
----
-
-## 9) Presence heartbeat
-
-**POST** `/api/friends/heartbeat`
-
-Updates your `last_seen` timestamp.
-
-### Success response (200)
-
-```json
-{
-    "success": true
-}
-```
-
-### Error response
-
-- `500` `{ "error": "Error updating presence." }`
+### 409 Conflict
+Duplicate request or already friends.
