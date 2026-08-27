@@ -165,90 +165,34 @@ Creates a new post.
 }
 ```
 
----
+## 4) Create comment
 
-## 4) Add like to a post
+**POST** `/api/posts/comments`
 
-**PATCH** `/api/posts/likes`
-
-Adds a user like to a post.
+Creates a comment for an existing post.
 
 ### Body (JSON)
 
 ```json
 {
-    "id": 101,
-    "user": 12
-}
-```
-
-### Success response (200)
-
-```json
-{
-    "post": 101,
-    "likes": [
-        "12",
-        "25"
-    ]
+    "content": "Nice post!",
+    "parent": 101
 }
 ```
 
 ### Common errors
 
-**409 Conflict**
+**500 Internal Server Error**
 
 ```json
 {
-    "code": 409,
-    "phrase": "Conflict",
-    "error": "User already liked that post"
+    "code": 500,
+    "phrase": "Internal Server Error",
+    "error": "Something went bad on post creation"
 }
 ```
 
----
-
-## 5) Remove like from a post
-
-**DELETE** `/api/posts/likes`
-
-Removes a user like from a post.
-
-### Body (JSON)
-
-```json
-{
-    "id": 101,
-    "user": 12
-}
-```
-
-### Success response (200)
-
-```json
-{
-    "post": 101,
-    "likes": [
-        "25"
-    ]
-}
-```
-
-### Common errors
-
-**404 Not Found**
-
-```json
-{
-    "code": 404,
-    "phrase": "Not Found",
-    "error": "Post or likes not found"
-}
-```
-
----
-
-## 6) Delete post
+## 5) Delete post
 
 **DELETE** `/api/posts`
 

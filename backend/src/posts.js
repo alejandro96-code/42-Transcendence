@@ -6,88 +6,6 @@ import { containsProfanity } from './profanity.js';
 import { verify_token } from './token.js';
 import { format } from 'path';
 
-async function remove_likes(req, res) {
-
-    const likes = await pool.query(
-        'SELECT likes FROM posts WHERE id = $1',
-        [req.body.id]
-    );
-    
-    let likes_array = [];
-
-    if (!likes || !likes.rows || !likes.rows[0] || !likes.rows[0].likes) {
-        let responseBody = formatErrorJson(404, "Not Found", "Post or likes not found");
-        return res.status(404).json(responseBody);
-    } else {
-        likes_array = likes.rows[0].likes;
-    }
-
-    if (likes_array && !likes_array.includes(req.body.id)) {
-        let responseBody = formatErrorJson(409, "Conflict", "User already liked that post");
-        return res.status(409).json(responseBody);
-    }
-
-    const updated_post = await pool.query(
-        'UPDATE posts SET likes = array_remove(likes, $2) WHERE id = $1',
-        [req.body.id, req.body.user]
-    );
-
-    if (likes_array) {
-        likes_array.push(req.body.id.toString());
-    } else {
-        likes_array = [req.body.id];
-    }
-
-    if (!updated_post || updated_post.rowCount === 0) {
-        let responseBody = formatErrorJson(500, "Internal server error", "Couldn't UPDATE post");
-        return res.status(500).json(responseBody);
-    }
-
-    res.status(202).json({"post": req.body.id, "likes": likes_array});
-}
-
-async function update_likes(req, res) {
-
-    const likes = await pool.query(
-        'SELECT likes FROM posts WHERE id = $1',
-        [req.body.id]
-    );
-    
-    let likes_array = [];
-
-    if (likes && likes.rows) {
-        if (likes.rows[0] && likes.rows[0].likes) {
-            likes_array = likes.rows[0].likes;
-        }
-    } else {
-        let responseBody = formatErrorJson(404, "Not Found", "Post or likes not found");
-        return res.status(404).json(responseBody);
-    }
-
-    if (likes_array && likes_array.includes(req.body.id)) {
-        let responseBody = formatErrorJson(409, "Conflict", "User already liked that post");
-        return res.status(409).json(responseBody);
-    }
-
-    const updated_post = await pool.query(
-        'UPDATE posts SET likes = array_append(likes, $2) where id = $1',
-        [req.body.id, req.body.user]
-    );
-
-    if (likes_array) {
-        likes_array.push(req.body.id.toString());
-    } else {
-        likes_array = [req.body.id];
-    }
-
-    if (!updated_post || updated_post.rowCount === 0) {
-        let responseBody = formatErrorJson(500, "Internal server error", "Couldn't UPDATE post");
-        return res.status(500).json(responseBody);
-    }
-
-    res.status(202).json({"post": req.body.id, "likes": likes_array});
-}
-
 async function read_comments(req, res) {
     const posts_lists = await pool.query(
         'SELECT * FROM posts WHERE parent = $1 FETCH FIRST $2 ROWS ONLY',
@@ -255,32 +173,36 @@ async function create_comment(req, res) {
 }
 
 async function delete_post(req, res) {
-
     const deleted_post = await pool.query(
-            `DELETE FROM posts where id = $1 RETURNING *`,
-            [
-                req.body.id
-            ]
-        );
+        `DELETE FROM posts
+         WHERE id = $1 AND author_id = $2
+         RETURNING *`,
+        [
+            req.body.id,
+            req.user.id
+        ]
+    );
 
     if (!deleted_post || deleted_post.rows.length === 0) {
-        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        return res.status(500).json(responseBody);
+        const responseBody = formatErrorJson(
+            404,
+            "Not Found",
+            "Post not found or you are not the author"
+        );
+        return res.status(404).json(responseBody);
     }
-    
-    res.status(204).end();
+
+    return res.status(204).end();
 }
 
 const router = express.Router();
 
 router.use(express.json());
 
-router.delete("/likes", verify_token, remove_likes);
-router.patch("/likes", verify_token, update_likes);
-router.delete("/", verify_token, delete_post);
-router.get("/", verify_token, read_posts);
 router.get("/comments", verify_token, read_comments);
 router.post("/comments", verify_token, create_comment);
+router.get("/", verify_token, read_posts);
 router.post("/", verify_token, create_post);
+router.delete("/", verify_token, delete_post);
 
 export default router;
