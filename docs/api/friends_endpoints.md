@@ -1,9 +1,6 @@
 # Friends API (`/api/friends`)
 
-This section is a user-facing template for your Friends module.
-
-> Your `friends.js` file was not included in the snippet, so the exact endpoints/fields cannot be listed yet.  
-> Use this structure and replace routes/fields with your actual implementation.
+This section is a user-facing template for the Friends module.
 
 ## Authentication
 

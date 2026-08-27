@@ -1,4 +1,4 @@
-# API Endpoints Audit (End-User View)
+# API Endpoints Audit
 
 ## Legend
 - **Session auth**: you must be logged in via the website/app (cookie session).
