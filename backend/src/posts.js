@@ -1,6 +1,5 @@
 import express from 'express';
 import { formatErrorJson, isAuthenticated, validate } from './utils.js';
-import { postsCreateSchema } from "./classes.js";
 import { pool } from "./db.js";
 import { containsProfanity } from './profanity.js';
 import { verify_token } from './token.js';
