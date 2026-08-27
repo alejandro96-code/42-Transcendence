@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: setup install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean mock-admin
+.PHONY: setup install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean
 
 GREEN  := $(shell printf '\033[0;32m')
 BLUE   := $(shell printf '\033[0;34m')
