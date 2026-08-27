@@ -1,6 +1,4 @@
--- Script de inicialización de la base de datos
--- Este archivo se ejecuta automáticamente cuando se crea el contenedor de PostgreSQL
--- Se ha creado la tabla como el formato que tiene la tabla de 42
+-- Database creation script for 42 Transcendence --
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,

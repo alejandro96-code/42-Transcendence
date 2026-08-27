@@ -73,7 +73,7 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 
 ## Database Schema
 
-PostgreSQL stores four core entities. Referential integrity is strictly enforced with foreign keys cascading from users. Indexes are applied on primary keys, relational lookups, and chronological queries (created_at, sent_at)[cite: 4].
+PostgreSQL stores four core entities. Referential integrity is strictly enforced with foreign keys cascading from users. Indexes are applied on primary keys, relational lookups, and chronological queries (created_at, sent_at).
 
     +--------------------+       1:N        +--------------------+
     |       users        | <------------->  |       posts        |
@@ -106,7 +106,7 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
 | friend_requests | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), status (VARCHAR), created_at (TIMESTAMP) | Models friendship states (pending, accepted, rejected). Enforces unique pairs and prevents self-invitations. |
 | chat_messages | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), content (TEXT), sent_at (TIMESTAMP) | Persists direct messages between users; automatically cascades deletions upon user removal. |
 
-*The full schema definition, constraints, and index configurations are available in backend/init.sql.*[cite: 4]
+*The full schema definition, constraints, and index configurations are available in backend/init.sql.*
 
 ## Features List
 
