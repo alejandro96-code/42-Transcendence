@@ -27,7 +27,6 @@ CREATE TABLE IF NOT EXISTS posts (
     FOREIGN KEY (author_id) REFERENCES users(id),
     author_username VARCHAR(50),
     content VARCHAR(240),
-    likes INT[],
     media TEXT[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

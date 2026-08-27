@@ -75,29 +75,29 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 
 PostgreSQL stores four core entities. Referential integrity is strictly enforced with foreign keys cascading from users. Indexes are applied on primary keys, relational lookups, and chronological queries (created_at, sent_at)[cite: 4].
 
-    +--------------------+       1:N       +--------------------+
-    |       users        | <-------------> |       posts        |
-    +--------------------+                 +--------------------+
-    | id (PK)            |                 | id (PK)            |
-    | intra_id (UNIQUE)  |                 | author_id (FK)     |
-    | username (UNIQUE)  |                 | content (TEXT)     |
-    | email              |                 | likes (INT)        |
-    | password_hash      |                 | media (TEXT)       |
-    | profile_data       |                 | parent (FK)        |
-    | created_at         |                 | created_at         |
-    +--------------------+                 +--------------------+
+    +--------------------+       1:N        +--------------------+
+    |       users        | <------------->  |       posts        |
+    +--------------------+                  +--------------------+
+    | id (PK)            |                  | id (PK)            |
+    | intra_id (UNIQUE)  |                  | author_id (FK)     |
+    | username (UNIQUE)  |                  | content (TEXT)     |
+    | email              |                  | media (TEXT)       |
+    | password_hash      |                  | parent (FK)        |            
+    | profile_data       |                  | created_at         |   
+    | created_at         |                  +--------------------+
+    +--------------------+                 
            |         |
        1:N |         | 1:N
            v         v
-    +--------------------+                 +--------------------+
-    |  friend_requests   |                 |   chat_messages    |
-    +--------------------+                 +--------------------+
-    | id (PK)            |                 | id (PK)            |
-    | sender_id (FK)     |                 | sender_id (FK)     |
-    | receiver_id (FK)  |                 | receiver_id (FK)   |
-    | status (ENUM)      |                 | content (TEXT)     |
-    | created_at         |                 | sent_at            |
-    +--------------------+                 +--------------------+
+    +--------------------+                  +--------------------+
+    |  friend_requests   |                  |   chat_messages    |
+    +--------------------+                  +--------------------+
+    | id (PK)            |                  | id (PK)            |
+    | sender_id (FK)     |                  | sender_id (FK)     |
+    | receiver_id (FK)   |                  | receiver_id (FK)   |
+    | status (ENUM)      |                  | content (TEXT)     |
+    | created_at         |                  | sent_at            |
+    +--------------------+                  +--------------------+
 
 | Table | Key Fields & Types | Relationships & Purpose |
 | :--- | :--- | :--- |
