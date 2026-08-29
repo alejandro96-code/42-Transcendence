@@ -32,7 +32,8 @@ services:
       - "3000"
 
     volumes:
-      - .:/app
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
 
     environment:
       - NODE_ENV=development
