@@ -285,4 +285,4 @@ tester-remove:
 		echo "Error: Virtual environment is currently active. Please run 'deactivate' first."; \
 		exit 1; \
 	fi && \
-	rm -rf .venv uv.lock
+	rm -rf .venv uv.lock .pytest_cache

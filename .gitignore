@@ -5,3 +5,5 @@ backend/package-lock.json
 backend/.env
 nginx/certs/*
 !nginx/certs/.gitkeep
+social-api-tests/.env
+social-api-tests/uv.lock
