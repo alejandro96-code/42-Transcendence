@@ -13,18 +13,7 @@ SERVER_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '{print $$7; exit}')
 
 CALLBACK_URL = https://$(SERVER_IP):8443/api/auth/42/callback
 
-
-install:
-	@if [ -d node_modules ] && [ -f package-lock.json ]; then \
-		echo "$(GREEN)✓ Dependencies already installed (node_modules exists)$(NC)"; \
-	else \
-		echo "$(GREEN)Installing dependencies...$(NC)"; \
-		npm install; \
-		npm install react react-dom; \
-		npm install -D @types/react @types/react-dom; \
-		echo "$(GREEN)✓ Dependencies installed$(NC)"; \
-	fi
-
+all: docker-up
 
 setup:
 	@bash -c '\
@@ -123,8 +112,7 @@ setup:
 		fi; \
 	'
 
-
-docker-up: install setup
+docker-up: setup
 	@echo "$(BLUE)Detecting SERVER_IP...$(NC)"
 
 	@SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-); \
@@ -203,17 +191,6 @@ docker-up: install setup
 	echo "$(GREEN)✓ SERVER_IP=$$SERVER_IP$(NC)"; \
 	echo "$(GREEN)✓ Frontend: https://$$SERVER_IP:8443$(NC)"; \
 	echo "$(GREEN)✓ Nginx running on port 8443$(NC)"
-
-
-dev:
-	@echo "$(GREEN)Starting frontend...$(NC)"
-	npm run dev:frontend
-
-
-dev-backend:
-	@echo "$(GREEN)Starting backend...$(NC)"
-	npm run dev:backend
-
 
 docker-build:
 	@echo "$(BLUE)Building Docker images...$(NC)"
