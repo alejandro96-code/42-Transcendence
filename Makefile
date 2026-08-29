@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: setup install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean
+.PHONY: setup install dev dev-backend docker-build docker-up docker-down docker-down-all docker-restart docker-clean tester-build tester-launch tester-remove
 
 GREEN  := $(shell printf '\033[0;32m')
 BLUE   := $(shell printf '\033[0;34m')
@@ -255,3 +255,34 @@ docker-clean:
 		2>/dev/null || true
 
 	@echo "$(GREEN)✓ Containers and volumes removed$(NC)"
+
+tester-build:
+	@if command -v uv >/dev/null 2>&1; then \
+		echo "Using uv to sync environment..."; \
+		cd social-api-tests && uv sync; \
+	else \
+		echo "uv not found, using python venv and pip..."; \
+		cd social-api-tests && \
+		python3 -m venv .venv && \
+		. .venv/bin/activate && \
+		pip install .; \
+	fi
+	cd social-api-tests && \
+	echo 'API_BASE_URL="https://$(SERVER_IP):8443"' > .env
+
+tester-launch:
+	@cd social-api-tests && \
+	if [ -d .venv ]; then \
+		. .venv/bin/activate && pytest -v; exit_code=$$?; deactivate; exit $$exit_code; \
+	else \
+		echo "Virtual environment (.venv) not found. Run 'make tester-build' first."; \
+		exit 1; \
+	fi
+
+tester-remove:
+	@cd social-api-tests && \
+	if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "Error: Virtual environment is currently active. Please run 'deactivate' first."; \
+		exit 1; \
+	fi && \
+	rm -rf .venv uv.lock
