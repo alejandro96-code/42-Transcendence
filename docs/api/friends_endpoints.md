@@ -18,17 +18,19 @@ Most friends endpoints are typically protected and require:
 - **Body:**
 ```json
 {
-  "recipientId": 42
+  "username": 42
 }
 ```
 
-### Accept friend request
+### Accept or decline a friend request
 - **Method:** `PATCH`
-- **Path:** `/api/friends/requests/:requestId/accept`
-
-### Decline friend request
-- **Method:** `PATCH`
-- **Path:** `/api/friends/requests/:requestId/decline`
+- **Path:** `/api/friends/requests/:requestId`
+- **Body:**
+```json
+{
+  "status": "accepted"/"rejected" 
+}
+```
 
 ### Remove friend
 - **Method:** `DELETE`
@@ -37,6 +39,15 @@ Most friends endpoints are typically protected and require:
 ### List friends
 - **Method:** `GET`
 - **Path:** `/api/friends`
+- **Response**: (Array)
+```json
+[{
+  "id": 3,
+  "username":"recipient",
+  "email":"mail",
+  "created_at":"creation_date"
+}]
+```
 
 ### List pending requests
 - **Method:** `GET`

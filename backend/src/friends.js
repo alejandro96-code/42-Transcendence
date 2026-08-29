@@ -287,7 +287,7 @@ async function delete_friend(req, res) {
             return res.status(404).json(formatErrorJson(404, "Not Found", 'Friend not found'));
         }
         await client.query(
-            `DELETE FROM messages
+            `DELETE FROM chat_messages
              WHERE (sender_id = $1 AND receiver_id = $2)
                 OR (sender_id = $2 AND receiver_id = $1)`,
             [req.user.id, friendId],
