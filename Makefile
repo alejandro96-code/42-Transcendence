@@ -266,6 +266,9 @@ docker-clean:
 
 	@echo "$(GREEN)✓ Containers, volumes and network removed$(NC)"
 
+populate:
+	python3 Populate.py users.json
+
 tester-build:
 	@if command -v uv >/dev/null 2>&1; then \
 		echo "Using uv to sync environment..."; \

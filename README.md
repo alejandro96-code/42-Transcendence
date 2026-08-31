@@ -39,6 +39,7 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 | `make docker-down` | Stops services defined in the primary compose file. |
 | `make docker-down-all` | Stops all application and persistent database containers. |
 | `make docker-restart` | Restarts frontend and backend container services. |
+| `make populate` | Populate the database with mocked-up users. |
 | `make test-build` | Install dependencies to executes the test. |
 | `make test-launch` | Launches the tester with all scenarios and shows failed or passed depending on result |
 | `make test-remove` | Eliminate dependencies to executes the test. |
