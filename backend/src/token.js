@@ -37,19 +37,18 @@ async function get_token(req, res) {
 }
 
 export function verify_token(req, res, next) {
-    // Bypass token verification if already in session
-    if (req.isAuthenticated()) {
-        return next();
-    }
-
     const auth_header = req.headers["authorization"];
     const token = auth_header &&
     auth_header.split(" ").length == 2 &&
     auth_header.split(" ")[0] == "Bearer" ?
     auth_header.split(" ")[1].trim() : ""
     const jwt_secret = process.env.JWT_SECRET;
-
+    
     if (!token) {
+        if (req.isAuthenticated()) {
+            return next();
+        }
+
         res.status(400).json(formatErrorJson(400, "Bad Request", "Bad token header format"));
         return;
     }
