@@ -36,13 +36,63 @@ services:
       - ./frontend:/app/frontend
 
     environment:
-      - NODE_ENV=development
-      - SERVER_IP=${SERVER_IP}
-      - VITE_SERVER_IP=${SERVER_IP}
-      - VITE_API_URL=https://${SERVER_IP}:8443
+      NODE_ENV: development
+      SERVER_IP: ${SERVER_IP}
+      VITE_SERVER_IP: ${SERVER_IP}
+      VITE_API_URL: https://${SERVER_IP}:8443
 
     stdin_open: true
     tty: true
+
+    networks:
+      - transcendence-network
+
+
+  postgres:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+
+    container_name: transcendence-postgres
+
+    ports:
+      - "127.0.0.1:5432:5432"
+
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en the environment file}
+      POSTGRES_DB: ${DB_NAME:-transcendence}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-transcendence}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - transcendence-network
+
+
+  adminer:
+    image: adminer:latest
+
+    container_name: transcendence-adminer
+
+    ports:
+      - "127.0.0.1:8080:8080"
+
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+    restart: unless-stopped
+
+    depends_on:
+      - postgres
 
     networks:
       - transcendence-network
@@ -65,17 +115,25 @@ services:
       - ./backend/.env
 
     environment:
-      - NODE_ENV=development
-      - SERVER_IP=${SERVER_IP}
-      - FRONTEND_URL=https://${SERVER_IP}:8443
-      - FORTYTWO_CALLBACK_URL=https://${SERVER_IP}:8443/api/auth/42/callback
-      - DB_HOST=postgres
+      NODE_ENV: development
+      SERVER_IP: ${SERVER_IP}
+      FRONTEND_URL: https://${SERVER_IP}:8443
+      FORTYTWO_CALLBACK_URL: https://${SERVER_IP}:8443/api/auth/42/callback
+      DB_HOST: postgres
 
     stdin_open: true
     tty: true
 
+    depends_on:
+      postgres:
+        condition: service_healthy
+
     networks:
       - transcendence-network
+
+
+volumes:
+  postgres_data:
 
 
 networks:

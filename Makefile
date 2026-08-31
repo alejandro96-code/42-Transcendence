@@ -13,7 +13,9 @@ SERVER_IP ?= $(shell ip route get 1.1.1.1 2>/dev/null | awk '{print $$7; exit}')
 
 CALLBACK_URL = https://$(SERVER_IP):8443/api/auth/42/callback
 
+
 all: docker-up
+
 
 setup:
 	@bash -c '\
@@ -112,6 +114,7 @@ setup:
 		fi; \
 	'
 
+
 docker-up: setup
 	@echo "$(BLUE)Detecting SERVER_IP...$(NC)"
 
@@ -160,11 +163,10 @@ docker-up: setup
 	fi; \
 	\
 	echo ""; \
-	echo "$(BLUE)Starting PostgreSQL, frontend, backend and Nginx...$(NC)"; \
+	echo "$(BLUE)Starting PostgreSQL, Adminer, frontend, backend and Nginx...$(NC)"; \
 	SERVER_IP=$$SERVER_IP $(DOCKER_COMPOSE) \
 		--env-file backend/.env \
 		-f docker-compose.yml \
-		-f docker-compose.db.yml \
 		up -d --build --remove-orphans; \
 	\
 	if [ $$? -ne 0 ]; then \
@@ -172,25 +174,21 @@ docker-up: setup
 		exit 1; \
 	fi; \
 	\
+	echo ""; \
 	echo "$(BLUE)Waiting for PostgreSQL...$(NC)"; \
 	until docker exec transcendence-postgres pg_isready -U postgres >/dev/null 2>&1; do \
 		sleep 1; \
 	done; \
 	\
-	echo "$(BLUE)PostgreSQL is ready$(NC)"; \
-	echo "$(BLUE)Initializing database...$(NC)"; \
-	docker exec -i transcendence-postgres \
-		psql -q -v ON_ERROR_STOP=1 \
-		--set=client_min_messages=warning \
-		-U postgres \
-		-d transcendence \
-		< backend/init.sql; \
-	\
+	echo "$(GREEN)✓ PostgreSQL is ready$(NC)"; \
 	echo ""; \
 	echo "$(GREEN)✓ Project started successfully$(NC)"; \
 	echo "$(GREEN)✓ SERVER_IP=$$SERVER_IP$(NC)"; \
 	echo "$(GREEN)✓ Frontend: https://$$SERVER_IP:8443$(NC)"; \
-	echo "$(GREEN)✓ Nginx running on port 8443$(NC)"
+	echo "$(GREEN)✓ Nginx running on port 8443$(NC)"; \
+	echo "$(GREEN)✓ PostgreSQL initialized automatically$(NC)"; \
+	echo "$(GREEN)✓ Adminer: http://127.0.0.1:8080$(NC)"
+
 
 docker-build:
 	@echo "$(BLUE)Building Docker images...$(NC)"
@@ -198,7 +196,6 @@ docker-build:
 	@SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-) $(DOCKER_COMPOSE) \
 		--env-file backend/.env \
 		-f docker-compose.yml \
-		-f docker-compose.db.yml \
 		build --no-cache
 
 	@echo "$(GREEN)✓ Docker images built$(NC)"
@@ -210,8 +207,9 @@ docker-down:
 	@SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-) $(DOCKER_COMPOSE) \
 		--env-file backend/.env \
 		-f docker-compose.yml \
-		-f docker-compose.db.yml \
 		down --remove-orphans
+
+	@echo "$(GREEN)✓ Services stopped$(NC)"
 
 
 docker-down-all:
@@ -220,8 +218,9 @@ docker-down-all:
 	@SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-) $(DOCKER_COMPOSE) \
 		--env-file backend/.env \
 		-f docker-compose.yml \
-		-f docker-compose.db.yml \
 		down --remove-orphans
+
+	@echo "$(GREEN)✓ All services stopped$(NC)"
 
 
 docker-restart:
@@ -230,7 +229,6 @@ docker-restart:
 	@SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-) $(DOCKER_COMPOSE) \
 		--env-file backend/.env \
 		-f docker-compose.yml \
-		-f docker-compose.db.yml \
 		restart nginx frontend backend
 
 	@echo "$(GREEN)✓ Services restarted$(NC)"
@@ -240,6 +238,18 @@ docker-clean:
 	@echo "$(YELLOW)⚠ WARNING: This will delete ALL database data$(NC)"
 	@echo "$(YELLOW)Stopping services and removing volumes...$(NC)"
 
+	@if [ -f backend/.env ]; then \
+		SERVER_IP=$$(grep '^SERVER_IP=' backend/.env | cut -d= -f2-); \
+		$(DOCKER_COMPOSE) \
+			--env-file backend/.env \
+			-f docker-compose.yml \
+			down -v --remove-orphans 2>/dev/null || true; \
+	else \
+		$(DOCKER_COMPOSE) \
+			-f docker-compose.yml \
+			down -v --remove-orphans 2>/dev/null || true; \
+	fi
+
 	@docker rm -f \
 		transcendence-nginx \
 		transcendence-frontend \
@@ -248,13 +258,14 @@ docker-clean:
 		transcendence-postgres \
 		2>/dev/null || true
 
-	@docker volume rm $$(docker volume ls -q --filter name=transcendence) \
+	@docker volume rm $$(docker volume ls -q --filter name=postgres_data) \
 		2>/dev/null || true
 
-	@docker network rm transcendence_default \
+	@docker network rm transcendence-network \
 		2>/dev/null || true
 
-	@echo "$(GREEN)✓ Containers and volumes removed$(NC)"
+	@echo "$(GREEN)✓ Containers, volumes and network removed$(NC)"
+
 
 tester-build:
 	@if command -v uv >/dev/null 2>&1; then \
@@ -270,6 +281,7 @@ tester-build:
 	cd social-api-tests && \
 	echo 'API_BASE_URL="https://$(SERVER_IP):8443"' > .env
 
+
 tester-launch:
 	@cd social-api-tests && \
 	if [ -d .venv ]; then \
@@ -278,6 +290,7 @@ tester-launch:
 		echo "Virtual environment (.venv) not found. Run 'make tester-build' first."; \
 		exit 1; \
 	fi
+
 
 tester-remove:
 	@cd social-api-tests && \
