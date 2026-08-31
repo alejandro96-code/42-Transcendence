@@ -243,11 +243,11 @@ docker-clean:
 		$(DOCKER_COMPOSE) \
 			--env-file backend/.env \
 			-f docker-compose.yml \
-			down -v --remove-orphans 2>/dev/null || true; \
+			down -v --remove-orphans --rmi all || true; \
 	else \
 		$(DOCKER_COMPOSE) \
 			-f docker-compose.yml \
-			down -v --remove-orphans 2>/dev/null || true; \
+			down -v --remove-orphans --rmi all || true; \
 	fi
 
 	@docker rm -f \
@@ -265,7 +265,6 @@ docker-clean:
 		2>/dev/null || true
 
 	@echo "$(GREEN)✓ Containers, volumes and network removed$(NC)"
-
 
 tester-build:
 	@if command -v uv >/dev/null 2>&1; then \
