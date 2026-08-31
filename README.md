@@ -39,8 +39,9 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 | `make docker-down` | Stops services defined in the primary compose file. |
 | `make docker-down-all` | Stops all application and persistent database containers. |
 | `make docker-restart` | Restarts frontend and backend container services. |
-| `make docker-clean` | Completely removes containers, networks, and volumes (purging all DB data). |
-| `make dev` / `make dev-backend` | Runs frontend or backend locally in development mode. |
+| `make test-build` | Install dependencies to executes the test. |
+| `make test-launch` | Launches the tester with all scenarios and shows failed or passed depending on result |
+| `make test-remove` | Eliminate dependencies to executes the test. |
 
 *Note:* If an existing PostgreSQL volume is mounted and tables are missing, `make docker-up` automatically re-runs `backend/init.sql`. Alternatively, run `make docker-clean` to purge volumes and reset the state.
 
@@ -123,7 +124,7 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
 
 A balanced selection of 5 Major modules (2 points each) and 9 Minor modules (1 point each) was implemented to deliver an accessible, production-ready social network platform.
 
-Total Points: 19 points
+Total Points: 20 points
 
 | Area | Module | Type | Points | Justification & Implementation | Main Contributors |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -141,8 +142,9 @@ Total Points: 19 points
 | User Management | OAuth 2.0 Remote Authentication | Minor | 1 | Passport and passport-42 integrate the 42 intra. On first login, the user is created; subsequent logins update public data from the provider. | fcasaubo |
 | AI | Content moderation | Minor | 1 | Offensive words in names, profiles, posts, and messages are filtered before storage. The @2toad/profanity module configures filtering for multiple languages, and the API rejects disallowed content. | fcasaubo, andefern |
 | Modules of Choice | Custom Module: Initial Social Network Seed | Minor | 1 | A mock SQL test script was prepared to provide a local account for testing the platform without relying exclusively on OAuth. This starting point makes it easy to verify linked data across profiles, posts, friends, and chat. | xortega, fcasaubo |
+| Modules of Choice | Custom Module: Social api test | Minor | 1 | Tester with natural language (using Behave) that executes many scenarios, validating the API calls. | xortega, fcasaubo |
 
-Calculation: 5 major modules × 2 points = 10 points; 9 minor modules × 1 point = 9 points. Total: 19 points.
+Calculation: 5 major modules × 2 points = 10 points; 10 minor modules × 1 point = 10 points. Total: 20 points.
 
 ## Individual Contributions
 
