@@ -33,7 +33,6 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 
 | Command | Description |
 | :--- | :--- |
-| `make install` | Installs dependencies across the monorepo workspace. |
 | `make setup` | Generates `backend/.env` with local secrets and tokens. |
 | `make docker-up` | Builds and starts Nginx, frontend, backend, PostgreSQL, and Adminer containers. |
 | `make docker-build` | Forces a complete rebuild of Docker images without cache. |
