@@ -290,11 +290,10 @@ tester-launch:
 		exit 1; \
 	fi
 
-
 tester-remove:
 	@cd social-api-tests && \
 	if [ -n "$$VIRTUAL_ENV" ]; then \
 		echo "Error: Virtual environment is currently active. Please run 'deactivate' first."; \
 		exit 1; \
 	fi && \
-	rm -rf .venv uv.lock .pytest_cache
+	rm -rf .env .venv uv.lock .pytest_cache
