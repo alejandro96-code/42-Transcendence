@@ -7,3 +7,4 @@ nginx/certs/*
 !nginx/certs/.gitkeep
 social-api-tests/.env
 social-api-tests/uv.lock
+__pycache__
