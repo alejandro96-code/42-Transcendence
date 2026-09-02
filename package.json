@@ -13,7 +13,6 @@
     "preview": "vite preview frontend --config frontend/vite.config.ts"
   },
   "dependencies": {
-    "@2toad/profanity": "^3.3.0",
     "@reduxjs/toolkit": "^2.11.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

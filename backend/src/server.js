@@ -11,7 +11,6 @@ import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
 import token_endpoints from "./token.js"
 import { isAuthenticated, formatErrorJson, hashPassword, verifyPassword } from "./utils.js"
-import { containsProfanity } from "./profanity.js"
 import notifications_endpoints from "./notificationsRoutes.js";
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -282,12 +281,6 @@ function start_server() {
         const fullName = normalizeText(req.body?.fullName);
         const email = normalizeText(req.body?.email).toLowerCase();
         
-        if (containsProfanity(username)) {
-            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Username contains vulgar words'));
-        }
-        if (containsProfanity(fullName)) {
-            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Full name contains vulgar words'));
-        }
         if (!USERNAME_REGEX.test(username)) {
             return res.status(400).json(formatErrorJson(400, "Bad Request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
         }
@@ -377,18 +370,6 @@ function start_server() {
 app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
     const profession = normalizeText(req.body?.profession);
     const description = normalizeText(req.body?.description);
-
-    if (containsProfanity(profession)) {
-        return res.status(403).json(
-            formatErrorJson(403, "Forbidden", 'Profession contains vulgar words')
-        );
-    }
-
-    if (containsProfanity(description)) {
-        return res.status(403).json(
-            formatErrorJson(403, "Forbidden", 'Description contains vulgar words')
-        );
-    }
 
     if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
         return res.status(400).json(

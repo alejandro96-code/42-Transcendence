@@ -150,9 +150,6 @@ Invalid input.
 ### 401 Unauthorized
 Invalid credentials/token (depending on endpoint).
 
-### 403 Forbidden
-Input blocked by policy (for example profanity validation).
-
 ### 404 Not Found
 Resource/user not found.
 
