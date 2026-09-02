@@ -70,7 +70,7 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 | **Backend** | Node.js, Express, JavaScript, Passport, passport-42 | **Express** delivers a lightweight, unopinionated REST API. **Passport.js** enables seamless OAuth 2.0 integration with the 42 API while cookie sessions guard private routes. |
 | **Database** | PostgreSQL 16, pg | **PostgreSQL** was chosen for its strict relational integrity, ACID compliance, and robust indexing for relational social graph queries (users, friendships, posts, threads). |
 | **Infrastructure** | Docker Compose, Nginx, Adminer | **Docker Compose** ensures a deterministic multi-container execution environment. **Nginx** acts as a reverse proxy managing SSL termination and routing. **Adminer** enables local database inspection. |
-| **Security & Quality** | ESLint, scrypt, HTTP-Only Cookies, Input Validation, @2toad/profanity | Strict payload validation, cryptographically strong **scrypt** password hashing, XSS/CSRF mitigation via HTTP-only secure cookies, and multilingual profanity filtering. |
+| **Security & Quality** | ESLint, scrypt, HTTP-Only Cookies, Input Validation| Strict payload validation, cryptographically strong **scrypt** password hashing, XSS/CSRF mitigation via HTTP-only secure cookies and multilingual. |
 
 ## Database Schema
 
@@ -141,7 +141,7 @@ Total Points: 20 points
 | Accessibility & i18n | Browser compatibility | Minor | 1 | The application is built with standard web technologies and responsive design to work across modern desktop and mobile browsers without browser-specific dependencies. | alejanr2, andefern |
 | User Management | Standard user management | Major | 2 | Implemented local registration, login, logout, persistent session, profile editing, friendships, and presence. Passwords are protected with scrypt and sessions use HTTP-only cookies. | fcasaubo, xortega |
 | User Management | OAuth 2.0 Remote Authentication | Minor | 1 | Passport and passport-42 integrate the 42 intra. On first login, the user is created; subsequent logins update public data from the provider. | fcasaubo |
-| AI | Content moderation | Minor | 1 | Offensive words in names, profiles, posts, and messages are filtered before storage. The @2toad/profanity module configures filtering for multiple languages, and the API rejects disallowed content. | fcasaubo, andefern |
+| AI | Content moderation | Minor | 1 | Offensive words in names, profiles, posts, and messages are filtered before storage. module configures filtering for multiple languages, and the API rejects disallowed content. | fcasaubo, andefern |
 | Modules of Choice | Custom Module: Initial Social Network Seed | Minor | 1 | A mock SQL test script was prepared to provide a local account for testing the platform without relying exclusively on OAuth. This starting point makes it easy to verify linked data across profiles, posts, friends, and chat. | xortega, fcasaubo |
 | Modules of Choice | Custom Module: Social api test | Minor | 1 | Tester with natural language (using Behave) that executes many scenarios, validating the API calls. | xortega, fcasaubo |
 

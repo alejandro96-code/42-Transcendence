@@ -1,7 +1,6 @@
 import express from 'express';
 import { formatErrorJson } from './utils.js';
 import { pool } from "./db.js";
-import { containsProfanity } from './profanity.js';
 import { verify_token } from './token.js';
 import { addNotification } from './notifications.js';
 
@@ -86,16 +85,6 @@ async function create_post(req, res) {
 
         if (!content || content.length == 0) {
             return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!"))
-        }
-
-        if (containsProfanity(content)) {
-            return res.status(400).json(
-                formatErrorJson(
-                    400,
-                    "Bad Request",
-                    "The media contains vulgar words"
-                )
-            );
         }
 
         const author_username = await pool.query(

@@ -1,7 +1,6 @@
 import express from 'express';
 import { formatErrorJson} from './utils.js';
 import { pool } from './db.js';
-import { containsProfanity } from './profanity.js';
 import { verify_token } from './token.js';
 import { addNotification } from './notifications.js';
 
@@ -99,16 +98,6 @@ async function create_message(req, res) {
                 413,
                 "Content Too Large",
                 "Content must be between 1 and 1000 characters long"
-            )
-        );
-    }
-
-    if (containsProfanity(content)) {
-        return res.status(400).json(
-            formatErrorJson(
-                400,
-                "Bad Request",
-                "The message contains non allowed or vulgar words."
             )
         );
     }
