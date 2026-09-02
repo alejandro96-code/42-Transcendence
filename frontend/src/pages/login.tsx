@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/authAPI'
 import { useAppDispatch } from '../store/hooks'
 import { setUser } from '../store/authSlice'
+import { Dropdown } from 'primereact/dropdown'
+import { useTranslation } from 'react-i18next'
 
 type AuthMode = 'login' | 'register'
 
@@ -22,9 +24,24 @@ export function Login() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const { t, i18n } = useTranslation()
 
   const handleOAuthLogin = () => {
     authAPI.initiateLogin()
+  }
+  
+  const languageOptions = [
+    { label: 'ES', value: 'es' },
+    { label: 'EU', value: 'eu' },
+    { label: 'EN', value: 'en' },
+  ]
+
+  const currentLanguage =
+    languageOptions.find((opt) => i18n.language?.startsWith(opt.value))?.value ||
+    'es'
+
+  const handleLanguageChange = (e: { value: string }) => {
+    i18n.changeLanguage(e.value)
   }
 
   const switchAuthMode = (nextMode: AuthMode) => {
@@ -59,43 +76,54 @@ export function Login() {
     setIsSubmitting(true)
 
 try {
-  const user = isRegisterMode
-    ? await authAPI.registerWithCredentials(
-        normalizedUsername,
-        password,
-        normalizedFullName,
-        normalizedEmail,
-      )
-    : await authAPI.loginWithCredentials(
-        normalizedUsername,
-        password,
-      )
+      const user = isRegisterMode
+        ? await authAPI.registerWithCredentials(
+            normalizedUsername,
+            password,
+            normalizedFullName,
+            normalizedEmail,
+          )
+        : await authAPI.loginWithCredentials(
+            normalizedUsername,
+            password,
+          )
 
-  dispatch(setUser(user))
-  navigate('/profile')
-} catch (error) {
-  setErrorMessage(
-    error instanceof Error
-      ? error.message
-      : 'No se pudo completar la autenticación.',
-  )
-} finally {
-  setIsSubmitting(false)
-}
+      dispatch(setUser(user))
+      navigate('/profile')
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo completar la autenticación.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <main className='container-login'>
       <div className="login-shell">
         <Card className="shadow-8">
+            <div className='header-languages-wrapper'>
+              <Dropdown
+                inputId='language-select-normal'
+                value={currentLanguage}
+                options={languageOptions}
+                onChange={handleLanguageChange}
+                className='p-inputtext-sm'
+                aria-label={t('language_selector')}
+              />
+            </div>
           <div className="text-center mb-5">
             <h1 className="font-semibold mb-2">Transcendence</h1>
             <p className="login-subtitle">Conecta y comparte con tu comunidad</p>
           </div>
+          
 
           <div className="flex flex-column gap-4">
             <form className="login-form" onSubmit={handleCredentialsSubmit}>
-              <label htmlFor="username" className="login-label">Usuario</label>
+              <label htmlFor="username" className="login-label">{t('login_username')}</label>
               <InputText
                 id="username"
                 className="w-full"

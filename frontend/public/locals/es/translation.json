@@ -1,4 +1,6 @@
 {
+  "login_username": "Usuario",
+  
   "header_menu_aria_label": "Abrir menú",
   "header_logo_alt": "Logo de Transcendence",
   "header_search_aria_label": "Buscar amigos",

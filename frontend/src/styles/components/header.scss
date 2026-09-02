@@ -84,12 +84,14 @@
     .p-dropdown-trigger {
       display: none;
     }
+    
   }
 
   .p-dropdown {
     background: rgba(6, 13, 26, 0.28);
     border: 1px solid rgba(99, 192, 255, 0.3);
     color: #eaf4ff;
+    border: none;
   }
 
   .header-avatar-button {
