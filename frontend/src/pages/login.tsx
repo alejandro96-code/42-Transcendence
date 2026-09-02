@@ -36,9 +36,7 @@ export function Login() {
     { label: 'EN', value: 'en' },
   ]
 
-  const currentLanguage =
-    languageOptions.find((opt) => i18n.language?.startsWith(opt.value))?.value ||
-    'es'
+  const currentLanguage = languageOptions.find((opt) => i18n.language?.startsWith(opt.value))?.value || 'es'
 
   const handleLanguageChange = (e: { value: string }) => {
     i18n.changeLanguage(e.value)
@@ -58,24 +56,24 @@ export function Login() {
     const normalizedEmail = email.trim()
 
     if (!normalizedUsername || !password) {
-      setErrorMessage('Completa usuario y contraseña.')
+      setErrorMessage(t('login_complete_credentials'))
       return
     }
 
     if (isRegisterMode && (!normalizedFullName || !normalizedEmail)) {
-      setErrorMessage('Completa nombre completo y correo electrónico.')
+      setErrorMessage(t('login_complete_registration'))
       return
     }
 
     if (isRegisterMode && password !== confirmPassword) {
-      setErrorMessage('Las contraseñas no coinciden.')
+      setErrorMessage(t('login_passwords_mismatch'))
       return
     }
 
     setErrorMessage('')
     setIsSubmitting(true)
 
-try {
+    try {
       const user = isRegisterMode
         ? await authAPI.registerWithCredentials(
             normalizedUsername,
@@ -91,11 +89,7 @@ try {
       dispatch(setUser(user))
       navigate('/profile')
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo completar la autenticación.',
-      )
+      setErrorMessage(error instanceof Error ? error.message : t('login_authentication_error'),)
     } finally {
       setIsSubmitting(false)
     }
@@ -105,22 +99,22 @@ try {
     <main className='container-login'>
       <div className="login-shell">
         <Card className="shadow-8">
-            <div className='header-languages-wrapper'>
-              <Dropdown
-                inputId='language-select-normal'
-                value={currentLanguage}
-                options={languageOptions}
-                onChange={handleLanguageChange}
-                className='p-inputtext-sm'
-                aria-label={t('language_selector')}
-              />
-            </div>
+          <div className='header-languages-wrapper'>
+            <Dropdown
+              inputId='language-select-normal'
+              value={currentLanguage}
+              options={languageOptions}
+              onChange={handleLanguageChange}
+              className='p-inputtext-sm'
+              aria-label={t('language_selector')}
+            />
+          </div>
+
           <div className="text-center mb-5">
             <h1 className="font-semibold mb-2">Transcendence</h1>
-            <p className="login-subtitle">Conecta y comparte con tu comunidad</p>
+            <p className="login-subtitle">{t('login_subtitle')}</p>
           </div>
           
-
           <div className="flex flex-column gap-4">
             <form className="login-form" onSubmit={handleCredentialsSubmit}>
               <label htmlFor="username" className="login-label">{t('login_username')}</label>
@@ -132,10 +126,9 @@ try {
                 autoComplete="username"
                 maxLength={30}
               />
-
               {isRegisterMode && (
                 <>
-                  <label htmlFor="fullName" className="login-label">Nombre completo</label>
+                  <label htmlFor="fullName" className="login-label">{t('login_full_name')}</label>
                   <InputText
                     id="fullName"
                     className="w-full"
@@ -144,8 +137,7 @@ try {
                     autoComplete="name"
                     maxLength={100}
                   />
-
-                  <label htmlFor="email" className="login-label">Correo electrónico</label>
+                  <label htmlFor="email" className="login-label">{t('login_email')}</label>
                   <InputText
                     id="email"
                     type="email"
@@ -157,8 +149,7 @@ try {
                   />
                 </>
               )}
-
-              <label htmlFor="password" className="login-label">Contraseña</label>
+              <label htmlFor="password" className="login-label">{t('login_password')}</label>
               <Password
                 inputId="password"
                 className="inputPassword w-full"
@@ -171,7 +162,7 @@ try {
 
               {isRegisterMode && (
                 <>
-                  <label htmlFor="confirmPassword" className="login-label">Repetir contraseña</label>
+                  <label htmlFor="confirmPassword" className="login-label">{t('login_confirm_password')}</label>
                   <Password
                     inputId="confirmPassword"
                     className="inputPassword w-full"
@@ -184,40 +175,38 @@ try {
                 </>
               )}
 
-              {errorMessage && <small className="login-error">{errorMessage}</small>}
+              {errorMessage && (<small className="login-error">{errorMessage}</small>)}
 
-            <div className="row flex">
-              <div className="col-6">
-                <Button
-                  type="submit"
-                  className="button-login"
-                  size="large"
-                  loading={isSubmitting}
-                  disabled={isSubmitting}
-                  label={isRegisterMode ? 'Crear cuenta' : 'Entrar'}
-                />
-              </div>
-              <div className="col-6">
-                <Button
-                  type="button"
-                  className={`button-login ${mode === 'register' ? 'active' : ''}`}
-                  label={isRegisterMode ? 'Volver a Iniciar sesión' : 'Registrarse'}
-                  outlined={!isRegisterMode}
-                  onClick={() => switchAuthMode(isRegisterMode ? 'login' : 'register' )}
-                />
-              </div>
+              <div className="row flex">
+                <div className="col-6">
+                  <Button
+                    type="submit"
+                    className="button-login"
+                    size="large"
+                    loading={isSubmitting}
+                    disabled={isSubmitting}
+                    label={isRegisterMode? t('login_create_account'): t('login_submit')}
+                  />
+                </div>
+
+                <div className="col-6">
+                  <Button
+                    type="button"
+                    className={`button-login ${mode === 'register' ? 'active' : ''}`}
+                    label={isRegisterMode ? t('login_back_to_login') : t('login_register')}
+                    outlined={!isRegisterMode}
+                    onClick={() =>switchAuthMode(isRegisterMode ? 'login' : 'register')}
+                  />
+                </div>
               </div>
             </form>
 
-            <div className="login-divider">
-              <span>o</span>
-            </div>
-
+            <div className="login-divider"><span>{t('login_or')}</span></div>
             <Button
               className="button-login"
               size="large"
               onClick={handleOAuthLogin}
-              label="SIGN IN WITH 42"
+              label={t('login_42')}
             />
           </div>
         </Card>
