@@ -7,8 +7,6 @@ import { PostFeed } from '../components/posts'
 import { Friends } from '../components/friends'
 import { Chat } from '../components/chat'
 import { friendsAPI, type FriendProfile } from '../services/friendsAPI'
-import { authAPI } from '../services/authAPI'
-import type { User } from '../types/auth'
 
 export function Profile() {
   const { friendId } = useParams()
@@ -32,7 +30,6 @@ export function Profile() {
   })
 
   const [profileUser, setProfileUser] = useState<FriendProfile | null>(null)
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
 
   const isFriendProfile = Boolean(friendId)
 
@@ -51,28 +48,6 @@ export function Profile() {
       setActiveChatFriend(JSON.parse(savedFriend))
     } catch {
       localStorage.removeItem('activeChatFriend')
-    }
-  }, [isFriendProfile])
-
-  useEffect(() => {
-    let mounted = true
-
-    const loadCurrentUser = async () => {
-      if (isFriendProfile) {
-        return
-      }
-
-      const user = await authAPI.getCurrentUser()
-
-      if (mounted) {
-        setCurrentUser(user)
-      }
-    }
-
-    void loadCurrentUser()
-
-    return () => {
-      mounted = false
     }
   }, [isFriendProfile])
 
