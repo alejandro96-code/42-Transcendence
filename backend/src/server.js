@@ -207,6 +207,66 @@ function start_server() {
         }
     );
 
+    app.post('/api/auth/avatar', isAuthenticated, async (req, res) => {
+        const avatarUrl = req.body?.image;
+
+        if (!avatarUrl || typeof avatarUrl !== 'string') {
+            return res.status(400).json(
+                formatErrorJson(
+                    400,
+                    "Bad Request",
+                    "No avatar image provided"
+                )
+            );
+        }
+
+        if (!avatarUrl.startsWith('data:image/')) {
+            return res.status(400).json(
+                formatErrorJson(
+                    400,
+                    "Bad Request",
+                    "Invalid avatar image"
+                )
+            );
+        }
+
+        try {
+            const result = await pool.query(
+                `UPDATE users
+                SET avatar_url = $1,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = $2
+                RETURNING *`,
+                [
+                    avatarUrl,
+                    req.user.id
+                ]
+            );
+
+            if (result.rows.length === 0) {
+                return res.status(404).json(
+                    formatErrorJson(
+                        404,
+                        "Not Found",
+                        "User not found"
+                    )
+                );
+            }
+
+            return res.json(toPublicUser(result.rows[0]));
+        } catch (error) {
+            console.error('Error uploading avatar:', error);
+
+            return res.status(500).json(
+                formatErrorJson(
+                    500,
+                    "Internal server error",
+                    `Error on avatar upload: ${error}`
+                )
+            );
+        }
+    });
+
     app.get('/api/auth/me', (req, res) => {
         if (!req.user) {
             return res.status(200).json(null)
@@ -313,67 +373,69 @@ function start_server() {
         });
     });
 
-    app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
-        const profession = normalizeText(req.body?.profession);
-        const description = normalizeText(req.body?.description);
-        const avatarUrl = normalizeText(req.body?.avatarUrl);
+app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
+    const profession = normalizeText(req.body?.profession);
+    const description = normalizeText(req.body?.description);
 
-        if (containsProfanity(profession)) {
-            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Profession contains vulgar words'));
-        }
+    if (containsProfanity(profession)) {
+        return res.status(403).json(
+            formatErrorJson(403, "Forbidden", 'Profession contains vulgar words')
+        );
+    }
 
-        if (containsProfanity(description)) {
-            return res.status(403).json(formatErrorJson(403, "Forbidden", 'Description contains vulgar words'));
-        }
+    if (containsProfanity(description)) {
+        return res.status(403).json(
+            formatErrorJson(403, "Forbidden", 'Description contains vulgar words')
+        );
+    }
 
-        if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", `Profession must be less than ${PROFILE_PROFESSION_MAX_LENGTH} characters long`));
-        }
+    if (profession.length > PROFILE_PROFESSION_MAX_LENGTH) {
+        return res.status(400).json(
+            formatErrorJson(
+                400,
+                "Bad Request",
+                `Profession must be less than ${PROFILE_PROFESSION_MAX_LENGTH} characters long`
+            )
+        );
+    }
 
-        if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", `Profession must be less than ${PROFILE_DESCRIPTION_MAX_LENGTH} characters long`));
-        }
+    if (description.length > PROFILE_DESCRIPTION_MAX_LENGTH) {
+        return res.status(400).json(
+            formatErrorJson(
+                400,
+                "Bad Request",
+                `Description must be less than ${PROFILE_DESCRIPTION_MAX_LENGTH} characters long`
+            )
+        );
+    }
 
-        const allowedAvatars = [
-            '/img/avatar1.png',
-            '/img/avatar2.png'
-        ];
+    try {
+        const result = await pool.query(
+            `UPDATE users
+             SET profession = $1,
+                 description = $2,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $3
+             RETURNING *`,
+            [
+                profession || null,
+                description || null,
+                req.user.id
+            ]
+        );
 
-        if (!req.user.is_intra_user && avatarUrl && !allowedAvatars.includes(avatarUrl)) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", "Not a valid avatar"));
-        }
-
-        if (req.user.is_intra_user && avatarUrl) {
-            return res.status(403).json(formatErrorJson(403, "Forbidden", "42 Users can't change the avatar"));
-        }
-
-        try {
-            const result = await pool.query(
-                `UPDATE users
-                SET profession = $1,
-                    description = $2,
-                    avatar_url = CASE
-                        WHEN is_intra_user = TRUE THEN avatar_url
-                        WHEN $3 = '' THEN avatar_url
-                        ELSE $3
-                    END,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = $4
-                RETURNING *`,
-                [
-                    profession || null,
-                    description || null,
-                    avatarUrl,
-                    req.user.id
-                ]
-            );
-
-            return res.json(toPublicUser(result.rows[0]));
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on updating user: ${error}`));
-        }
-    });
+        return res.json(toPublicUser(result.rows[0]));
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        return res.status(500).json(
+            formatErrorJson(
+                500,
+                "Internal server error",
+                `Error on updating user: ${error}`
+            )
+        );
+    }
+});
 
     app.get('/', (req, res) => {
         res.json({ message: 'Transcendence API working!' });

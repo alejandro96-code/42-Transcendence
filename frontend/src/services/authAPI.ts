@@ -3,13 +3,17 @@ import type { User } from '../types/auth'
 const SERVER_IP = import.meta.env.VITE_SERVER_IP || window.location.hostname
 const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 
-async function readErrorMessage(response: Response, fallbackMessage: string): Promise<string> {
+async function readErrorMessage(
+  response: Response,
+  fallbackMessage: string,
+): Promise<string> {
   if (!response.headers.get('content-type')?.includes('application/json')) {
     return fallbackMessage
   }
 
   try {
     const data = await response.json()
+
     if (typeof data?.error === 'string' && data.error.length > 0) {
       return data.error
     }
@@ -38,7 +42,10 @@ export const authAPI = {
     }
   },
 
-  async loginWithCredentials(username: string, password: string): Promise<User> {
+  async loginWithCredentials(
+    username: string,
+    password: string,
+  ): Promise<User> {
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
@@ -49,7 +56,11 @@ export const authAPI = {
     })
 
     if (!response.ok) {
-      const message = await readErrorMessage(response, 'No se pudo iniciar sesión.')
+      const message = await readErrorMessage(
+        response,
+        'No se pudo iniciar sesión.',
+      )
+
       throw new Error(message)
     }
 
@@ -68,11 +79,20 @@ export const authAPI = {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ username, password, fullName, email }),
+      body: JSON.stringify({
+        username,
+        password,
+        fullName,
+        email,
+      }),
     })
 
     if (!response.ok) {
-      const message = await readErrorMessage(response, 'No se pudo registrar la cuenta.')
+      const message = await readErrorMessage(
+        response,
+        'No se pudo registrar la cuenta.',
+      )
+
       throw new Error(message)
     }
 
@@ -82,7 +102,6 @@ export const authAPI = {
   async updateMyProfile(profile: {
     profession: string
     description: string
-    avatarUrl?: string
   }): Promise<User> {
     const response = await fetch(`${API_URL}/api/auth/me`, {
       method: 'PATCH',
@@ -96,7 +115,49 @@ export const authAPI = {
     if (!response.ok) {
       const message = await readErrorMessage(
         response,
-        'No se pudo guardar el profile.',
+        'No se pudo guardar el perfil.',
+      )
+
+      throw new Error(message)
+    }
+
+    return await response.json()
+  },
+
+  async uploadAvatar(file: File): Promise<User> {
+    const image = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result)
+        } else {
+          reject(new Error('No se pudo leer la imagen.'))
+        }
+      }
+
+      reader.onerror = () => {
+        reject(new Error('No se pudo leer la imagen.'))
+      }
+
+      reader.readAsDataURL(file)
+    })
+
+    const response = await fetch(`${API_URL}/api/auth/avatar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        image,
+      }),
+    })
+
+    if (!response.ok) {
+      const message = await readErrorMessage(
+        response,
+        'No se pudo subir el avatar.',
       )
 
       throw new Error(message)
