@@ -221,58 +221,90 @@ export function PostFeed({
     }
   }
 
-  useEffect(() => {
-    const loadPosts = async () => {
+useEffect(() => {
+  let cancelled = false
+
+  const loadPosts = async () => {
+    setImageError('')
+
+    try {
+      const postFilter =
+        !readOnly && filter === 'mentions'
+          ? 'mentions'
+          : undefined
+
+      const data = await postsAPI.getPosts(
+        userId,
+        postFilter,
+      )
+
+      if (cancelled) {
+        return
+      }
+
+      const locale =
+        i18n.language === 'en'
+          ? 'en-US'
+          : i18n.language === 'eu'
+            ? 'eu-ES'
+            : 'es-ES'
+
+      const loadedPosts: Post[] = data.map(
+        (post: any) => ({
+          id: Number(post.id),
+          content: post.content,
+          date: post.created_at
+            ? new Date(
+                post.created_at,
+              ).toLocaleString(locale)
+            : '',
+          isFromFriend: false,
+          image: post.media?.[0] ?? null,
+        }),
+      )
+
+      setPosts((currentPosts) => {
+        const changed =
+          currentPosts.length !== loadedPosts.length ||
+          currentPosts.some(
+            (post, index) =>
+              post.id !== loadedPosts[index]?.id,
+          )
+
+        return changed ? loadedPosts : currentPosts
+      })
+
       setImageError('')
+    } catch (error) {
+      if (cancelled) {
+        return
+      }
 
-      try {
-        const postFilter =
-          !readOnly && filter === 'mentions'
-            ? 'mentions'
-            : undefined
-
-        const data = await postsAPI.getPosts(
-          userId,
-          postFilter,
-        )
-
-        const locale =
-          i18n.language === 'en'
-            ? 'en-US'
-            : i18n.language === 'eu'
-              ? 'eu-ES'
-              : 'es-ES'
-
-        const loadedPosts: Post[] = data.map(
-          (post: any) => ({
-            id: Number(post.id),
-            content: post.content,
-            date: post.created_at
-              ? new Date(
-                  post.created_at,
-                ).toLocaleString(locale)
-              : '',
-            isFromFriend: false,
-            image: post.media?.[0] ?? null,
-          }),
-        )
-
-        setPosts(loadedPosts)
-        setImageError('')
-        setFirst(0)
-      } catch (error) {
-        if (error instanceof Error) {
-          setImageError(error.message)
-        } else {
-          setImageError(t('posts_err_load'))
-        }
-
-        setPosts([])
+      if (error instanceof Error) {
+        setImageError(error.message)
+      } else {
+        setImageError(t('posts_err_load'))
       }
     }
+  }
 
-    void loadPosts()
-  }, [userId, filter, readOnly, i18n.language])
+  void loadPosts()
+
+  if (!readOnly && filter === 'mentions') {
+    const interval = setInterval(() => {
+      void loadPosts()
+    }, 2000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }
+
+  return () => {
+    cancelled = true
+  }
+}, [userId, filter, readOnly, i18n.language, t])
 
   const filteredPosts = posts
 

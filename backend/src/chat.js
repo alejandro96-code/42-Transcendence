@@ -1,8 +1,9 @@
 import express from 'express';
-import { formatErrorJson, isAuthenticated } from './utils.js';
+import { formatErrorJson} from './utils.js';
 import { pool } from './db.js';
 import { containsProfanity } from './profanity.js';
 import { verify_token } from './token.js';
+import { addNotification } from './notifications.js';
 
 function getRecipientId(value) {
     const recipientId = Number(value);
@@ -144,6 +145,16 @@ async function create_message(req, res) {
             )
         );
     }
+    const sender = await pool.query(
+        'SELECT username FROM users WHERE id = $1',
+        [req.user.id]
+        );
+
+        addNotification(recipientId, {
+            type: 'new_message',
+            message: `${sender.rows[0].username} te ha enviado un mensaje`,
+        }
+    );
 
     return res.status(201).json(new_message.rows[0]);
 }

@@ -12,6 +12,7 @@ import friends_endpoints from "./friends.js"
 import token_endpoints from "./token.js"
 import { isAuthenticated, formatErrorJson, hashPassword, verifyPassword } from "./utils.js"
 import { containsProfanity } from "./profanity.js"
+import notifications_endpoints from "./notificationsRoutes.js";
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
@@ -464,6 +465,7 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
     app.use("/api/messages", chat_endpoints);
     app.use("/api/friends", friends_endpoints);
     app.use("/api/token", token_endpoints);
+    app.use("/api/notifications", notifications_endpoints);
 
     try {
         app.listen(PORT, '0.0.0.0', () => {

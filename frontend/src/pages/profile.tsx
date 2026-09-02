@@ -13,15 +13,46 @@ import type { User } from '../types/auth'
 export function Profile() {
   const { friendId } = useParams()
 
-  const [activeChatFriend, setActiveChatFriend] = useState<{
+ const [activeChatFriend, setActiveChatFriend] = useState<{
     id: number
     name: string
-  } | null>(null)
+  } | null>(() => {
+    const savedFriend = localStorage.getItem('activeChatFriend')
+
+    if (!savedFriend) {
+      return null
+    }
+
+    try {
+      return JSON.parse(savedFriend)
+    } catch {
+      localStorage.removeItem('activeChatFriend')
+      return null
+    }
+  })
 
   const [profileUser, setProfileUser] = useState<FriendProfile | null>(null)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
 
   const isFriendProfile = Boolean(friendId)
+
+  useEffect(() => {
+    if (isFriendProfile) {
+      return
+    }
+
+    const savedFriend = localStorage.getItem('activeChatFriend')
+
+    if (!savedFriend) {
+      return
+    }
+
+    try {
+      setActiveChatFriend(JSON.parse(savedFriend))
+    } catch {
+      localStorage.removeItem('activeChatFriend')
+    }
+  }, [isFriendProfile])
 
   useEffect(() => {
     let mounted = true
@@ -113,20 +144,26 @@ export function Profile() {
                 }
                 onOpenChat={
                   !isFriendProfile
-                    ? (friend) =>
-                        setActiveChatFriend({
+                    ? (friend) => {
+                        const chatFriend = {
                           id: friend.id,
                           name: friend.name,
-                        })
+                        }
+
+                        setActiveChatFriend(chatFriend)
+                        localStorage.setItem(
+                          'activeChatFriend',
+                          JSON.stringify(chatFriend)
+                        )
+                      }
                     : undefined
                 }
                 onFriendRemoved={
                   !isFriendProfile
                     ? (removedFriendId) => {
-                        if (
-                          activeChatFriend?.id === removedFriendId
-                        ) {
+                        if (activeChatFriend?.id === removedFriendId) {
                           setActiveChatFriend(null)
+                          localStorage.removeItem('activeChatFriend')
                         }
                       }
                     : undefined

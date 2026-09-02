@@ -19,28 +19,48 @@ export function Chat({ activeFriend = null }: ChatProps) {
   const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!activeFriend) {
-      setMessages([])
-      setError(null)
-      return
+  if (!activeFriend) {
+    setMessages([])
+    setError(null)
+    return
+  }
+
+  let cancelled = false
+
+  const loadMessages = async (showLoading = false) => {
+    if (showLoading) {
+      setIsLoading(true)
     }
 
-    let cancelled = false
-    setIsLoading(true)
-    setError(null)
-    chatAPI.getMessages(activeFriend.id)
-      .then((data) => {
-        if (!cancelled) setMessages(data)
-      })
-      .catch((requestError: Error) => {
-        if (!cancelled) setError(requestError.message)
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false)
-      })
+    try {
+      const data = await chatAPI.getMessages(activeFriend.id)
 
-    return () => { cancelled = true }
-  }, [activeFriend?.id])
+      if (!cancelled) {
+        setMessages(data)
+        setError(null)
+      }
+    } catch (requestError) {
+      if (!cancelled) {
+        setError(requestError instanceof Error ? requestError.message : t('chat_error_message'))
+      }
+    } finally {
+      if (!cancelled && showLoading) {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  void loadMessages(true)
+
+  const interval = setInterval(() => {
+    void loadMessages()
+  }, 2000)
+
+  return () => {
+    cancelled = true
+    clearInterval(interval)
+  }
+}, [activeFriend?.id, t])
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight })

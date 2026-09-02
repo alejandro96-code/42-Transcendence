@@ -1,9 +1,9 @@
 import express from 'express';
-import { formatErrorJson, isAuthenticated, validate } from './utils.js';
+import { formatErrorJson } from './utils.js';
 import { pool } from "./db.js";
 import { containsProfanity } from './profanity.js';
 import { verify_token } from './token.js';
-import { format } from 'path';
+import { addNotification } from './notifications.js';
 
 async function read_comments(req, res) {
     const posts_lists = await pool.query(
@@ -135,16 +135,40 @@ async function create_post(req, res) {
         );
 
         if (!new_post || new_post.rows.length === 0) {
-            return res.status(500).json(
-                formatErrorJson(
-                    500,
-                    "Internal Server Error",
-                    "Something went bad on post creation"
-                )
-            );
-        }
+    return res.status(500).json(
+        formatErrorJson(
+            500,
+            "Internal Server Error",
+            "Something went bad on post creation"
+        )
+    );
+}
 
-        return res.status(201).json(new_post.rows);
+const mentionedUsernames = [...new Set(
+        content.match(/@([a-zA-Z0-9_]+)/g)?.map(
+            mention => mention.substring(1)
+        ) || []
+    )];
+
+    if (mentionedUsernames.length > 0) {
+        const mentionedUsers = await pool.query(
+            `SELECT id, username
+            FROM users
+            WHERE LOWER(username) = ANY($1::text[])`,
+            [mentionedUsernames.map(username => username.toLowerCase())]
+        );
+
+        mentionedUsers.rows.forEach((user) => {
+            if (user.id !== authorId) {
+                addNotification(user.id, {
+                    type: 'post_mention',
+                    message: `${author_username.rows[0].username} te ha mencionado en una publicación`,
+                });
+            }
+        });
+    }
+
+    return res.status(201).json(new_post.rows);
     } catch (error) {
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation"));
     }

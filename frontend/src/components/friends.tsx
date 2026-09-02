@@ -53,19 +53,61 @@ export function Friends({
     }
   }, [ownerUserId, readOnly])
 
-  useEffect(() => {
-    void friendsAPI.heartbeat()
+useEffect(() => {
+  void loadFriends()
+
+  if (!readOnly && !ownerUserId) {
+    void loadRequests()
+  }
+
+  const interval = setInterval(() => {
     void loadFriends()
 
-    const interval = setInterval(() => {
-      void friendsAPI.heartbeat()
-      void loadFriends()
-    }, 10000)
-
-    return () => {
-      clearInterval(interval)
+    if (!readOnly && !ownerUserId) {
+      void loadRequests()
     }
-  }, [ownerUserId])
+  }, 2000)
+
+  return () => {
+    clearInterval(interval)
+  }
+}, [ownerUserId, readOnly])
+
+useEffect(() => {
+  void loadFriends()
+
+  if (!readOnly && !ownerUserId) {
+    void loadRequests()
+  }
+
+  const interval = setInterval(() => {
+    void loadFriends()
+
+    if (!readOnly && !ownerUserId) {
+      void loadRequests()
+    }
+  }, 2000)
+
+  return () => {
+    clearInterval(interval)
+  }
+}, [ownerUserId, readOnly])
+
+useEffect(() => {
+  if (readOnly || ownerUserId) {
+    return
+  }
+
+  void friendsAPI.heartbeat()
+
+  const interval = setInterval(() => {
+    void friendsAPI.heartbeat()
+  }, 10000)
+
+  return () => {
+    clearInterval(interval)
+  }
+}, [ownerUserId, readOnly])
 
   const sortedFriends = useMemo(() => (
     [...friendsList].sort((a, b) => a.username.localeCompare(b.username, i18n.language || 'es', { sensitivity: 'base' }))
@@ -125,7 +167,6 @@ export function Friends({
           await friendsAPI.removeFriend(friend.id)
           await loadFriends()
           onFriendRemoved?.(friend.id)
-          toast.current?.show({ severity: 'info', summary: t('friends_toast_removed_title'), detail: `${friend.username} ${t('friends_removed_message')}` })
           toast.current?.show({ severity: 'info', summary: t('friends_toast_removed_title'), detail: `${friend.username} ${t('friends_removed_message')}` })
         } catch (error) {
           toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_remove_error') })
