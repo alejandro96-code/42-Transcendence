@@ -1,113 +1,59 @@
 # Chat API (`/api/messages`)
 
-These endpoints let you read, send, edit, and delete direct messages between you and another user.
+All endpoints require a logged-in session or `Authorization: Bearer <JWT>`.
+The authenticated user is always taken from the session/token, never from a
+client-supplied sender identity.
 
-## Authentication
+## Endpoints
 
-Protected routes under `/api/messages` require **either**:
-- an active login session, **or**
-- a valid Bearer token.
-
----
-
-## 1) Read conversation
-
-- **Method:** `GET`
-- **Path:** `/api/messages/:recipientId`
-- **Content-Type:** `application/json`
-
-Returns the message history between you and `recipientId` (oldest → newest).
-
-### Path Parameter
-- `recipientId` (number): the other user’s ID.
-
-### Optional limit
-The API supports an optional `amount` limit (default: `20`).
-
----
-
-## 2) Send message
-
-- **Method:** `POST`
-- **Path:** `/api/messages/:recipientId`
-- **Content-Type:** `application/json`
-
-Creates a new message to `recipientId`.
-
-### Request Body
-```json
-{
-  "content": "Hello!"
-}
-```
-
-### Notes
-- Message content must be between 1 and 1000 characters.
-- You cannot message yourself.
-
----
-
-## 3) Edit message
-
-- **Method:** `PATCH`
-- **Path:** `/api/messages/`
-- **Content-Type:** `application/json`
-
-Updates an existing message.
-
-### Request Body (expected)
-```json
-{
-  "id": 123,
-  "new_body": "Updated text"
-}
-```
-
----
-
-## 4) Delete message
-
-- **Method:** `DELETE`
-- **Path:** `/api/messages/`
-- **Content-Type:** `application/json`
-
-Deletes a message by id.
-
-### Request Body
-```json
-{
-  "id": 123
-}
-```
-
----
-
-## cURL Example (Read conversation)
+### Read a conversation
 
 ```bash
-curl -k \
-  -H "Authorization: Bearer <jwt-token>" \
-  https://192.168.1.144:8443/api/messages/42
+curl -k -H "Authorization: Bearer $TOKEN" \
+  "$BASE_URL/api/messages/42?amount=20"
 ```
 
----
+`GET /api/messages/:recipientId` returns messages oldest first. `recipientId`
+must be a positive user ID different from the authenticated user. `amount` is
+optional and defaults to 20.
 
-## Typical Responses
+### Send a message
 
-### 200 OK
-Returned for successful reads.
+```bash
+curl -k -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Hello!"}' "$BASE_URL/api/messages/42"
+```
 
-### 201 Created
-Returned when a message is successfully created.
+`POST /api/messages/:recipientId` returns `201` and the created message.
+Content is trimmed and must contain 1–1000 characters.
 
-### 204 No Content
-Returned when update/delete succeeds without response body.
+### Edit your message
 
-### 400 Bad Request
-Invalid recipient, invalid input, or malformed auth header.
+```bash
+curl -k -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"id":123,"new_body":"Updated text"}' "$BASE_URL/api/messages/"
+```
 
-### 401 Unauthorized
-Invalid/expired token.
+`PATCH /api/messages/` returns `200`. Only the original sender can edit it;
+`content` is also accepted as an alias for `new_body`.
 
-### 404 Not Found
-Conversation/user/message not found.
+### Delete your message
+
+```bash
+curl -k -X DELETE -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"id":123,"sender_id":7}' "$BASE_URL/api/messages/"
+```
+
+`DELETE /api/messages/` returns `204`. `sender_id` is required and must match
+the authenticated user. This prevents deleting another user's message.
+
+## Common responses
+
+`400` invalid input, `401` missing/malformed/invalid authentication, `404` unknown user
+or message, `429` rate limit exceeded, `500` database error.
+
+Set `BASE_URL` to the deployment URL, for example
+`https://192.168.1.144:8443`, and obtain `$TOKEN` with `POST /api/token`.

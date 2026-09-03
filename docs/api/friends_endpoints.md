@@ -1,91 +1,36 @@
 # Friends API (`/api/friends`)
 
-This section is a user-facing template for the Friends module.
+All endpoints require a session or `Authorization: Bearer <JWT>`.
+Examples use `BASE_URL` and `$TOKEN` as described in
+[chat_endpoints.md](/home/aleja/42-Transcendence/docs/api/chat_endpoints.md).
 
-## Authentication
-
-Most friends endpoints are typically protected and require:
-- an active session, **or**
-- a valid Bearer token.
-
----
-
-## Typical Friends Actions (example structure)
-
-### Send friend request
-- **Method:** `POST`
-- **Path:** `/api/friends/requests`
-- **Body:**
-```json
-{
-  "username": 42
-}
-```
-
-### Accept or decline a friend request
-- **Method:** `PATCH`
-- **Path:** `/api/friends/requests/:requestId`
-- **Body:**
-```json
-{
-  "status": "accepted"/"rejected" 
-}
-```
-
-### Remove friend
-- **Method:** `DELETE`
-- **Path:** `/api/friends/:friendId`
-
-### List friends
-- **Method:** `GET`
-- **Path:** `/api/friends`
-- **Response**: (Array)
-```json
-[{
-  "id": 3,
-  "username":"recipient",
-  "email":"mail",
-  "created_at":"creation_date"
-}]
-```
-
-### List pending requests
-- **Method:** `GET`
-- **Path:** `/api/friends/requests/pending`
-
----
-
-## cURL Example (template)
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/friends` | List your accepted friends |
+| GET | `/api/friends/user/:userId` | List a user's friends (only yourself or an accepted friend) |
+| GET | `/api/friends/search?q=ali` | Search your friends |
+| GET | `/api/friends/:friendId/profile` | Read your own or a friend's profile |
+| GET | `/api/friends/requests` | List pending requests received |
+| POST | `/api/friends/heartbeat` | Update your online presence |
+| POST | `/api/friends/requests` | Send a request by username |
+| PATCH | `/api/friends/requests/:requestId` | Accept/reject a request |
+| DELETE | `/api/friends/:friendId` | Remove a friend |
 
 ```bash
-curl -k -X POST \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <jwt-token>" \
-  -d '{"recipientId":42}' \
-  https://192.168.1.144:8443/api/friends/requests
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends/user/42"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends/search?q=ali"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends/42/profile"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends/requests"
+curl -k -X POST -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends/heartbeat"
+curl -k -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"username":"alice"}' "$BASE_URL/api/friends/requests"
+curl -k -X PATCH -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"status":"accepted"}' "$BASE_URL/api/friends/requests/10"
+curl -k -X DELETE -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends/42"
 ```
 
----
-
-## Typical Responses
-
-### 200 OK
-Action/read success.
-
-### 201 Created
-Friend request sent.
-
-### 204 No Content
-Delete/remove success.
-
-### 400 Bad Request
-Invalid input.
-
-### 401 Unauthorized
-Invalid/expired token.
-
-### 404 Not Found
-User/request/friend relation not found.
-
-### 409 Conflict
-Duplicate request or already friends.
+Successful request creation returns `201`; reads and updates return `200`;
+deletion returns `204`. Invalid input is `400`, unauthenticated requests
+return `401`, missing resources `404`, conflicts `409`, and rate-limited
+requests `429`.

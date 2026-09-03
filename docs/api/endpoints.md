@@ -1,34 +1,40 @@
-# API Endpoints Audit
+# API endpoint reference
 
-## Legend
-- **Session auth**: you must be logged in via the website/app (cookie session).
-- **Token auth**: you must send a Bearer token in `Authorization` header.
-- For endpoints marked **Session or Token**, either method works.
+Base URL: `https://<SERVER_IP>:8443`. Set `TOKEN` using
+`POST /api/token`; protected requests use `Authorization: Bearer $TOKEN`.
 
-| Method | Path | What it does (for the user) | Main input | Access needed | Can use without session? | Can use without token? |
-|---|---|---|---|---|---|---|
-| GET | `/` | Confirms API is running | None | Public | Yes | Yes |
-| GET | `/api/health` | Confirms backend can reach database | None | Public | Yes | Yes |
-| GET | `/api/users` | Lists user profiles (public-safe fields) | None | Public | Yes | Yes |
-| GET | `/api/auth/42` | Starts 42 OAuth sign-in | None | Public | Yes | Yes |
-| GET | `/api/auth/42/callback` | Completes 42 OAuth sign-in and redirects | OAuth callback params | Public (OAuth flow) | Yes | Yes |
-| GET | `/api/auth/me` | Returns your current logged-in account (or `null`) | None | Optional | Yes | Yes |
-| POST | `/api/auth/register` | Creates a new account and logs you in | `username`, `password`, `fullName`, `email` | Public | Yes | Yes |
-| POST | `/api/auth/login` | Logs in with username/password | `username`, `password` | Public | Yes | Yes |
-| POST | `/api/auth/logout` | Logs out current session | None | Public/Logged-in context | Yes | Yes |
-| PATCH | `/api/auth/me` | Updates your profile (profession, description, avatar rules apply) | `profession`, `description`, `avatarUrl` | **Session required** | No | Yes |
-| POST | `/api/token` | Generates API token for user credentials | `username`, `password` | Public | Yes | Yes |
-| GET | `/api/messages/:recipientId` | Gets conversation with a specific user | `recipientId`, optional limit | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| POST | `/api/messages/:recipientId` | Sends a message to a specific user | `recipientId`, `content` | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| PATCH | `/api/messages/` | Updates one of your messages | Message update fields | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| DELETE | `/api/messages/` | Deletes a message | `id` | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| GET | `/api/posts/comments` | Lists comments for a post/thread | Parent post id, optional limit | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| POST | `/api/posts/comments` | Creates a comment on a post/thread | Comment payload | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| GET | `/api/posts` | Lists posts (yours/selected user/mentions) | Query: `user`, `amount`, `filter` | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| POST | `/api/posts` | Creates a new post | `content`, optional `image`, optional `parent` | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
-| DELETE | `/api/posts` | Deletes one of your posts | `id` | **Session or Token** | Yes (if token provided) | Yes (if session exists) |
+| Method | Path | Auth |
+|---|---|---|
+| GET | `/` | Public |
+| GET | `/api/health` | Public |
+| GET | `/api/users` | Session or token |
+| GET/POST | `/api/auth/42`, `/api/auth/42/callback` | OAuth flow |
+| GET | `/api/auth/me` | Optional |
+| POST | `/api/auth/register`, `/api/auth/login`, `/api/auth/logout` | Public/session |
+| PATCH | `/api/auth/me` | Session |
+| POST | `/api/auth/avatar` | Session |
+| POST | `/api/token` | Public |
+| GET/POST | `/api/messages/:recipientId` | Session or token |
+| PATCH/DELETE | `/api/messages/` | Session or token |
+| GET/POST | `/api/posts`, `/api/posts/comments` | Session or token |
+| DELETE | `/api/posts` | Session or token |
+| GET/POST/PATCH/DELETE | `/api/friends/...` | Session or token |
+| GET | `/api/notifications` | Session or token |
 
-## Summary
-- **Public endpoints** (no login/token needed): homepage, health, users list, register/login/logout, OAuth start/callback, token creation.
-- **Protected content endpoints** (posts/messages): require **either** logged-in session **or** Bearer token.
-- **Profile edit endpoint** (`PATCH /api/auth/me`): requires an active **session login**.
+## Smoke tests
+
+```bash
+curl -k "$BASE_URL/"
+curl -k "$BASE_URL/api/health"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/users"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/notifications"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/posts?amount=20"
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends"
+```
+
+Detailed request bodies and one cURL command for every friends and chat route
+are documented in [friends_endpoints.md](/home/aleja/42-Transcendence/docs/api/friends_endpoints.md)
+and [chat_endpoints.md](/home/aleja/42-Transcendence/docs/api/chat_endpoints.md).
+
+All endpoints can return `429 Too Many Requests`; retry after the seconds
+specified in the `Retry-After` response header.

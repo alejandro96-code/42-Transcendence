@@ -38,10 +38,10 @@ async function get_token(req, res) {
 
 export function verify_token(req, res, next) {
     const auth_header = req.headers["authorization"];
-    const token = auth_header &&
-    auth_header.split(" ").length == 2 &&
-    auth_header.split(" ")[0] == "Bearer" ?
-    auth_header.split(" ")[1].trim() : ""
+    const auth_parts = typeof auth_header === "string" ? auth_header.trim().split(/\s+/) : [];
+    const token = auth_parts.length === 2 && auth_parts[0] === "Bearer"
+        ? auth_parts[1].trim()
+        : "";
     const jwt_secret = process.env.JWT_SECRET;
     
     if (!token) {
@@ -49,7 +49,7 @@ export function verify_token(req, res, next) {
             return next();
         }
 
-        res.status(400).json(formatErrorJson(400, "Bad Request", "Bad token header format"));
+        res.status(401).json(formatErrorJson(401, "Unauthorized", "Authentication required"));
         return;
     }
 

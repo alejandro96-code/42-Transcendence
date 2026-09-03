@@ -11,6 +11,7 @@ import chat_endpoints from "./chat.js"
 import friends_endpoints from "./friends.js"
 import token_endpoints from "./token.js"
 import { isAuthenticated, formatErrorJson, hashPassword, verifyPassword } from "./utils.js"
+import { verify_token } from "./token.js";
 import notifications_endpoints from "./notificationsRoutes.js";
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -18,6 +19,38 @@ const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PROFILE_PROFESSION_MAX_LENGTH = 80;
 const PROFILE_DESCRIPTION_MAX_LENGTH = 200;
+
+function createRateLimiter({ windowMs, max, name }) {
+    const requests = new Map();
+
+    return (req, res, next) => {
+        const now = Date.now();
+        const key = req.ip || req.socket.remoteAddress || 'unknown';
+        const entry = requests.get(key);
+
+        if (!entry || entry.resetAt <= now) {
+            requests.set(key, { count: 1, resetAt: now + windowMs });
+            res.set('X-RateLimit-Limit', String(max));
+            return next();
+        }
+
+        entry.count += 1;
+        res.set('X-RateLimit-Limit', String(max));
+        res.set('X-RateLimit-Remaining', String(Math.max(0, max - entry.count)));
+
+        if (entry.count > max) {
+            const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+            res.set('Retry-After', String(retryAfter));
+            return res.status(429).json(formatErrorJson(
+                429,
+                'Too Many Requests',
+                `${name} rate limit exceeded. Retry in ${retryAfter} seconds`
+            ));
+        }
+
+        return next();
+    };
+}
 
 function normalizeUsername(value) {
     return String(value ?? '').trim();
@@ -102,6 +135,19 @@ function start_server() {
     }));
     app.use(passport.initialize());
     app.use(passport.session());
+
+    const apiRateLimit = createRateLimiter({
+        windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+        max: Number(process.env.API_RATE_LIMIT_MAX) || 300,
+        name: 'API'
+    });
+    const authRateLimit = createRateLimiter({
+        windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
+        max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 20,
+        name: 'Authentication'
+    });
+    app.use('/api', apiRateLimit);
+    app.use(['/api/auth/register', '/api/auth/login', '/api/token'], authRateLimit);
 
     const pool = new pg.Pool({
         host: process.env.DB_HOST || 'localhost',
@@ -423,7 +469,7 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
         res.json({ message: 'Transcendence API working!' });
     });
 
-    app.get('/api/users', async (req, res) => {
+    app.get('/api/users', verify_token, async (req, res) => {
         try {
             const result = await pool.query('SELECT * FROM users');
             res.json(result.rows.map(toPublicUser));

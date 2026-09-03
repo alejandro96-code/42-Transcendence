@@ -1,157 +1,69 @@
-# User & Auth API (`/api/auth`, `/api/users`)
+# Users and authentication API
 
-These endpoints cover account registration/login/logout, profile retrieval/update, OAuth login, token issuance, and public user listing.
+Set `BASE_URL=https://<SERVER_IP>:8443`. Protected endpoints accept either the
+session cookie or `Authorization: Bearer <JWT>`.
 
----
+## Users
 
-## Public User Listing
+`GET /api/users` is protected and returns public-safe profiles.
 
-### Get users
-- **Method:** `GET`
-- **Path:** `/api/users`
-
-Returns public-safe user fields for all users.
-
-#### cURL
 ```bash
-curl -k https://192.168.1.144:8443/api/users
+curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/users"
 ```
 
----
+## Local authentication
 
-## Auth: Local Account
-
-### Register
-- **Method:** `POST`
-- **Path:** `/api/auth/register`
-- **Content-Type:** `application/json`
-
-```json
-{
-  "username": "abc",
-  "password": "123456",
-  "fullName": "Alice Bob",
-  "email": "alice@example.com"
-}
+```bash
+curl -k -X POST -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"secret123","fullName":"Alice Bob","email":"alice@example.com"}' \
+  "$BASE_URL/api/auth/register"
+curl -k -c cookies.txt -X POST -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"secret123"}' "$BASE_URL/api/auth/login"
+curl -k -b cookies.txt -X POST "$BASE_URL/api/auth/logout"
 ```
 
-On success, account is created and session is started.
+Registration returns `201`; login returns `200`; logout returns `204`.
+Usernames are 3–30 characters, passwords at least 6, and email must be valid.
 
----
+## Current session and profile
 
-### Login
-- **Method:** `POST`
-- **Path:** `/api/auth/login`
-- **Content-Type:** `application/json`
-
-```json
-{
-  "username": "abc",
-  "password": "123456"
-}
+```bash
+curl -k -b cookies.txt "$BASE_URL/api/auth/me"
+curl -k -b cookies.txt -X PATCH -H "Content-Type: application/json" \
+  -d '{"profession":"Software Engineer","description":"Building cool stuff"}' \
+  "$BASE_URL/api/auth/me"
+curl -k -b cookies.txt -X POST -F "avatar=@./avatar.png" \
+  "$BASE_URL/api/auth/avatar"
 ```
 
-On success, session is started.
+`GET /api/auth/me` is optional (`null` when logged out). Profile and avatar
+updates require a session and return `200`; profession is limited to 80
+characters and description to 200.
 
----
+## 42 OAuth
 
-### Logout
-- **Method:** `POST`
-- **Path:** `/api/auth/logout`
-
-Logs out and clears current session.
-
----
-
-## Auth: Current User
-
-### Get current user
-- **Method:** `GET`
-- **Path:** `/api/auth/me`
-
-Returns current user profile if logged in by session, otherwise `null`.
-
----
-
-### Update current user profile
-- **Method:** `PATCH`
-- **Path:** `/api/auth/me`
-- **Content-Type:** `application/json`
-- **Auth:** **Session required**
-
-```json
-{
-  "profession": "Software Engineer",
-  "description": "Building cool stuff",
-  "avatarUrl": "/img/avatar1.png"
-}
+```bash
+curl -k -i "$BASE_URL/api/auth/42"
+curl -k -i "$BASE_URL/api/auth/42/callback?code=<oauth-code>"
 ```
 
----
+These routes redirect to 42 and back to the frontend; they are normally
+tested through a browser.
 
-## Auth: 42 OAuth
+## JWT token
 
-### Start OAuth
-- **Method:** `GET`
-- **Path:** `/api/auth/42`
-
-Redirects to 42 login.
-
-### OAuth callback
-- **Method:** `GET`
-- **Path:** `/api/auth/42/callback`
-
-Completes OAuth login and redirects to frontend profile page.
-
----
-
-## Auth: JWT Token
-
-### Issue token
-- **Method:** `POST`
-- **Path:** `/api/token`
-- **Content-Type:** `application/json`
-
-```json
-{
-  "username": "abc",
-  "password": "123456"
-}
+```bash
+curl -k -X POST -H "Content-Type: application/json" \
+  -d '{"username":"alice","password":"secret123"}' "$BASE_URL/api/token"
 ```
 
-Success:
-```json
-{
-  "token": "<jwt-token>"
-}
-```
+The response is `{"token":"..."}`. Invalid credentials return `401`.
 
-Use on protected routes:
-```http
-Authorization: Bearer <jwt-token>
-```
+## Status codes and limits
 
----
-
-## Typical Responses
-
-### 200 OK
-Read/login/token success.
-
-### 201 Created
-Registration success.
-
-### 204 No Content
-Logout success.
-
-### 400 Bad Request
-Invalid input.
-
-### 401 Unauthorized
-Invalid credentials/token (depending on endpoint).
-
-### 404 Not Found
-Resource/user not found.
-
-### 409 Conflict
-Username/email already in use.
+`400` invalid input, `401` authentication failure, `404` missing user,
+`409` duplicate username/email, and `429` rate limit exceeded. API requests
+default to 300 per 15 minutes per client IP; register/login/token requests
+default to 20 per 15 minutes. Configure with
+`API_RATE_LIMIT_WINDOW_MS`, `API_RATE_LIMIT_MAX`,
+`AUTH_RATE_LIMIT_WINDOW_MS`, and `AUTH_RATE_LIMIT_MAX`.

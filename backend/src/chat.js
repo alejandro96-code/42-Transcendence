@@ -10,32 +10,30 @@ function getRecipientId(value) {
 }
 
 async function update_message(req, res) {
+    const messageId = Number(req.body?.id);
+    const content = String(req.body?.new_body ?? req.body?.content ?? '').trim();
 
-    const original_message = await pool.query(
-        'SELECT * FROM chat_messages WHERE id = $1',
-        [
-            req.body.sender, req.body.receiver, req.body.amount || 20
-        ]
-    );
-        
-    if (!original_message || original_message.rows.length === 0) {
-        let responseBody = formatErrorJson(404, "Not Found", "No messages were found in database");
-        return res.status(404).json(responseBody);
+    if (!Number.isSafeInteger(messageId) || messageId <= 0 || !content || content.length > 1000) {
+        return res.status(400).json(formatErrorJson(
+            400, "Bad Request", "id must be a positive integer and content must contain 1 to 1000 characters"
+        ));
     }
 
-    const updated_message = await pool.query(
-        'UPDATE * FROM chat_messages WHERE id = $1RETURNING *',
-        [
-            req.body.id, req.body.new_body, req.body.amount || 20
-        ]
+    const updatedMessage = await pool.query(
+        `UPDATE chat_messages
+         SET content = $1
+         WHERE id = $2 AND sender_id = $3
+         RETURNING id, sender_id, receiver_id, content, sent_at AS created_at`,
+        [content, messageId, req.user.id]
     );
 
-    if (!updated_message || updated_message.rows.length === 0) {
-        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        return res.status(500).json(responseBody);
+    if (updatedMessage.rows.length === 0) {
+        return res.status(404).json(formatErrorJson(
+            404, "Not Found", "Message not found or you are not the sender"
+        ));
     }
 
-    res.status(204).end();
+    return res.json(updatedMessage.rows[0]);
 }
 
 async function read_messages(req, res) {
@@ -149,20 +147,30 @@ async function create_message(req, res) {
 }
 
 async function delete_message(req, res) {
+    const messageId = Number(req.body?.id);
+    const senderId = Number(req.body?.sender_id ?? req.user.id);
 
-    const deleted_post = await pool.query(
-            `DELETE FROM chat_messages where id = $1 RETURNING *`,
-            [
-                req.body.id
-            ]
-        );
-
-    if (!deleted_post || deleted_post.rows.length === 0) {
-        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        return res.status(500).json(responseBody);
+    if (!Number.isSafeInteger(messageId) || messageId <= 0 ||
+        !Number.isSafeInteger(senderId) || senderId !== req.user.id) {
+        return res.status(400).json(formatErrorJson(
+            400, "Bad Request", "id and sender_id are required and sender_id must match the authenticated user"
+        ));
     }
 
-    res.status(204).end();
+    const deletedMessage = await pool.query(
+        `DELETE FROM chat_messages
+         WHERE id = $1 AND sender_id = $2
+         RETURNING id`,
+        [messageId, senderId]
+    );
+
+    if (deletedMessage.rows.length === 0) {
+        return res.status(404).json(formatErrorJson(
+            404, "Not Found", "Message not found or you are not the sender"
+        ));
+    }
+
+    return res.status(204).end();
 }
 
 const router = express.Router();
