@@ -33,6 +33,7 @@ services:
 
     volumes:
       - ./backend:/app/backend
+      - avatar_uploads:/app/backend/uploads
       - ./frontend:/app/frontend
 
     environment:
@@ -134,6 +135,7 @@ services:
 
 volumes:
   postgres_data:
+  avatar_uploads:
 
 
 networks:

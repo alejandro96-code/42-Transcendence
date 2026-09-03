@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pg from 'pg';
+import path from 'path';
+import { mkdir, writeFile } from 'fs/promises';
+import { randomUUID } from 'crypto';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as FortyTwoStrategy } from 'passport-42';
@@ -77,9 +80,35 @@ function toPublicUser(user) {
     };
 }
 
-function start_server() {
+async function migrateLegacyAvatars(pool, avatarDirectory) {
+    const legacyUsers = await pool.query(
+        "SELECT id, avatar_url FROM users WHERE avatar_url LIKE 'data:image/%'"
+    );
+    if (legacyUsers.rows.length === 0) return;
+
+    await mkdir(avatarDirectory, { recursive: true });
+    const imagePattern = /^data:image\/(png|jpeg|jpg|webp);base64,([A-Za-z0-9+/=\s]+)$/i;
+    for (const user of legacyUsers.rows) {
+        const match = user.avatar_url.match(imagePattern);
+        if (!match) continue;
+
+        const extension = match[1].toLowerCase() === 'jpg' ? 'jpeg' : match[1].toLowerCase();
+        const imageBuffer = Buffer.from(match[2].replace(/\s/g, ''), 'base64');
+        if (imageBuffer.length === 0 || imageBuffer.length > 2 * 1024 * 1024) continue;
+
+        const filename = `${randomUUID()}.${extension}`;
+        await writeFile(path.join(avatarDirectory, filename), imageBuffer, { flag: 'wx' });
+        await pool.query(
+            'UPDATE users SET avatar_url = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [`/api/uploads/avatars/${filename}`, user.id]
+        );
+    }
+}
+
+async function start_server() {
     dotenv.config();
     const app = express();
+    const avatarDirectory = path.resolve('backend/uploads/avatars');
     const PORT = process.env.PORT || 4000;
     const SERVER_IP = process.env.SERVER_IP;
     const FRONTEND_URL = process.env.FRONTEND_URL || `http://${SERVER_IP}:3000`;
@@ -106,6 +135,10 @@ function start_server() {
     }));
 
     app.use(express.json({ limit: '5mb' }));
+    app.use('/api/uploads/avatars', express.static(avatarDirectory, {
+        index: false,
+        fallthrough: false
+    }));
 
     app.use((error, request, response, next) => {
         if (error instanceof ValidationError) {
@@ -156,6 +189,7 @@ function start_server() {
         user: process.env.DB_USER || 'postgres',
         password: process.env.DB_PASSWORD || 'postgres',
     });
+    await migrateLegacyAvatars(pool, avatarDirectory);
 
     passport.use(new FortyTwoStrategy({
         clientID: process.env.FORTYTWO_CLIENT_ID,
@@ -266,7 +300,8 @@ function start_server() {
             );
         }
 
-        if (!avatarUrl.startsWith('data:image/')) {
+        const match = avatarUrl.match(/^data:image\/(png|jpeg|jpg|webp);base64,([A-Za-z0-9+/=\s]+)$/i);
+        if (!match) {
             return res.status(400).json(
                 formatErrorJson(
                     400,
@@ -277,6 +312,21 @@ function start_server() {
         }
 
         try {
+            const extension = match[1].toLowerCase() === 'jpg' ? 'jpeg' : match[1].toLowerCase();
+            const imageBuffer = Buffer.from(match[2].replace(/\s/g, ''), 'base64');
+            const maxAvatarBytes = 2 * 1024 * 1024;
+
+            if (imageBuffer.length === 0 || imageBuffer.length > maxAvatarBytes) {
+                return res.status(413).json(
+                    formatErrorJson(413, "Content Too Large", "Avatar must be smaller than 2 MB")
+                );
+            }
+
+            await mkdir(avatarDirectory, { recursive: true });
+            const filename = `${randomUUID()}.${extension}`;
+            await writeFile(path.join(avatarDirectory, filename), imageBuffer, { flag: 'wx' });
+            const storedAvatarUrl = `/api/uploads/avatars/${filename}`;
+
             const result = await pool.query(
                 `UPDATE users
                 SET avatar_url = $1,
@@ -284,7 +334,7 @@ function start_server() {
                 WHERE id = $2
                 RETURNING *`,
                 [
-                    avatarUrl,
+                    storedAvatarUrl,
                     req.user.id
                 ]
             );

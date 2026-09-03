@@ -40,6 +40,11 @@ curl -k -b cookies.txt -X POST -F "avatar=@./avatar.png" \
 updates require a session and return `200`; profession is limited to 80
 characters and description to 200.
 
+Avatars must be PNG, JPEG, or WebP and smaller than 2 MB. The API stores the
+file on disk and returns a URL such as
+`/api/uploads/avatars/<random-name>.png`; image bytes are not persisted in the
+user JSON response.
+
 ## 42 OAuth
 
 ```bash
