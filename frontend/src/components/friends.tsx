@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+
 import { Button } from 'primereact/button'
 import { Dialog } from 'primereact/dialog'
 import { InputText } from 'primereact/inputtext'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
 import { Toast } from 'primereact/toast'
-import { friendsAPI, type Friend, type PendingFriendRequest } from '../services/friendsAPI'
+
+import {
+  friendsAPI,
+  type Friend,
+  type PendingFriendRequest,
+} from '../services/friendsAPI'
+
 import { useTranslation } from 'react-i18next'
 
 interface FriendsProps {
@@ -24,6 +31,7 @@ export function Friends({
 }: FriendsProps) {
   const { t, i18n } = useTranslation()
   const toast = useRef<Toast>(null)
+
   const [friendsList, setFriendsList] = useState<Friend[]>([])
   const [pendingRequests, setPendingRequests] = useState<PendingFriendRequest[]>([])
   const [activeSection, setActiveSection] = useState<'friends' | 'requests'>('friends')
@@ -32,9 +40,20 @@ export function Friends({
 
   const loadFriends = async () => {
     try {
-      setFriendsList(ownerUserId ? await friendsAPI.getUserFriends(ownerUserId) : await friendsAPI.getFriends())
+      setFriendsList(
+        ownerUserId
+          ? await friendsAPI.getUserFriends(ownerUserId)
+          : await friendsAPI.getFriends()
+      )
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_load_error') })
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('friends_load_error'),
+      })
     }
   }
 
@@ -42,83 +61,117 @@ export function Friends({
     try {
       setPendingRequests(await friendsAPI.getPendingRequests())
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_load_dialog_error') })
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('friends_load_dialog_error'),
+      })
     }
   }
 
   useEffect(() => {
-    void loadFriends()
-    if (!readOnly && !ownerUserId) {
-      void loadRequests()
+    let cancelled = false
+
+    const refreshFriends = async () => {
+      try {
+        const friends = ownerUserId
+          ? await friendsAPI.getUserFriends(ownerUserId)
+          : await friendsAPI.getFriends()
+
+        if (!cancelled) {
+          setFriendsList(friends)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          toast.current?.show({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              error instanceof Error
+                ? error.message
+                : t('friends_load_error'),
+          })
+        }
+      }
+    }
+
+    const refreshRequests = async () => {
+      if (readOnly || ownerUserId) {
+        return
+      }
+
+      try {
+        const requests = await friendsAPI.getPendingRequests()
+
+        if (!cancelled) {
+          setPendingRequests(requests)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          toast.current?.show({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              error instanceof Error
+                ? error.message
+                : t('friends_load_dialog_error'),
+          })
+        }
+      }
+    }
+
+    const refresh = () => {
+      void refreshFriends()
+      void refreshRequests()
+    }
+
+    refresh()
+
+    const interval = setInterval(refresh, 2000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [ownerUserId, readOnly, t])
+
+  useEffect(() => {
+    if (readOnly || ownerUserId) {
+      return
+    }
+
+    void friendsAPI.heartbeat()
+
+    const interval = setInterval(() => {
+      void friendsAPI.heartbeat()
+    }, 10000)
+
+    return () => {
+      clearInterval(interval)
     }
   }, [ownerUserId, readOnly])
 
-useEffect(() => {
-  void loadFriends()
+  const sortedFriends = useMemo(
+    () =>
+      [...friendsList].sort((a, b) =>
+        a.username.localeCompare(
+          b.username,
+          i18n.language || 'es',
+          { sensitivity: 'base' }
+        )
+      ),
+    [friendsList, i18n.language]
+  )
 
-  if (!readOnly && !ownerUserId) {
-    void loadRequests()
-  }
-
-  const interval = setInterval(() => {
-    void loadFriends()
-
-    if (!readOnly && !ownerUserId) {
-      void loadRequests()
-    }
-  }, 2000)
-
-  return () => {
-    clearInterval(interval)
-  }
-}, [ownerUserId, readOnly])
-
-useEffect(() => {
-  void loadFriends()
-
-  if (!readOnly && !ownerUserId) {
-    void loadRequests()
-  }
-
-  const interval = setInterval(() => {
-    void loadFriends()
-
-    if (!readOnly && !ownerUserId) {
-      void loadRequests()
-    }
-  }, 2000)
-
-  return () => {
-    clearInterval(interval)
-  }
-}, [ownerUserId, readOnly])
-
-useEffect(() => {
-  if (readOnly || ownerUserId) {
-    return
-  }
-
-  void friendsAPI.heartbeat()
-
-  const interval = setInterval(() => {
-    void friendsAPI.heartbeat()
-  }, 10000)
-
-  return () => {
-    clearInterval(interval)
-  }
-}, [ownerUserId, readOnly])
-
-  const sortedFriends = useMemo(() => (
-    [...friendsList].sort((a, b) => a.username.localeCompare(b.username, i18n.language || 'es', { sensitivity: 'base' }))
-  ), [friendsList, i18n.language])
-
-  useEffect(() => {
-    if (pendingRequests.length === 0 && activeSection === 'requests') setActiveSection('friends')
-  }, [pendingRequests.length, activeSection])
-
-  const handleAnswerRequest = (request: PendingFriendRequest, status: 'accepted' | 'rejected') => {
+  const handleAnswerRequest = (
+    request: PendingFriendRequest,
+    status: 'accepted' | 'rejected'
+  ) => {
     const accepted = status === 'accepted'
+
     confirmDialog({
       message: `${t('friends_request_question_tooltip')}${accepted ? t('friends_request_accept_tooltip') : t('friends_confirm_accept_reject_msg')} ${request.username}?`,
       header: t('friends_confirm_header'),
@@ -127,14 +180,29 @@ useEffect(() => {
         try {
           await friendsAPI.answerRequest(request.id, status)
           await loadRequests()
-          if (accepted) await loadFriends()
-          toast.current?.show({ 
-            severity: accepted ? 'success' : 'info', 
-            summary: accepted ? t('friends_request_accepted') : t('friends_request_rejected'), 
-            detail: accepted ? `${request.username} ${t('friends_new_friend')}` : `${t('friends_no_new_fried')} ${request.username}.` 
+
+          if (accepted) {
+            await loadFriends()
+          }
+
+          toast.current?.show({
+            severity: accepted ? 'success' : 'info',
+            summary: accepted
+              ? t('friends_request_accepted')
+              : t('friends_request_rejected'),
+            detail: accepted
+              ? `${request.username} ${t('friends_new_friend')}`
+              : `${t('friends_no_new_fried')} ${request.username}.`,
           })
         } catch (error) {
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_request_response_error') })
+          toast.current?.show({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              error instanceof Error
+                ? error.message
+                : t('friends_request_response_error'),
+          })
         }
       },
     })
@@ -142,8 +210,13 @@ useEffect(() => {
 
   const handleSendFriendRequest = async () => {
     const nickname = friendNick.trim()
+
     if (!nickname) {
-      toast.current?.show({ severity: 'warn', summary: t('friends_toast_req_title'), detail: t('friends_toast_req_detail') })
+      toast.current?.show({
+        severity: 'warn',
+        summary: t('friends_toast_req_title'),
+        detail: t('friends_toast_req_detail'),
+      })
       return
     }
 
@@ -151,9 +224,21 @@ useEffect(() => {
       await friendsAPI.sendRequest(nickname)
       setFriendNick('')
       setIsAddFriendOpen(false)
-      toast.current?.show({ severity: 'success', summary: t('friends_toast_sent_title'), detail: `${t('friends_toast_sent_detail')} ${nickname}.` })
+
+      toast.current?.show({
+        severity: 'success',
+        summary: t('friends_toast_sent_title'),
+        detail: `${t('friends_toast_sent_detail')} ${nickname}.`,
+      })
     } catch (error) {
-      toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_request_send_error') })
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail:
+          error instanceof Error
+            ? error.message
+            : t('friends_request_send_error'),
+      })
     }
   }
 
@@ -167,32 +252,68 @@ useEffect(() => {
           await friendsAPI.removeFriend(friend.id)
           await loadFriends()
           onFriendRemoved?.(friend.id)
-          toast.current?.show({ severity: 'info', summary: t('friends_toast_removed_title'), detail: `${friend.username} ${t('friends_removed_message')}` })
+
+          toast.current?.show({
+            severity: 'info',
+            summary: t('friends_toast_removed_title'),
+            detail: `${friend.username} ${t('friends_removed_message')}`,
+          })
         } catch (error) {
-          toast.current?.show({ severity: 'error', summary: 'Error', detail: error instanceof Error ? error.message : t('friends_remove_error') })
+          toast.current?.show({
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              error instanceof Error
+                ? error.message
+                : t('friends_remove_error'),
+          })
         }
       },
     })
   }
 
   return (
-    <div className='friends-container'>
+    <div className="friends-container">
       <Toast ref={toast} />
       <ConfirmDialog />
+
       <div className="surface-card border-round-sm p-3">
         <div className="friends-tabs">
-          <button type="button" className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`} onClick={() => setActiveSection('friends')}>
-            <span>{t('friends_tab_friends', { count: friendsList.length })}</span>
+          <button
+            type="button"
+            className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`}
+            onClick={() => setActiveSection('friends')}
+          >
+            <span>
+              {t('friends_tab_friends', { count: friendsList.length })}
+            </span>
+
             {!readOnly && (
-              <span className="friends-tab-add" onClick={(event) => { event.stopPropagation(); setIsAddFriendOpen(true) }}>+</span>
+              <span
+                className="friends-tab-add"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  setIsAddFriendOpen(true)
+                }}
+              >
+                +
+              </span>
             )}
           </button>
+
           {!readOnly && !ownerUserId && pendingRequests.length > 0 && (
-            <button type="button" className={`p-button-friends friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`} onClick={() => setActiveSection('requests')}>
-              {t('friends_tab_requests', { count: pendingRequests.length })}
+            <button
+              type="button"
+              className={`p-button-friends friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`}
+              onClick={() => setActiveSection('requests')}
+            >
+              {t('friends_tab_requests', {
+                count: pendingRequests.length,
+              })}
             </button>
           )}
         </div>
+
         <div className="friends-panel">
           {activeSection === 'friends' && (
             <section className="friends-section">
@@ -203,27 +324,40 @@ useEffect(() => {
                       <div className="friend-info">
                         <div className="friend-details">
                           <h4 className="mb-0">
-                            <span className={`online-status ${friend.is_online ? 'online' : 'offline'}`} />
+                            <span
+                              className={`online-status ${friend.is_online ? 'online' : 'offline'}`}
+                            />
                             <span>{friend.username}</span>
                           </h4>
                         </div>
                       </div>
+
                       <div className="friend-actions">
                         {!readOnly && !ownerUserId && (
                           <>
-                            <Button 
-                              icon="pi pi-eye" 
-                              aria-label={t('friends_chat_aria_label', { name: friend.username })} 
-                              className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`} 
-                              tooltip={t('friends_chat_tooltip', { name: friend.username })} 
-                              onClick={() => onOpenChat?.({ id: friend.id, name: friend.username })} 
+                            <Button
+                              icon="pi pi-eye"
+                              aria-label={t('friends_chat_aria_label', {
+                                name: friend.username,
+                              })}
+                              className={`p-button-rounded p-button-text p-button-sm ${selectedFriendId === friend.id ? 'p-button-info' : ''}`}
+                              tooltip={t('friends_chat_tooltip', {
+                                name: friend.username,
+                              })}
+                              onClick={() =>
+                                onOpenChat?.({
+                                  id: friend.id,
+                                  name: friend.username,
+                                })
+                              }
                             />
-                            <Button 
-                              icon="pi pi-times" 
-                              label={t('friends_remove_message')} 
-                              className="p-button-rounded p-button-danger p-button-text p-button-sm" 
-                              tooltip={t('friends_remove_tooltip')} 
-                              onClick={() => handleRemoveFriend(friend)} 
+
+                            <Button
+                              icon="pi pi-times"
+                              label={t('friends_remove_message')}
+                              className="p-button-rounded p-button-danger p-button-text p-button-sm"
+                              tooltip={t('friends_remove_tooltip')}
+                              onClick={() => handleRemoveFriend(friend)}
                             />
                           </>
                         )}
@@ -239,62 +373,107 @@ useEffect(() => {
               )}
             </section>
           )}
-          {!readOnly && !ownerUserId && activeSection === 'requests' && pendingRequests.length > 0 && (
-            <section className="friends-section">
-              <div className="requests-list">
-                {pendingRequests.map((request) => (
-                  <div key={request.id} className="request-card">
-                    <div className="request-info">
-                      <div className="request-details">
-                        <h4 className="mb-0">{request.username}</h4>
-                        <small className="text-secondary">
-                          {new Date(request.created_at).toLocaleDateString(i18n.language === 'en' ? 'en-US' : (i18n.language === 'eu' ? 'eu-ES' : 'es-ES'))}
-                        </small>
+
+          {!readOnly &&
+            !ownerUserId &&
+            activeSection === 'requests' &&
+            pendingRequests.length > 0 && (
+              <section className="friends-section">
+                <div className="requests-list">
+                  {pendingRequests.map((request) => (
+                    <div key={request.id} className="request-card">
+                      <div className="request-info">
+                        <div className="request-details">
+                          <h4 className="mb-0">{request.username}</h4>
+
+                          <small className="text-secondary">
+                            {new Date(
+                              request.created_at
+                            ).toLocaleDateString(
+                              i18n.language === 'en'
+                                ? 'en-US'
+                                : i18n.language === 'eu'
+                                  ? 'eu-ES'
+                                  : 'es-ES'
+                            )}
+                          </small>
+                        </div>
+                      </div>
+
+                      <div className="request-actions">
+                        <Button
+                          icon="pi pi-check"
+                          label={t('friends_request_accept')}
+                          className="p-button-rounded p-button-success p-button-text p-button-sm"
+                          tooltip={t(
+                            'friends_request_accept_tooltip'
+                          )}
+                          onClick={() =>
+                            handleAnswerRequest(request, 'accepted')
+                          }
+                        />
+
+                        <Button
+                          icon="pi pi-times"
+                          label={t('friends_request_reject')}
+                          className="p-button-rounded p-button-danger p-button-text p-button-sm"
+                          tooltip={t(
+                            'friends_request_reject_tooltip'
+                          )}
+                          onClick={() =>
+                            handleAnswerRequest(request, 'rejected')
+                          }
+                        />
                       </div>
                     </div>
-                    <div className="request-actions">
-                      <Button 
-                        icon="pi pi-check" 
-                        label={t('friends_request_accept')} 
-                        className="p-button-rounded p-button-success p-button-text p-button-sm" 
-                        tooltip={t('friends_request_accept_tooltip')} 
-                        onClick={() => handleAnswerRequest(request, 'accepted')} 
-                      />
-                      <Button 
-                        icon="pi pi-times" 
-                        label={t('friends_request_reject')} 
-                        className="p-button-rounded p-button-danger p-button-text p-button-sm" 
-                        tooltip={t('friends_request_reject_tooltip')} 
-                        onClick={() => handleAnswerRequest(request, 'rejected')} 
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+                  ))}
+                </div>
+              </section>
+            )}
         </div>
       </div>
+
       {!readOnly && !ownerUserId && (
-        <Dialog 
-          header={t('friends_dialog_header')} 
-          visible={isAddFriendOpen} 
-          onHide={() => { setIsAddFriendOpen(false); setFriendNick('') }} 
+        <Dialog
+          header={t('friends_dialog_header')}
+          visible={isAddFriendOpen}
+          onHide={() => {
+            setIsAddFriendOpen(false)
+            setFriendNick('')
+          }}
           className="add-friend-dialog"
         >
           <div className="flex flex-column gap-3">
             <span>{t('friends_dialog_description')}</span>
             <span>{t('friends_dialog_42_note')}</span>
-            <InputText 
-              value={friendNick} 
-              onChange={(event) => setFriendNick(event.target.value)} 
-              placeholder={t('friends_dialog_placeholder')} 
-              autoFocus 
-              onKeyDown={(event) => { if (event.key === 'Enter') void handleSendFriendRequest() }} 
+
+            <InputText
+              value={friendNick}
+              onChange={(event) => setFriendNick(event.target.value)}
+              placeholder={t('friends_dialog_placeholder')}
+              autoFocus
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  void handleSendFriendRequest()
+                }
+              }}
             />
+
             <div className="flex justify-content-end gap-2">
-              <Button label={t('friends_dialog_cancel')} text onClick={() => { setIsAddFriendOpen(false); setFriendNick('') }} />
-              <Button label={t('friends_dialog_send')} icon="pi pi-send" onClick={() => void handleSendFriendRequest()} />
+              <Button
+                label={t('friends_dialog_cancel')}
+                text
+                onClick={() => {
+                  setIsAddFriendOpen(false)
+                  setFriendNick('')
+                }}
+              />
+
+              <Button
+                label={t('friends_dialog_send')}
+                icon="pi pi-send"
+                onClick={() => void handleSendFriendRequest()}
+              />
             </div>
           </div>
         </Dialog>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState} from 'react'
+import { useRef, useState } from 'react'
 import { Avatar } from 'primereact/avatar'
 import { Button } from 'primereact/button'
 import { InputText } from 'primereact/inputtext'
@@ -30,7 +30,6 @@ export function PersonalData({
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
   const activeUser = profileUser ?? user
-
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const [avatarLoadError, setAvatarLoadError] = useState(false)
@@ -39,10 +38,14 @@ export function PersonalData({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  const [form, setForm] = useState({
-    profession: '',
-    description: '',
-  })
+  const [form, setForm] = useState(() => ({
+    profession: activeUser?.profession ?? '',
+    description: activeUser?.description ?? '',
+  }))
+
+  if (!activeUser) {
+    return null
+  }
 
   const canChangeAvatar =
     !readOnly &&
@@ -51,33 +54,8 @@ export function PersonalData({
     !user?.is_intra_user &&
     isEditing
 
-  useEffect(() => {
-    if (!activeUser) {
-      return
-    }
-
-    setAvatarLoadError(false)
-
-    setForm({
-      profession: activeUser.profession ?? '',
-      description: activeUser.description ?? '',
-    })
-  }, [
-    activeUser?.avatar_url,
-    activeUser?.profession,
-    activeUser?.description,
-  ])
-
-  const hasValidAvatar = useMemo(
-    () =>
-      Boolean(activeUser?.avatar_url?.trim()) &&
-      !avatarLoadError,
-    [activeUser?.avatar_url, avatarLoadError],
-  )
-
-  if (!activeUser) {
-    return null
-  }
+  const hasValidAvatar =
+    Boolean(activeUser.avatar_url?.trim()) && !avatarLoadError
 
   const handleChange = <K extends keyof typeof form>(
     key: K,
@@ -90,6 +68,11 @@ export function PersonalData({
   }
 
   const handleEditClick = () => {
+    setForm({
+      profession: activeUser.profession ?? '',
+      description: activeUser.description ?? '',
+    })
+    setAvatarLoadError(false)
     setErrorMessage('')
     setIsEditing(true)
   }
@@ -105,6 +88,10 @@ export function PersonalData({
       })
 
       dispatch(setUser(updatedUser))
+      setForm({
+        profession: updatedUser.profession ?? '',
+        description: updatedUser.description ?? '',
+      })
       setIsEditing(false)
     } catch (error) {
       setErrorMessage(
@@ -150,11 +137,10 @@ export function PersonalData({
   }
 
   return (
-    <div className='personal_data-container'>
-      <div className='surface-card border-round-sm p-4'>
-
-        <div className='profile-header'>
-          <div className='profile-img'>
+    <div className="personal_data-container">
+      <div className="surface-card border-round-sm p-4">
+        <div className="profile-header">
+          <div className="profile-img">
             {hasValidAvatar ? (
               <img
                 src={activeUser.avatar_url ?? ''}
@@ -173,9 +159,9 @@ export function PersonalData({
               />
             ) : (
               <Avatar
-                icon='pi pi-user'
-                size='xlarge'
-                shape='circle'
+                icon="pi pi-user"
+                size="xlarge"
+                shape="circle"
                 style={{
                   width: '140px',
                   height: '140px',
@@ -187,11 +173,13 @@ export function PersonalData({
             )}
 
             {canChangeAvatar && (
-              <div className='profile-avatar-selector'>
+              <div className="profile-avatar-selector">
                 <input
+                  id="avatar-upload"
+                  name="avatar"
                   ref={avatarInputRef}
-                  type='file'
-                  accept='image/*'
+                  type="file"
+                  accept="image/*"
                   style={{ display: 'none' }}
                   onChange={(event) =>
                     void handleAvatarChange(event)
@@ -199,50 +187,52 @@ export function PersonalData({
                 />
 
                 <Button
-                  type='button'
-                  icon='pi pi-upload'
-                  className='p-button-sm'
+                  type="button"
+                  icon="pi pi-upload"
+                  className="p-button-sm"
                   onClick={() =>
                     avatarInputRef.current?.click()
                   }
                   loading={isUploadingAvatar}
                   disabled={isUploadingAvatar}
-                  aria-label={t('personal_data_change_avatar')}
+                  aria-label={t(
+                    'personal_data_change_avatar',
+                  )}
                 />
               </div>
             )}
           </div>
 
-          <div className='text-center'>
-            <h2 className='full-name m-1'>
+          <div className="text-center">
+            <h2 className="full-name m-1">
               {activeUser.full_name}
             </h2>
 
-            <h3 className='user-name m-1'>
+            <h3 className="user-name m-1">
               {activeUser.username}
             </h3>
 
-            <h3 className='user-email m-1'>
+            <h3 className="user-email m-1">
               {activeUser.email}
             </h3>
           </div>
         </div>
 
-        <div className='profile-details'>
-          <section className='profile-header-section'>
-            <div className='profile-details-title'>
+        <div className="profile-details">
+          <section className="profile-header-section">
+            <div className="profile-details-title">
               {isEditing && !readOnly ? (
                 <>
                   <label
-                    className='profile-title text-sm'
-                    htmlFor='profession'
+                    className="profile-title text-sm"
+                    htmlFor="profession"
                   >
                     {t('personal_data_headline_label')}
                   </label>
 
                   <InputText
-                    id='profession'
-                    className='profile-input w-full'
+                    id="profession"
+                    className="profile-input w-full"
                     placeholder={t(
                       'personal_data_headline_placeholder',
                     )}
@@ -258,11 +248,11 @@ export function PersonalData({
                 </>
               ) : (
                 <>
-                  <span className='profile-title text-sm'>
+                  <span className="profile-title text-sm">
                     {t('personal_data_headline_label')}
                   </span>
 
-                  <p className='profile-value'>
+                  <p className="profile-value">
                     {activeUser.profession?.trim() ||
                       t('personal_data_no_profession')}
                   </p>
@@ -270,19 +260,19 @@ export function PersonalData({
               )}
             </div>
 
-            <div className='profile-details-free-text'>
+            <div className="profile-details-free-text">
               {isEditing && !readOnly ? (
                 <>
                   <label
-                    className='profile-free-text text-sm'
-                    htmlFor='about'
+                    className="profile-free-text text-sm"
+                    htmlFor="about"
                   >
                     {t('personal_data_about_label')}
                   </label>
 
                   <InputTextarea
-                    className='profile-input-textarea w-full'
-                    id='about'
+                    className="profile-input-textarea w-full"
+                    id="about"
                     placeholder={t(
                       'personal_data_about_placeholder',
                     )}
@@ -299,11 +289,11 @@ export function PersonalData({
                 </>
               ) : (
                 <>
-                  <span className='profile-free-text text-sm'>
+                  <span className="profile-free-text text-sm">
                     {t('personal_data_about_label')}
                   </span>
 
-                  <p className='profile-value profile-description'>
+                  <p className="profile-value profile-description">
                     {activeUser.description?.trim() ||
                       t('personal_data_no_description')}
                   </p>
@@ -312,25 +302,25 @@ export function PersonalData({
             </div>
 
             {!readOnly && (
-              <div className='profile-actions'>
+              <div className="profile-actions">
                 {!isEditing ? (
                   <Button
                     label={t(
                       'personal_data_edit_profile',
                     )}
-                    icon='pi pi-pencil'
-                    className='p-button-sm'
+                    icon="pi pi-pencil"
+                    className="p-button-sm"
                     onClick={handleEditClick}
                   />
                 ) : (
-                  <div className='profile-actions__group'>
+                  <div className="profile-actions__group">
                     <Button
                       label={t(
                         'personal_data_save_changes',
                       )}
-                      className='p-button-sm'
+                      className="p-button-sm"
                       loading={isSaving}
-                      onClick={handleSave}
+                      onClick={() => void handleSave()}
                     />
                   </div>
                 )}
@@ -338,7 +328,7 @@ export function PersonalData({
             )}
 
             {errorMessage && (
-              <p className='profile-error'>
+              <p className="profile-error">
                 {errorMessage}
               </p>
             )}

@@ -1,8 +1,5 @@
-const SERVER_IP =
-  import.meta.env.VITE_SERVER_IP || window.location.hostname
-
-const API_URL =
-  import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
+const SERVER_IP =import.meta.env.VITE_SERVER_IP || window.location.hostname
+const API_URL =import.meta.env.VITE_API_URL ||`http://${SERVER_IP}:4000`
 
 export interface PostAttachment {
   data: string
@@ -10,33 +7,51 @@ export interface PostAttachment {
   type: string
 }
 
+export interface ApiPost {
+  id: number
+  content: string
+  created_at?: string
+  media?: string[]
+}
+
 async function readErrorMessage(
   response: Response,
   fallbackMessage: string,
 ): Promise<string> {
-  if (!response.headers.get('content-type')?.includes('application/json')) {
+  if (
+    !response.headers.get('content-type')?.includes('application/json')
+  ) {
     return fallbackMessage
   }
 
   try {
-    const data = await response.json()
+    const data: unknown = await response.json()
 
     if (
-      typeof data?.description === 'string' &&
+      typeof data === 'object' &&
+      data !== null &&
+      'description' in data &&
+      typeof data.description === 'string' &&
       data.description.length > 0
     ) {
       return data.description
     }
 
     if (
-      typeof data?.message === 'string' &&
+      typeof data === 'object' &&
+      data !== null &&
+      'message' in data &&
+      typeof data.message === 'string' &&
       data.message.length > 0
     ) {
       return data.message
     }
 
     if (
-      typeof data?.error === 'string' &&
+      typeof data === 'object' &&
+      data !== null &&
+      'error' in data &&
+      typeof data.error === 'string' &&
       data.error.length > 0 &&
       data.error !== 'Bad Request'
     ) {
@@ -53,7 +68,7 @@ export const postsAPI = {
   async createPost(
     content: string,
     attachment?: PostAttachment | null,
-  ): Promise<any> {
+  ): Promise<ApiPost> {
     const response = await fetch(
       `${API_URL}/api/posts`,
       {
@@ -70,21 +85,35 @@ export const postsAPI = {
     )
 
     if (!response.ok) {
-      const message = await readErrorMessage(
-        response,
-        'No se pudo crear la publicación.',
-      )
+      const message =
+        await readErrorMessage(
+          response,
+          'No se pudo crear la publicación.',
+        )
 
       throw new Error(message)
     }
 
-    return await response.json()
+    const data: unknown = await response.json()
+
+    if (
+      typeof data !== 'object' ||
+      data === null ||
+      !('id' in data) ||
+      !('content' in data)
+    ) {
+      throw new Error(
+        'Respuesta inválida al crear la publicación.',
+      )
+    }
+
+    return data as ApiPost
   },
 
   async getPosts(
     userId?: number,
     filter?: string,
-  ): Promise<any[]> {
+  ): Promise<ApiPost[]> {
     const url = new URL(
       `${API_URL}/api/posts`,
     )
@@ -112,20 +141,22 @@ export const postsAPI = {
     )
 
     if (!response.ok) {
-      const message = await readErrorMessage(
-        response,
-        'No se pudieron cargar las publicaciones.',
-      )
+      const message =
+        await readErrorMessage(
+          response,
+          'No se pudieron cargar las publicaciones.',
+        )
 
       throw new Error(message)
     }
 
-    const data = await response.json()
+    const data: unknown =
+      await response.json()
 
     if (!Array.isArray(data)) {
       return []
     }
 
-    return data
+    return data as ApiPost[]
   },
 }

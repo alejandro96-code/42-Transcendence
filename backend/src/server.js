@@ -170,13 +170,13 @@ async function start_server() {
     app.use(passport.session());
 
     const apiRateLimit = createRateLimiter({
-        windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
-        max: Number(process.env.API_RATE_LIMIT_MAX) || 300,
+        //windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
+        //max: Number(process.env.API_RATE_LIMIT_MAX) || 300,
         name: 'API'
     });
     const authRateLimit = createRateLimiter({
-        windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
-        max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 20,
+        //windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
+        //max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 20,
         name: 'Authentication'
     });
     app.use('/api', apiRateLimit);
