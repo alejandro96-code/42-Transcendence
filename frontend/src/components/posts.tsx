@@ -4,17 +4,17 @@ import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
 import { Paginator, type PaginatorPageChangeEvent } from 'primereact/paginator'
 import { useTranslation } from 'react-i18next'
-import { postsAPI } from '../services/postAPI'
+import { postsAPI, type PostAttachment } from '../services/postAPI'
 import { friendsAPI } from '../services/friendsAPI'
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
+const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024 // 2 MB
 
 interface Post {
   id: number
   content: string
   date: string
   isFromFriend: boolean
-  image?: string | null
+  attachment?: PostAttachment | null
 }
 
 interface MentionUser {
@@ -26,6 +26,31 @@ interface MentionUser {
 
 type FilterType = 'all' | 'my_posts' | 'mentions'
 type SortOrder = 'desc' | 'asc'
+
+function parseAttachment(value: unknown): PostAttachment | null {
+  if (typeof value !== 'string') return null
+
+  try {
+    const parsed = JSON.parse(value)
+    if (
+      parsed &&
+      typeof parsed.data === 'string' &&
+      typeof parsed.name === 'string' &&
+      typeof parsed.type === 'string'
+    ) {
+      return parsed
+    }
+  } catch {
+    // Older posts stored the raw data URL directly.
+  }
+
+  if (value.startsWith('data:')) {
+    const type = value.slice(5, value.indexOf(';')) || 'application/octet-stream'
+    return { data: value, name: 'attachment', type }
+  }
+
+  return null
+}
 
 interface PostFeedProps {
   readOnly?: boolean
@@ -49,7 +74,7 @@ export function PostFeed({
   const [filter, setFilter] = useState<FilterType>('all')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
-  const [image, setImage] = useState<string | null>(null)
+  const [attachment, setAttachment] = useState<PostAttachment | null>(null)
   const [imageError, setImageError] = useState<string>('')
   const [first, setFirst] = useState(0)
 
@@ -129,7 +154,7 @@ export function PostFeed({
     })
   }
 
-  const handleImageSelect = (
+  const handleFileSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0]
@@ -138,12 +163,7 @@ export function PostFeed({
 
     setImageError('')
 
-    if (!file.type.startsWith('image/')) {
-      setImageError(t('posts_err_not_an_image'))
-      return
-    }
-
-    if (file.size > MAX_IMAGE_SIZE) {
+    if (file.size > MAX_ATTACHMENT_SIZE) {
       setImageError(
         t('posts_err_image_too_large', {
           maxSize: '2 MB',
@@ -156,7 +176,11 @@ export function PostFeed({
     const reader = new FileReader()
 
     reader.onloadend = () => {
-      setImage(reader.result as string)
+      setAttachment({
+        data: reader.result as string,
+        name: file.name,
+        type: file.type || 'application/octet-stream',
+      })
       e.target.value = ''
     }
 
@@ -170,7 +194,7 @@ export function PostFeed({
     setImageError('')
 
     try {
-      const createdPost = await postsAPI.createPost(content, image)
+      const createdPost = await postsAPI.createPost(content, attachment)
 
       const locale =
         i18n.language === 'en'
@@ -193,10 +217,9 @@ export function PostFeed({
             ).toLocaleString(locale)
           : new Date().toLocaleString(locale),
         isFromFriend: false,
-        image:
-          createdPost[0]?.media?.[0] ??
-          image ??
-          null,
+        attachment:
+          parseAttachment(createdPost[0]?.media?.[0]) ??
+          attachment,
       }
 
       setPosts((currentPosts) => [
@@ -205,7 +228,7 @@ export function PostFeed({
       ])
 
       setText('')
-      setImage(null)
+      setAttachment(null)
       setImageError('')
       setFirst(0)
 
@@ -259,7 +282,7 @@ useEffect(() => {
               ).toLocaleString(locale)
             : '',
           isFromFriend: false,
-          image: post.media?.[0] ?? null,
+          attachment: parseAttachment(post.media?.[0]),
         }),
       )
 
@@ -360,7 +383,7 @@ useEffect(() => {
                 rows={3}
                 placeholder={t('posts_textarea_placeholder')}
                 className={`w-full post-comment-textarea ${
-                  image ? 'with-image' : ''
+                  attachment ? 'with-image' : ''
                 }`}
                 autoResize
                 maxLength={200}
@@ -393,13 +416,20 @@ useEffect(() => {
                 {text.length}/200
               </small>
 
-              {image && (
+              {attachment && (
                 <div className="preview-image-container">
-                  <img
-                    src={image}
-                    alt={t('posts_preview_image_alt')}
-                    className="preview-image"
-                  />
+                  {attachment.type.startsWith('image/') ? (
+                    <img
+                      src={attachment.data}
+                      alt={t('posts_preview_image_alt')}
+                      className="preview-image"
+                    />
+                  ) : (
+                    <span className="preview-file">
+                      <i className="pi pi-file" aria-hidden="true" />
+                      {attachment.name}
+                    </span>
+                  )}
 
                   <Button
                     type="button"
@@ -410,7 +440,7 @@ useEffect(() => {
                     icon="pi pi-times"
                     aria-label={t('posts_remove_image_aria_label')}
                     onClick={() => {
-                      setImage(null)
+                      setAttachment(null)
                       setImageError('')
                     }}
                   />
@@ -428,15 +458,14 @@ useEffect(() => {
                 id="post-image-upload"
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
+                onChange={handleFileSelect}
                 className="hidden-file-input"
               />
 
               <div className="post-actions">
                 <Button
                   severity={
-                    image ? 'success' : 'secondary'
+                    attachment ? 'success' : 'secondary'
                   }
                   text
                   className="cursor-pointer"
@@ -444,7 +473,7 @@ useEffect(() => {
                     fileInputRef.current?.click()
                   }
                 >
-                  {image
+                  {attachment
                     ? t('posts_btn_image_selected')
                     : t('posts_btn_add_image')}
                 </Button>
@@ -538,12 +567,23 @@ useEffect(() => {
                 {post.content}
               </p>
 
-              {post.image && (
-                <img
-                  src={post.image}
-                  alt={t('posts_image_alt')}
-                  className="post-image"
-                />
+              {post.attachment && (
+                post.attachment.type.startsWith('image/') ? (
+                  <img
+                    src={post.attachment.data}
+                    alt={t('posts_image_alt')}
+                    className="post-image"
+                  />
+                ) : (
+                  <a
+                    href={post.attachment.data}
+                    download={post.attachment.name}
+                    className="post-file"
+                  >
+                    <i className="pi pi-file" aria-hidden="true" />
+                    {post.attachment.name}
+                  </a>
+                )
               )}
 
               <p className="fecha text-color-secondary">

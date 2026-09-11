@@ -4,6 +4,12 @@ const SERVER_IP =
 const API_URL =
   import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 
+export interface PostAttachment {
+  data: string
+  name: string
+  type: string
+}
+
 async function readErrorMessage(
   response: Response,
   fallbackMessage: string,
@@ -46,7 +52,7 @@ async function readErrorMessage(
 export const postsAPI = {
   async createPost(
     content: string,
-    image?: string | null,
+    attachment?: PostAttachment | null,
   ): Promise<any> {
     const response = await fetch(
       `${API_URL}/api/posts`,
@@ -58,7 +64,7 @@ export const postsAPI = {
         credentials: 'include',
         body: JSON.stringify({
           content,
-          ...(image ? { image } : {}),
+          ...(attachment ? { attachment } : {}),
         }),
       },
     )

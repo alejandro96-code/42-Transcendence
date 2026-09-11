@@ -4,6 +4,31 @@ import { pool } from "./db.js";
 import { verify_token } from './token.js';
 import { addNotification } from './notifications.js';
 
+const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024;
+
+function serializeAttachment(attachment) {
+    if (!attachment || typeof attachment !== 'object') {
+        return null;
+    }
+
+    const data = typeof attachment.data === 'string' ? attachment.data : '';
+    const match = data.match(/^data:[^;,]*(?:;[^;,]*)*;base64,([A-Za-z0-9+/=\s]+)$/);
+    if (!match) {
+        return null;
+    }
+
+    const buffer = Buffer.from(match[1].replace(/\s/g, ''), 'base64');
+    if (buffer.length === 0 || buffer.length > MAX_ATTACHMENT_SIZE) {
+        return null;
+    }
+
+    return JSON.stringify({
+        data,
+        name: String(attachment.name || 'attachment').slice(0, 255),
+        type: String(attachment.type || 'application/octet-stream').slice(0, 255),
+    });
+}
+
 async function read_comments(req, res) {
     const posts_lists = await pool.query(
         'SELECT * FROM posts WHERE parent = $1 FETCH FIRST $2 ROWS ONLY',
@@ -79,7 +104,17 @@ async function read_posts(req, res) {
 
 async function create_post(req, res) {
     try {
-        const media = req.body.image ? [req.body.image] : [];
+        const serializedAttachment = serializeAttachment(req.body.attachment);
+        if (req.body.attachment && !serializedAttachment) {
+            return res.status(400).json(formatErrorJson(
+                400,
+                "Bad Request",
+                "Attachment must be a valid file no larger than 2 MB"
+            ));
+        }
+        const media = serializedAttachment
+            ? [serializedAttachment]
+            : (req.body.image ? [req.body.image] : []);
         const authorId = req.user.id;
         const content = String(req.body?.content ?? '').trim();
 
