@@ -9,6 +9,7 @@ import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { friendsAPI, type Friend } from '../services/friendsAPI'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { Avatar } from './ui/Avatar'
 import logo42 from '../../public/img/42.png'
 
 export function Header() {
@@ -119,11 +120,10 @@ export function Header() {
               onClick={handleOpenMyProfile}
               title={user.username}
             >
-              <img
-                src={user.avatar_url || '/img/Not_image.png'}
-                alt={t('header_avatar_alt', {
-                  name: user.username,
-                })}
+              <Avatar
+                src={user.avatar_url}
+                name={user.username}
+                size="sm"
                 className="header-avatar"
               />
             </button>
@@ -152,11 +152,10 @@ export function Header() {
               onClick={handleOpenMyProfile}
               title={user.username}
             >
-              <img
-                src={user.avatar_url || '/img/Not_image.png'}
-                alt={t('header_avatar_alt', {
-                  name: user.username,
-                })}
+              <Avatar
+                src={user.avatar_url}
+                name={user.username}
+                size="sm"
                 className="header-avatar"
               />
             </button>

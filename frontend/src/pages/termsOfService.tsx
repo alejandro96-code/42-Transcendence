@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Header } from '../components/header'
 import { Footer } from '../components/footer'
+import { PageHeading } from '../components/ui/PageHeading'
 
 export function TermsOfService() {
   const { t } = useTranslation()
@@ -12,11 +13,11 @@ export function TermsOfService() {
 
       <main className='legal-content'>
         <article className='legal-card'>
-          <h1>{t('terms_title')}</h1>
-
-          <p className='legal-updated'>
-            {t('terms_updated')}
-          </p>
+          <PageHeading
+            title={t('terms_title')}
+            subtitle={t('terms_updated')}
+            subtitleClassName='legal-updated'
+          />
 
           <section>
             <h2>{t('terms_s1_title')}</h2>

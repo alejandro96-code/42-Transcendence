@@ -43,12 +43,13 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 | `make docker-down` | Stops services defined in the primary compose file. |
 | `make docker-down-all` | Stops all application and persistent database containers. |
 | `make docker-restart` | Restarts frontend and backend container services. |
+| `make docker-clean` | Stops all services and deletes containers, images, and volumes, including the database data. |
 | `make populate` | Populates the database with mocked-up users. |
 | `make tester-build` | Installs dependencies to execute the tests. |
 | `make tester-launch` | Launches the tester with all scenarios and shows failed or passed results. |
 | `make tester-remove` | Removes the dependencies used to execute the tests. |
 
-*Note:* If an existing PostgreSQL volume is mounted and tables are missing, `make docker-up` automatically re-runs `backend/init.sql`. Alternatively, run `make docker-clean` to purge volumes and recreate the database.
+*Note:* `database/init.sql` is only executed automatically by PostgreSQL the first time its data volume is created (standard Postgres init-script behavior). If you need to reset the schema against an existing volume, run `make docker-clean` to purge volumes and recreate the database.
 
 ## Team Information
 
@@ -113,7 +114,7 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
 | friend_requests | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), status (VARCHAR), created_at (TIMESTAMP) | Models friendship states (pending, accepted, rejected). Enforces unique pairs between users. |
 | chat_messages | id (SERIAL PK), sender_id (INT FK), receiver_id (INT FK), content (TEXT), sent_at (TIMESTAMP) | Persists direct messages between users and automatically cascades deletions upon user removal. |
 
-*The full schema definition, constraints, and index configurations are available in `backend/init.sql`.*
+*The full schema definition, constraints, and index configurations are available in `database/init.sql`.*
 
 ## Features List
 
@@ -125,21 +126,25 @@ PostgreSQL stores four core entities. Referential integrity is strictly enforced
 | **Friend Management** | Send, accept, or decline friend requests; remove friends; and view online status. | xortega, fcasaubo |
 | **Direct Chat** | One-on-one direct messaging interface between connected users with chronological history and polling-based updates. | xortega, alejanr2 |
 | **Notifications** | In-app notifications for pending friend requests and post mentions, with updates available while using the chat and social features. | xortega, alejanr2 |
+| **Advanced Post Search** | Filter posts by keyword, author, attachment presence, and date range, with sort order and paginated results. | alejanr2, fcasaubo |
+| **Public REST API** | API-key-secured endpoints (`/api/public`) for users and posts (GET/POST/PUT/DELETE), rate-limited and documented in `docs/api/public_api.md`. | fcasaubo, alejanr2 |
 | **i18n & Legal Pages** | Full interface localization in Spanish, Basque, and English; Privacy Policy and Terms of Service pages. | alejanr2, andefern |
 
 ## Modules
 
-A balanced selection of 5 Major modules (2 points each) and 7 Minor modules (1 point each) was implemented to deliver an accessible, production-ready social network platform.
+A balanced selection of 6 Major modules (2 points each) and 8 Minor modules (1 point each) was implemented to deliver an accessible, production-ready social network platform.
 
-Total Points: 17 points
+Total Points: 20 points
 
 | Area | Module | Type | Points | Justification & Implementation | Main Contributors |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Web | Frontend and backend frameworks | Major | 2 | React, TypeScript, and Vite structure the client; Node.js and Express expose server logic. This combination cleanly separates presentation, services, and persistence. | alejanr2, fcasaubo |
 | Web | User interaction | Major | 2 | The UI allows editing profiles, posting, reacting, sending friend requests, accepting or rejecting them, removing friends, and chatting. React Router, Redux Toolkit, and reusable components ensure smooth interaction. | alejanr2, xortega |
 | Web | Notification system | Minor | 1 | Pending friend requests and mentions in posts act as in-app notifications. Notifications are retrieved through request endpoints and updated through polling where necessary, including chat-related interactions. | xortega, alejanr2 |
-| Web | Custom design system | Minor | 1 | A custom visual identity was created with SCSS, variables, responsive layouts, and reusable React components. Examples include the Header, Profile, Post, PostForm, Friends, FriendRequests, Chat, ChatMessage, NotificationBell, and LanguageSelector components. PrimeReact and PrimeFlex are used as support, not as a replacement for custom design. | alejanr2 |
-| Web | File upload and management | Minor | 1 | Posts allow an image to be selected from the browser. The client validates the type and size, converts the image to a Data URL, and the API stores it linked to the post. Images are deleted together with the post; posts are the only place where uploaded images can be stored. | alejanr2, fcasaubo |
+| Web | Custom design system | Minor | 1 | A custom visual identity built on SCSS design tokens (color palette, typography scale, spacing, and radii in `variables.scss`) backs a dedicated reusable UI kit in `frontend/src/components/ui/` (Avatar, Badge, EmptyState, FormField, IconButton, LoadingSpinner, PageHeading, StatPill, Tag) plus the shared LanguageSwitcher, used consistently across the header, friends list, posts feed, profile, login, and legal pages. PrimeReact and PrimeFlex are used as support, not as a replacement for custom design. | alejanr2 |
+| Web | File upload and management | Minor | 1 | Posts allow an image or file to be attached from the browser, with client-side type/size validation and secure storage as base64 linked to the post; profile avatars are stored the same way, directly in the database. Attachments are deleted together with their post. | alejanr2, fcasaubo |
+| Web | Advanced search | Minor | 1 | Posts can be searched by keyword, author, attachment presence, and date range, with sort order and paginated results, restricted to the requesting user's own posts and their friends'. | alejanr2, fcasaubo |
+| Web | Public API | Major | 2 | An API-key-secured REST API (`/api/public`) exposes users and posts across GET, POST, PUT, and DELETE, with its own rate limiting and full documentation in `docs/api/public_api.md`. | fcasaubo, alejanr2 |
 | Accessibility & i18n | WCAG 2.1 AA Compliance | Major | 2 | Accessibility was validated manually and with WAVE. The application includes aria-label attributes, alternative text, identifiable controls, semantic structure, responsive layouts, and visible error messages in interactive components. | alejanr2, andefern |
 | Accessibility & i18n | Three languages | Minor | 1 | i18next and react-i18next manage translations in Spanish, Basque, and English. The application interface, including login, registration, messages, dates, labels, and legal pages, uses the translation system and adapts to the selected language. | alejanr2, andefern |
 | Accessibility & i18n | Browser compatibility | Minor | 1 | The application is built with standard web technologies and responsive design for use across modern desktop and mobile browsers. | alejanr2 |
@@ -148,7 +153,7 @@ Total Points: 17 points
 | Modules of Choice | Custom Module: Initial Social Network Seed | Minor | 1 | A mock SQL test script was prepared to provide a local account for testing the platform without relying exclusively on OAuth. This starting point makes it easy to verify linked data across profiles, posts, friends, and chat. | xortega, fcasaubo |
 | Modules of Choice | Custom Module: Social API test | Major | 2 | A Behave tester executes 16 scenarios using natural-language steps to validate API calls and social features. The suite includes friend deletion and cleans up the relevant relationships, making it repeatable on a persistent database. | xortega, fcasaubo |
 
-Calculation: 5 major modules × 2 points = 10 points; 7 minor modules × 1 point = 7 points. Total: 17 points.
+Calculation: 6 major modules × 2 points = 12 points; 8 minor modules × 1 point = 8 points. Total: 20 points.
 
 ## Individual Contributions
 

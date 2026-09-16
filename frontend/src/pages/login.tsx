@@ -9,6 +9,7 @@ import { useAppDispatch } from '../store/hooks'
 import { setUser } from '../store/authSlice'
 import { useTranslation } from 'react-i18next'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
+import { PageHeading } from '../components/ui/PageHeading'
 import { translateApiError } from '../services/apiError'
 
 type AuthMode = 'login' | 'register'
@@ -92,10 +93,13 @@ export function Login() {
             <LanguageSwitcher inputId='language-select-normal' name='language' />
           </div>
 
-          <div className="text-center mb-5">
-            <h1 className="font-semibold mb-2">Transcendence</h1>
-            <p className="login-subtitle">{t('login_subtitle')}</p>
-          </div>
+          <PageHeading
+            title="Transcendence"
+            subtitle={t('login_subtitle')}
+            className="text-center mb-5"
+            titleClassName="font-semibold mb-2"
+            subtitleClassName="login-subtitle"
+          />
           
           <div className="flex flex-column gap-4">
             <form className="login-form" onSubmit={handleCredentialsSubmit}>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Header } from '../components/header'
 import { Footer } from '../components/footer'
+import { PageHeading } from '../components/ui/PageHeading'
 
 export function PrivacyPolicy() {
   const { t } = useTranslation()
@@ -12,11 +13,11 @@ export function PrivacyPolicy() {
 
       <main className='legal-content'>
         <article className='legal-card'>
-          <h1>{t('privacy_title')}</h1>
-
-          <p className='legal-updated'>
-            {t('privacy_updated')}
-          </p>
+          <PageHeading
+            title={t('privacy_title')}
+            subtitle={t('privacy_updated')}
+            subtitleClassName='legal-updated'
+          />
 
           <section>
             <h2>{t('privacy_s1_title')}</h2>

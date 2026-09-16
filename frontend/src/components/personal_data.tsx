@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { Avatar } from 'primereact/avatar'
 import { Button } from 'primereact/button'
 import { InputText } from 'primereact/inputtext'
 import { InputTextarea } from 'primereact/inputtextarea'
@@ -8,6 +7,9 @@ import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { translateApiError } from '../services/apiError'
+import { Avatar } from './ui/Avatar'
+import { IconButton } from './ui/IconButton'
+import { LoadingSpinner } from './ui/LoadingSpinner'
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const ACCEPTED_AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/webp']
@@ -36,7 +38,6 @@ export function PersonalData({
   const activeUser = profileUser ?? user
   const avatarInputRef = useRef<HTMLInputElement>(null)
 
-  const [avatarLoadError, setAvatarLoadError] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
@@ -58,9 +59,6 @@ export function PersonalData({
     !user?.is_intra_user &&
     isEditing
 
-  const hasValidAvatar =
-    Boolean(activeUser.avatar_url?.trim()) && !avatarLoadError
-
   const handleChange = <K extends keyof typeof form>(
     key: K,
     value: (typeof form)[K],
@@ -76,7 +74,6 @@ export function PersonalData({
       profession: activeUser.profession ?? '',
       description: activeUser.description ?? '',
     })
-    setAvatarLoadError(false)
     setErrorMessage('')
     setIsEditing(true)
   }
@@ -141,7 +138,6 @@ export function PersonalData({
       const updatedUser = await authAPI.uploadAvatar(file)
 
       dispatch(setUser(updatedUser))
-      setAvatarLoadError(false)
     } catch (error) {
       setErrorMessage(translateApiError(t, error, 'personal_data_avatar_error'))
     } finally {
@@ -158,36 +154,11 @@ export function PersonalData({
       <div className="surface-card border-round-sm p-4">
         <div className="profile-header">
           <div className="profile-img">
-            {hasValidAvatar ? (
-              <img
-                src={activeUser.avatar_url ?? ''}
-                alt={t('personal_data_avatar_alt', {
-                  name:
-                    activeUser.full_name ||
-                    activeUser.username,
-                })}
-                style={{
-                  width: '140px',
-                  height: '140px',
-                  borderRadius: '50%',
-                  objectFit: 'cover',
-                }}
-                onError={() => setAvatarLoadError(true)}
-              />
-            ) : (
-              <Avatar
-                icon="pi pi-user"
-                size="xlarge"
-                shape="circle"
-                style={{
-                  width: '140px',
-                  height: '140px',
-                  fontSize: '3rem',
-                  backgroundColor: '#2196F3',
-                  color: 'white',
-                }}
-              />
-            )}
+            <Avatar
+              src={activeUser.avatar_url}
+              name={activeUser.full_name || activeUser.username}
+              size="xl"
+            />
 
             {canChangeAvatar && (
               <div className="profile-avatar-selector">
@@ -203,19 +174,16 @@ export function PersonalData({
                   }
                 />
 
-                <Button
-                  type="button"
-                  icon="pi pi-upload"
-                  className="p-button-sm"
-                  onClick={() =>
-                    avatarInputRef.current?.click()
-                  }
-                  loading={isUploadingAvatar}
-                  disabled={isUploadingAvatar}
-                  aria-label={t(
-                    'personal_data_change_avatar',
-                  )}
-                />
+                {isUploadingAvatar ? (
+                  <LoadingSpinner size="sm" />
+                ) : (
+                  <IconButton
+                    icon="pi pi-upload"
+                    variant="solid"
+                    ariaLabel={t('personal_data_change_avatar')}
+                    onClick={() => avatarInputRef.current?.click()}
+                  />
+                )}
               </div>
             )}
           </div>

@@ -12,6 +12,10 @@ import { useAppSelector } from '../store/hooks'
 import { store } from '../store/store'
 import { notificationsAPI } from '../services/notificationsAPI'
 import { translateApiError } from '../services/apiError'
+import { EmptyState } from './ui/EmptyState'
+import { FormField } from './ui/FormField'
+import { LoadingSpinner } from './ui/LoadingSpinner'
+import { StatPill } from './ui/StatPill'
 
 const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024
 
@@ -772,29 +776,27 @@ const handleDeletePost = async (postId: number) => {
               <div className="posts-search-panel surface-100 border-round-sm p-3 mb-4">
                 <div className="grid formgrid">
                   <div className="col-12 md:col-6">
-                    <label htmlFor="search-q" className="text-sm">
-                      {t('posts_search_query_label')}
-                    </label>
-                    <InputText
-                      id="search-q"
-                      className="w-full"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t('posts_search_query_placeholder')}
-                    />
+                    <FormField id="search-q" label={t('posts_search_query_label')}>
+                      <InputText
+                        id="search-q"
+                        className="w-full"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={t('posts_search_query_placeholder')}
+                      />
+                    </FormField>
                   </div>
 
                   <div className="col-12 md:col-6">
-                    <label htmlFor="search-author" className="text-sm">
-                      {t('posts_search_author_label')}
-                    </label>
-                    <InputText
-                      id="search-author"
-                      className="w-full"
-                      value={searchAuthor}
-                      onChange={(e) => setSearchAuthor(e.target.value)}
-                      placeholder={t('posts_search_author_placeholder')}
-                    />
+                    <FormField id="search-author" label={t('posts_search_author_label')}>
+                      <InputText
+                        id="search-author"
+                        className="w-full"
+                        value={searchAuthor}
+                        onChange={(e) => setSearchAuthor(e.target.value)}
+                        placeholder={t('posts_search_author_placeholder')}
+                      />
+                    </FormField>
                   </div>
 
                   <div className="col-12 md:col-4">
@@ -889,14 +891,16 @@ const handleDeletePost = async (postId: number) => {
         {isSearchActive ? (
           <>
             <div className="posts-list">
-              <p className="text-color-secondary">
+              <StatPill>
                 {t('posts_search_results_count', { count: searchTotal })}
-              </p>
+              </StatPill>
 
-              {searchResults.length === 0 && (
-                <p className="text-color-secondary text-center">
-                  {t('posts_search_no_results')}
-                </p>
+              {isSearching ? (
+                <LoadingSpinner label={t('header_search_loading')} />
+              ) : (
+                searchResults.length === 0 && (
+                  <EmptyState icon="pi pi-search" message={t('posts_search_no_results')} />
+                )
               )}
 
               {searchResults.map(renderPostCard)}
@@ -921,15 +925,14 @@ const handleDeletePost = async (postId: number) => {
           <>
             <div className="posts-list">
               {filteredPosts.length === 0 && (
-                <p className="text-color-secondary text-center">
-                  {filter === 'mentions'
-                    ? t(
-                        'posts_empty_mentions',
-                      )
-                    : t(
-                        'posts_empty_state',
-                      )}
-                </p>
+                <EmptyState
+                  icon={filter === 'mentions' ? 'pi pi-at' : 'pi pi-inbox'}
+                  message={
+                    filter === 'mentions'
+                      ? t('posts_empty_mentions')
+                      : t('posts_empty_state')
+                  }
+                />
               )}
 
               {paginatedPosts.map(renderPostCard)}

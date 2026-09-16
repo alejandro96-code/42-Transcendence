@@ -26,10 +26,17 @@
     margin-bottom: 0.9rem;
   }
 
+  .friends-tab-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
   .friends-tab {
     color: rgba($color-text-write, 0.75);
     border-color: rgba($color-5, 0.25);
     width: 100%;
+    flex: 1;
     padding: 0.55rem 0.4rem;
     font-weight: 700;
     letter-spacing: 0.2px;
@@ -53,21 +60,7 @@
   .friends-tab-add {
     width: 22px;
     height: 22px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: $color-text-write;
-    background: rgba($color-1, 0.2);
-    border: 1px solid rgba($color-5, 0.25);
-    transition: background 0.2s ease, border-color 0.2s ease;
-
-    &:hover {
-      background: rgba($color-5, 0.2);
-      border-color: rgba($color-accent, 0.52);
-    }
+    flex-shrink: 0;
   }
 
   .friends-panel {
@@ -248,45 +241,6 @@
     display: flex;
     gap: 0.3rem;
     flex-shrink: 0;
-  }
-
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: $color-5;
-    text-align: center;
-    flex: 1;
-
-    i {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      opacity: 0.42;
-    }
-
-    p {
-      margin: 0;
-      font-size: 0.9rem;
-    }
-  }
-
-  .online-status {
-    width: 10px;
-    height: 10px;
-    min-width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 8px;
-  }
-
-  .online-status.online {
-      background-color: #22c55e;
-  }
-
-  .online-status.offline {
-      background-color: #9ca3af;
   }
 
   .p-button-friends {

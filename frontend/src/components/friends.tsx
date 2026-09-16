@@ -12,6 +12,12 @@ import {
   type PendingFriendRequest,
 } from '../services/friendsAPI'
 import { translateApiError } from '../services/apiError'
+import { Avatar } from './ui/Avatar'
+import { Badge } from './ui/Badge'
+import { EmptyState } from './ui/EmptyState'
+import { FormField } from './ui/FormField'
+import { IconButton } from './ui/IconButton'
+import { StatPill } from './ui/StatPill'
 
 import { useTranslation } from 'react-i18next'
 
@@ -243,27 +249,26 @@ export function Friends({
 
       <div className="surface-card border-round-sm p-3">
         <div className="friends-tabs">
-          <button
-            type="button"
-            className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`}
-            onClick={() => setActiveSection('friends')}
-          >
-            <span>
-              {t('friends_tab_friends', { count: friendsList.length })}
-            </span>
+          <div className="friends-tab-wrap">
+            <button
+              type="button"
+              className={`p-button-friends friends-tab ${activeSection === 'friends' ? 'is-active' : ''}`}
+              onClick={() => setActiveSection('friends')}
+            >
+              <StatPill active={activeSection === 'friends'}>
+                {t('friends_tab_friends', { count: friendsList.length })}
+              </StatPill>
+            </button>
 
             {!readOnly && (
-              <span
+              <IconButton
+                icon="pi pi-plus"
+                ariaLabel={t('friends_dialog_header')}
                 className="friends-tab-add"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  setIsAddFriendOpen(true)
-                }}
-              >
-                +
-              </span>
+                onClick={() => setIsAddFriendOpen(true)}
+              />
             )}
-          </button>
+          </div>
 
           {!readOnly && !ownerUserId && pendingRequests.length > 0 && (
             <button
@@ -271,9 +276,11 @@ export function Friends({
               className={`p-button-friends friends-tab ${activeSection === 'requests' ? 'is-active' : ''}`}
               onClick={() => setActiveSection('requests')}
             >
-              {t('friends_tab_requests', {
-                count: pendingRequests.length,
-              })}
+              <StatPill active={activeSection === 'requests'}>
+                {t('friends_tab_requests', {
+                  count: pendingRequests.length,
+                })}
+              </StatPill>
             </button>
           )}
         </div>
@@ -286,13 +293,26 @@ export function Friends({
                   {sortedFriends.map((friend) => (
                     <div key={friend.id} className="friend-card">
                       <div className="friend-info">
+                        <div className="friend-avatar">
+                          <Avatar src={friend.avatar_url} name={friend.username} size="md" />
+                          <span
+                            className={`status-indicator ${friend.is_online ? 'online' : 'offline'}`}
+                            title={
+                              friend.is_online
+                                ? t('friends_status_online')
+                                : t('friends_status_offline')
+                            }
+                          >
+                            <span className="sr-only">
+                              {friend.is_online
+                                ? t('friends_status_online')
+                                : t('friends_status_offline')}
+                            </span>
+                          </span>
+                        </div>
+
                         <div className="friend-details">
-                          <h4 className="mb-0">
-                            <span
-                              className={`online-status ${friend.is_online ? 'online' : 'offline'}`}
-                            />
-                            <span>{friend.username}</span>
-                          </h4>
+                          <h4 className="mb-0">{friend.username}</h4>
                         </div>
                       </div>
 
@@ -330,10 +350,7 @@ export function Friends({
                   ))}
                 </div>
               ) : (
-                <div className="empty-state">
-                  <i className="pi pi-heart-fill" />
-                  <p>{t('friends_empty_state')}</p>
-                </div>
+                <EmptyState icon="pi pi-heart-fill" message={t('friends_empty_state')} />
               )}
             </section>
           )}
@@ -347,6 +364,8 @@ export function Friends({
                   {pendingRequests.map((request) => (
                     <div key={request.id} className="request-card">
                       <div className="request-info">
+                        <Avatar name={request.username} size="md" />
+
                         <div className="request-details">
                           <h4 className="mb-0">{request.username}</h4>
 
@@ -361,6 +380,10 @@ export function Friends({
                                   : 'es-ES'
                             )}
                           </small>
+
+                          <Badge variant="info" className="ml-2">
+                            {t('friends_request_pending_badge')}
+                          </Badge>
                         </div>
                       </div>
 
@@ -411,23 +434,22 @@ export function Friends({
             <span>{t('friends_dialog_description')}</span>
             <span>{t('friends_dialog_42_note')}</span>
 
-            <label htmlFor="friend-nick" className="sr-only">
-              {t('friends_dialog_description')}
-            </label>
-
-            <InputText
-              id="friend-nick"
-              name="friend-nick"
-              value={friendNick}
-              onChange={(event) => setFriendNick(event.target.value)}
-              placeholder={t('friends_dialog_placeholder')}
-              autoFocus
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  void handleSendFriendRequest()
-                }
-              }}
-            />
+            <FormField id="friend-nick" label={t('friends_dialog_description')} hideLabel>
+              <InputText
+                id="friend-nick"
+                name="friend-nick"
+                className="w-full"
+                value={friendNick}
+                onChange={(event) => setFriendNick(event.target.value)}
+                placeholder={t('friends_dialog_placeholder')}
+                autoFocus
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    void handleSendFriendRequest()
+                  }
+                }}
+              />
+            </FormField>
 
             <div className="flex justify-content-end gap-2">
               <Button
