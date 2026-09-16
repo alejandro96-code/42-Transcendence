@@ -38,7 +38,10 @@ export function Chat({activeFriend = null,}: ChatProps) {
   const listRef =
     useRef<HTMLDivElement>(null)
 
-  const activeFriendId = activeFriend?.id
+  const activeFriendId =
+    activeFriend && activeFriend.id !== currentUser?.id
+      ? activeFriend.id
+      : undefined
 
   useEffect(() => {
     if (!activeFriendId) {

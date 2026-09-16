@@ -8,31 +8,57 @@ import { PostFeed } from '../components/posts'
 import { Friends } from '../components/friends'
 import { Chat } from '../components/chat'
 import {friendsAPI,type FriendProfile,} from '../services/friendsAPI'
+import { useAppSelector } from '../store/hooks'
+
+function readStoredChatFriend(): { id: number; name: string } | null {
+  const savedFriend = localStorage.getItem('activeChatFriend')
+
+  if (!savedFriend) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(savedFriend)
+
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      typeof parsed.id === 'number' &&
+      typeof parsed.name === 'string'
+    ) {
+      return parsed
+    }
+  } catch {
+    // Fall through to clear the corrupted entry below.
+  }
+
+  localStorage.removeItem('activeChatFriend')
+  return null
+}
 
 export function Profile() {
   const { t } = useTranslation()
   const { friendId } = useParams()
+  const currentUser = useAppSelector((state) => state.auth.user)
   const [activeChatFriend, setActiveChatFriend] = useState<{
     id: number
     name: string
-  } | null>(() => {
-    const savedFriend = localStorage.getItem('activeChatFriend')
-
-    if (!savedFriend) {
-      return null
-    }
-
-    try {
-      return JSON.parse(savedFriend)
-    } catch {
-      localStorage.removeItem('activeChatFriend')
-      return null
-    }
-  })
+  } | null>(readStoredChatFriend)
 
   const [profileUser, setProfileUser] = useState<FriendProfile | null>(null)
 
   const isFriendProfile = Boolean(friendId)
+
+  const safeActiveChatFriend =
+    currentUser && activeChatFriend?.id === currentUser.id
+      ? null
+      : activeChatFriend
+
+  useEffect(() => {
+    if (currentUser && activeChatFriend?.id === currentUser.id) {
+      localStorage.removeItem('activeChatFriend')
+    }
+  }, [currentUser, activeChatFriend])
 
   useEffect(() => {
     let mounted = true
@@ -99,7 +125,7 @@ export function Profile() {
                 selectedFriendId={
                   isFriendProfile
                     ? null
-                    : activeChatFriend?.id ?? null
+                    : safeActiveChatFriend?.id ?? null
                 }
                 onOpenChat={
                   !isFriendProfile
@@ -126,7 +152,7 @@ export function Profile() {
                   !isFriendProfile
                     ? (removedFriendId) => {
                         if (
-                          activeChatFriend?.id ===
+                          safeActiveChatFriend?.id ===
                           removedFriendId
                         ) {
                           setActiveChatFriend(null)
@@ -150,7 +176,7 @@ export function Profile() {
             {!isFriendProfile && (
               <div className="right-pane-item">
                 <Chat
-                  activeFriend={activeChatFriend}
+                  activeFriend={safeActiveChatFriend}
                 />
               </div>
             )}
