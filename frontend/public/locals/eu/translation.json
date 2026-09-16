@@ -288,6 +288,8 @@
   "api_error_post_create_failed": "Ezin izan da argitalpena publikatu.",
   "api_error_post_create_invalid_response": "Erantzun baliogabea argitalpena sortzean.",
   "api_error_post_not_found": "Ez da argitalpena aurkitu edo ez zara egilea.",
+  "api_error_posts_invalid_user": "Erabiltzailea ez da baliozkoa.",
+  "api_error_posts_view_forbidden": "Ezin dituzu erabiltzaile honen argitalpenak ikusi.",
   "api_error_post_delete_failed": "Ezin izan da argitalpena ezabatu.",
   "api_error_rate_limited": "Eskaera gehiegi. Saiatu berriro {{seconds}} segundo barru.",
   "api_error_server_error": "Zerbitzari-errore bat gertatu da. Saiatu berriro geroago.",

@@ -8,3 +8,4 @@ nginx/certs/*
 social-api-tests/.env
 social-api-tests/uv.lock
 __pycache__
+backend/uploads/

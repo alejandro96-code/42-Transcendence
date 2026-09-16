@@ -83,10 +83,10 @@ export function Header() {
   }
 
   const handleLogout = async () => {
-    await authAPI.logout()
     dispatch(clearUser())
     navigate('/')
     setIsMenuOpen(false)
+    await authAPI.logout()
   }
 
   return (

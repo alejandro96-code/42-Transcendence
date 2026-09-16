@@ -288,6 +288,8 @@
   "api_error_post_create_failed": "Could not publish the post.",
   "api_error_post_create_invalid_response": "Invalid response while creating the post.",
   "api_error_post_not_found": "Post not found or you are not the author.",
+  "api_error_posts_invalid_user": "Invalid user.",
+  "api_error_posts_view_forbidden": "You can't see this user's posts.",
   "api_error_post_delete_failed": "Could not delete the post.",
   "api_error_rate_limited": "Too many requests. Try again in {{seconds}} seconds.",
   "api_error_server_error": "A server error occurred. Please try again later.",

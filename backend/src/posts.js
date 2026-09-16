@@ -34,9 +34,35 @@ function serializeAttachment(attachment) {
 
 async function read_posts(req, res) {
     try {
-        const targetUser = req.query.user || req.user.id;
+        const targetUser = req.query.user
+            ? Number.parseInt(req.query.user, 10)
+            : req.user.id;
         const amount = Number(req.query.amount) || 50;
         const filter = req.query.filter;
+
+        if (!Number.isInteger(targetUser)) {
+            return res.status(400).json(
+                formatErrorJson(400, "Bad Request", "Invalid user", "POSTS_INVALID_USER")
+            );
+        }
+
+        if (targetUser !== req.user.id) {
+            const allowedResult = await pool.query(
+                `SELECT 1
+                 FROM friend_requests
+                 WHERE status = 'accepted'
+                   AND ((sender_id = $1 AND receiver_id = $2)
+                     OR (sender_id = $2 AND receiver_id = $1))
+                 LIMIT 1`,
+                [req.user.id, targetUser],
+            );
+
+            if (allowedResult.rows.length === 0) {
+                return res.status(403).json(
+                    formatErrorJson(403, "Forbidden", "You can not see the posts of this user", "POSTS_VIEW_FORBIDDEN")
+                );
+            }
+        }
 
         if (filter === 'mentions') {
             const mentions_posts = await pool.query(

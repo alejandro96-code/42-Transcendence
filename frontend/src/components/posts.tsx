@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { postsAPI, type ApiPost, type PostAttachment} from '../services/postAPI'
 import { friendsAPI } from '../services/friendsAPI'
 import { useAppSelector } from '../store/hooks'
+import { store } from '../store/store'
 import { notificationsAPI } from '../services/notificationsAPI'
 import { translateApiError } from '../services/apiError'
 
@@ -112,6 +113,7 @@ export function PostFeed({
     useState<number | null>(null)
   const [deletingPostId, setDeletingPostId] =
   useState<number | null>(null)
+  const [isPublishing, setIsPublishing] = useState(false)
 
   const onPageChange = (event: PaginatorPageChangeEvent) => {
     setFirst(event.first)
@@ -245,6 +247,7 @@ export function PostFeed({
     }
 
     setImageError('')
+    setIsPublishing(true)
 
     try {
       const createdPost =
@@ -290,6 +293,8 @@ export function PostFeed({
       setMentionStart(null)
     } catch (error) {
       setImageError(translateApiError(t, error, 'posts_err_publish'))
+    } finally {
+      setIsPublishing(false)
     }
   }
 
@@ -421,7 +426,9 @@ const handleDeletePost = async (postId: number) => {
     void notificationsAPI.watchProfile(openedProfileId)
 
     return () => {
-      void notificationsAPI.unwatchProfile(openedProfileId)
+      if (store.getState().auth.isAuthenticated) {
+        void notificationsAPI.unwatchProfile(openedProfileId)
+      }
     }
   }, [openedProfileId])
 
@@ -601,7 +608,8 @@ const handleDeletePost = async (postId: number) => {
                   onClick={() =>
                     void handlePost()
                   }
-                  disabled={!text.trim()}
+                  loading={isPublishing}
+                  disabled={!text.trim() || isPublishing}
                 >
                   {t(
                     'posts_btn_publish',

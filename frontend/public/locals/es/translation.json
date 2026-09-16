@@ -288,6 +288,8 @@
   "api_error_post_create_failed": "No se pudo publicar el post.",
   "api_error_post_create_invalid_response": "Respuesta inválida al crear la publicación.",
   "api_error_post_not_found": "No se ha encontrado la publicación o no eres el autor.",
+  "api_error_posts_invalid_user": "Usuario no válido.",
+  "api_error_posts_view_forbidden": "No puedes ver las publicaciones de este usuario.",
   "api_error_post_delete_failed": "No se pudo eliminar la publicación.",
   "api_error_rate_limited": "Demasiadas peticiones. Inténtalo de nuevo en {{seconds}} segundos.",
   "api_error_server_error": "Ha ocurrido un error en el servidor. Inténtalo de nuevo más tarde.",

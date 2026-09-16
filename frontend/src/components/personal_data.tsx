@@ -9,6 +9,9 @@ import { setUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { translateApiError } from '../services/apiError'
 
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024
+const ACCEPTED_AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+
 interface ProfileUser {
   full_name: string
   username: string
@@ -110,8 +113,29 @@ export function PersonalData({
       return
     }
 
-    setIsUploadingAvatar(true)
     setErrorMessage('')
+
+    if (!ACCEPTED_AVATAR_TYPES.includes(file.type)) {
+      setErrorMessage(t('api_error_auth_avatar_invalid_format'))
+
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = ''
+      }
+
+      return
+    }
+
+    if (file.size > MAX_AVATAR_SIZE) {
+      setErrorMessage(t('api_error_auth_avatar_too_large', { maxSizeMB: 2 }))
+
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = ''
+      }
+
+      return
+    }
+
+    setIsUploadingAvatar(true)
 
     try {
       const updatedUser = await authAPI.uploadAvatar(file)
