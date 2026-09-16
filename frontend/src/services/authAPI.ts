@@ -1,28 +1,8 @@
 import type { User } from '../types/auth'
+import { ApiError, readApiError } from './apiError'
 
 const SERVER_IP = import.meta.env.VITE_SERVER_IP || window.location.hostname
 const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
-
-async function readErrorMessage(
-  response: Response,
-  fallbackMessage: string,
-): Promise<string> {
-  if (!response.headers.get('content-type')?.includes('application/json')) {
-    return fallbackMessage
-  }
-
-  try {
-    const data = await response.json()
-
-    if (typeof data?.error === 'string' && data.error.length > 0) {
-      return data.error
-    }
-  } catch {
-    return fallbackMessage
-  }
-
-  return fallbackMessage
-}
 
 export const authAPI = {
   async getCurrentUser(): Promise<User | null> {
@@ -56,12 +36,7 @@ export const authAPI = {
     })
 
     if (!response.ok) {
-      const message = await readErrorMessage(
-        response,
-        'No se pudo iniciar sesión.',
-      )
-
-      throw new Error(message)
+      throw await readApiError(response, 'AUTH_LOGIN_FAILED')
     }
 
     return await response.json()
@@ -88,12 +63,7 @@ export const authAPI = {
     })
 
     if (!response.ok) {
-      const message = await readErrorMessage(
-        response,
-        'No se pudo registrar la cuenta.',
-      )
-
-      throw new Error(message)
+      throw await readApiError(response, 'AUTH_REGISTER_FAILED')
     }
 
     return await response.json()
@@ -113,12 +83,7 @@ export const authAPI = {
     })
 
     if (!response.ok) {
-      const message = await readErrorMessage(
-        response,
-        'No se pudo guardar el perfil.',
-      )
-
-      throw new Error(message)
+      throw await readApiError(response, 'AUTH_PROFILE_UPDATE_FAILED')
     }
 
     return await response.json()
@@ -132,12 +97,12 @@ export const authAPI = {
         if (typeof reader.result === 'string') {
           resolve(reader.result)
         } else {
-          reject(new Error('No se pudo leer la imagen.'))
+          reject(new ApiError('AUTH_AVATAR_READ_FAILED'))
         }
       }
 
       reader.onerror = () => {
-        reject(new Error('No se pudo leer la imagen.'))
+        reject(new ApiError('AUTH_AVATAR_READ_FAILED'))
       }
 
       reader.readAsDataURL(file)
@@ -155,12 +120,7 @@ export const authAPI = {
     })
 
     if (!response.ok) {
-      const message = await readErrorMessage(
-        response,
-        'No se pudo subir el avatar.',
-      )
-
-      throw new Error(message)
+      throw await readApiError(response, 'AUTH_AVATAR_UPLOAD_FAILED')
     }
 
     return await response.json()

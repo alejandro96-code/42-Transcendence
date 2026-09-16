@@ -11,6 +11,7 @@ import {
   type Friend,
   type PendingFriendRequest,
 } from '../services/friendsAPI'
+import { translateApiError } from '../services/apiError'
 
 import { useTranslation } from 'react-i18next'
 
@@ -49,10 +50,7 @@ export function Friends({
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail:
-          error instanceof Error
-            ? error.message
-            : t('friends_load_error'),
+        detail: translateApiError(t, error, 'friends_load_error'),
       })
     }
   }
@@ -64,10 +62,7 @@ export function Friends({
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail:
-          error instanceof Error
-            ? error.message
-            : t('friends_load_dialog_error'),
+        detail: translateApiError(t, error, 'friends_load_dialog_error'),
       })
     }
   }
@@ -89,10 +84,7 @@ export function Friends({
           toast.current?.show({
             severity: 'error',
             summary: 'Error',
-            detail:
-              error instanceof Error
-                ? error.message
-                : t('friends_load_error'),
+            detail: translateApiError(t, error, 'friends_load_error'),
           })
         }
       }
@@ -114,10 +106,7 @@ export function Friends({
           toast.current?.show({
             severity: 'error',
             summary: 'Error',
-            detail:
-              error instanceof Error
-                ? error.message
-                : t('friends_load_dialog_error'),
+            detail: translateApiError(t, error, 'friends_load_dialog_error'),
           })
         }
       }
@@ -198,10 +187,7 @@ export function Friends({
           toast.current?.show({
             severity: 'error',
             summary: 'Error',
-            detail:
-              error instanceof Error
-                ? error.message
-                : t('friends_request_response_error'),
+            detail: translateApiError(t, error, 'friends_request_response_error'),
           })
         }
       },
@@ -234,10 +220,7 @@ export function Friends({
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail:
-          error instanceof Error
-            ? error.message
-            : t('friends_request_send_error'),
+        detail: translateApiError(t, error, 'friends_request_send_error'),
       })
     }
   }
@@ -262,10 +245,7 @@ export function Friends({
           toast.current?.show({
             severity: 'error',
             summary: 'Error',
-            detail:
-              error instanceof Error
-                ? error.message
-                : t('friends_remove_error'),
+            detail: translateApiError(t, error, 'friends_remove_error'),
           })
         }
       },

@@ -10,7 +10,7 @@ async function get_token(req, res) {
     const password = String(req.body?.password ?? '');
 
     if (!username || !password) {
-        return res.status(400).json(formatErrorJson(400, "Bad Request", "Username and password can't be blank"));
+        return res.status(400).json(formatErrorJson(400, "Bad Request", "Username and password can't be blank", "AUTH_CREDENTIALS_MISSING"));
     }
 
     const result = await pool.query('SELECT * FROM users WHERE username = $1 LIMIT 1', [username]);
@@ -22,7 +22,7 @@ async function get_token(req, res) {
     );
 
     if (!user_rows || user_rows.rows.length == 0 || !verifyPassword(password, user_rows.rows[0].password_hash)) {
-        return res.status(404).json(formatErrorJson(404, "Not Found", "User not found in database"));
+        return res.status(404).json(formatErrorJson(404, "Not Found", "User not found in database", "AUTH_USER_NOT_FOUND"));
     }
 
     const jwt_secret = process.env.JWT_SECRET;
@@ -49,7 +49,7 @@ export function verify_token(req, res, next) {
             return next();
         }
 
-        res.status(401).json(formatErrorJson(401, "Unauthorized", "Authentication required"));
+        res.status(401).json(formatErrorJson(401, "Unauthorized", "Authentication required", "AUTH_REQUIRED"));
         return;
     }
 
@@ -58,7 +58,7 @@ export function verify_token(req, res, next) {
         req.user = {"id": res.locals.decoded_token.userId};
         return next();
     } catch {
-        res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token"));
+        res.status(401).json(formatErrorJson(401, "Unauthorized", "Bad token", "AUTH_TOKEN_INVALID"));
     }
 }
 

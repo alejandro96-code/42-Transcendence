@@ -1,9 +1,11 @@
+import { readApiError } from './apiError'
+
 const SERVER_IP = import.meta.env.VITE_SERVER_IP || window.location.hostname
 const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 
 export interface Notification {
   type: string
-  message: string
+  params?: Record<string, unknown>
 }
 
 export const notificationsAPI = {
@@ -13,7 +15,7 @@ export const notificationsAPI = {
     })
 
     if (!response.ok) {
-      throw new Error('No se pudieron obtener las notificaciones.')
+      throw await readApiError(response, 'NOTIFICATIONS_LOAD_FAILED')
     }
 
     return response.json()

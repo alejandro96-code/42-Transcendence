@@ -8,6 +8,7 @@ import { postsAPI, type ApiPost, type PostAttachment} from '../services/postAPI'
 import { friendsAPI } from '../services/friendsAPI'
 import { useAppSelector } from '../store/hooks'
 import { notificationsAPI } from '../services/notificationsAPI'
+import { translateApiError } from '../services/apiError'
 
 const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024
 
@@ -148,10 +149,7 @@ export function PostFeed({
       setMentionUsers(users)
       setShowMentionSuggestions(users.length > 0)
     } catch (error) {
-      console.error(
-        'Error buscando amigos para mencionar:',
-        error,
-      )
+      console.error('Error searching friends to mention:', error)
 
       setMentionUsers([])
       setShowMentionSuggestions(false)
@@ -291,18 +289,12 @@ export function PostFeed({
       setMentionUsers([])
       setMentionStart(null)
     } catch (error) {
-      if (error instanceof Error) {
-        setImageError(error.message)
-      } else {
-        setImageError(t('posts_err_publish'))
-      }
+      setImageError(translateApiError(t, error, 'posts_err_publish'))
     }
   }
 
 const handleDeletePost = async (postId: number) => {
-    const confirmed = window.confirm(
-      '¿Seguro que quieres eliminar esta publicación?',
-    )
+    const confirmed = window.confirm(t('posts_confirm_delete'))
 
     if (!confirmed) {
       return
@@ -320,11 +312,7 @@ const handleDeletePost = async (postId: number) => {
 
       setFirst((currentFirst) => Math.max(0, currentFirst - 1))
     } catch (error) {
-      setImageError(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo eliminar la publicación.',
-      )
+      setImageError(translateApiError(t, error, 'posts_err_delete'))
     } finally {
       setDeletingPostId(null)
     }
@@ -394,11 +382,7 @@ const handleDeletePost = async (postId: number) => {
           return
         }
 
-        if (error instanceof Error) {
-          setImageError(error.message)
-        } else {
-          setImageError(t('posts_err_load'))
-        }
+        setImageError(translateApiError(t, error, 'posts_err_load'))
       }
     }
 
@@ -730,7 +714,7 @@ const handleDeletePost = async (postId: number) => {
                      rounded
                      loading={deletingPostId === post.id}
                      disabled={deletingPostId !== null}
-                     aria-label="Eliminar publicación"
+                     aria-label={t('posts_delete_aria_label')}
                      onClick={() => {
                        void handleDeletePost(post.id)
                      }}

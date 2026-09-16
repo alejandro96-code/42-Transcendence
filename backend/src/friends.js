@@ -40,7 +40,8 @@ async function read_friends(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                `Error retrieving friends: ${error}`
+                `Error retrieving friends: ${error}`,
+                "FRIENDS_LOAD_FAILED"
             )
         );
     }
@@ -52,7 +53,7 @@ async function read_friends_by_user(req, res) {
 
     if (!Number.isInteger(userId)) {
         return res.status(400).json(
-            formatErrorJson(400, "Bad Request", "Invalid user")
+            formatErrorJson(400, "Bad Request", "Invalid user", "FRIENDS_INVALID_USER")
         );
     }
 
@@ -73,7 +74,8 @@ async function read_friends_by_user(req, res) {
                     formatErrorJson(
                         403,
                         "Forbidden",
-                        'You can not see the friends of this user'
+                        'You can not see the friends of this user',
+                        "FRIENDS_VIEW_FORBIDDEN"
                     )
                 );
             }
@@ -104,7 +106,8 @@ async function read_friends_by_user(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                `Error retrieving friends: ${error}`
+                `Error retrieving friends: ${error}`,
+                "FRIENDS_LOAD_FAILED"
             )
         );
     }
@@ -149,7 +152,8 @@ async function read_friends_search(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                'Error searching your friends'
+                'Error searching your friends',
+                "FRIENDS_SEARCH_FAILED"
             )
         );
     }
@@ -161,7 +165,7 @@ async function read_friend_profile(req, res) {
 
     if (!Number.isInteger(friendId)) {
         return res.status(400).json(
-            formatErrorJson(400, "Bad Request", "Invalid friend")
+            formatErrorJson(400, "Bad Request", "Invalid friend", "FRIENDS_INVALID_FRIEND")
         );
     }
 
@@ -193,7 +197,7 @@ async function read_friend_profile(req, res) {
 
         if (result.rows.length === 0) {
             return res.status(404).json(
-                formatErrorJson(404, "Not Found", 'Profile not found')
+                formatErrorJson(404, "Not Found", 'Profile not found', "FRIENDS_PROFILE_NOT_FOUND")
             );
         }
 
@@ -204,7 +208,8 @@ async function read_friend_profile(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                'Error retrieving profile'
+                'Error retrieving profile',
+                "FRIENDS_PROFILE_LOAD_FAILED"
             )
         );
     }
@@ -231,7 +236,8 @@ async function read_friend_requests(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                'Error retrieving friend request'
+                'Error retrieving friend request',
+                "FRIENDS_REQUESTS_LOAD_FAILED"
             )
         );
     }
@@ -251,9 +257,9 @@ async function create_heartbeat(req, res) {
     } catch (error) {
         console.error('Error updating presence:', error);
 
-        return res.status(500).json({
-            error: 'Error updating presence.'
-        });
+        return res.status(500).json(
+            formatErrorJson(500, "Internal Server Error", "Error updating presence.", "FRIENDS_PRESENCE_UPDATE_FAILED")
+        );
     }
 }
 
@@ -263,7 +269,7 @@ async function create_friend_request(req, res) {
 
     if (!username) {
         return res.status(400).json(
-            formatErrorJson(400, "Bad Request", "Nick is mandatory")
+            formatErrorJson(400, "Bad Request", "Nick is mandatory", "FRIENDS_NICK_REQUIRED")
         );
     }
 
@@ -283,7 +289,8 @@ async function create_friend_request(req, res) {
                 formatErrorJson(
                     404,
                     "Not Found",
-                    'That user does not exist'
+                    'That user does not exist',
+                    "FRIENDS_USER_NOT_FOUND"
                 )
             );
         }
@@ -293,7 +300,8 @@ async function create_friend_request(req, res) {
                 formatErrorJson(
                     400,
                     "Bad Request",
-                    "Can't send a friend request to yourself"
+                    "Can't send a friend request to yourself",
+                    "FRIENDS_CANNOT_ADD_SELF"
                 )
             );
         }
@@ -315,7 +323,8 @@ async function create_friend_request(req, res) {
                     formatErrorJson(
                         409,
                         "Conflict",
-                        'You are already friends'
+                        'You are already friends',
+                        "FRIENDS_ALREADY_FRIENDS"
                     )
                 );
             }
@@ -325,7 +334,8 @@ async function create_friend_request(req, res) {
                     formatErrorJson(
                         409,
                         "Conflict",
-                        'There is already a pending friend request between these users'
+                        'There is already a pending friend request between these users',
+                        "FRIENDS_REQUEST_PENDING"
                     )
                 );
             }
@@ -347,7 +357,7 @@ async function create_friend_request(req, res) {
 
             addNotification(recipient.id, {
                 type: 'friend_request',
-                message: `${senderResult.rows[0].username} te ha enviado una solicitud de amistad`,
+                params: { username: senderResult.rows[0].username },
             });
 
             return res.status(201).json({
@@ -368,7 +378,7 @@ async function create_friend_request(req, res) {
 
         addNotification(recipient.id, {
             type: 'friend_request',
-            message: `${senderResult.rows[0].username} te ha enviado una solicitud de amistad`,
+            params: { username: senderResult.rows[0].username },
         });
 
         return res.status(201).json({
@@ -381,7 +391,8 @@ async function create_friend_request(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                'Error sending the friend request'
+                'Error sending the friend request',
+                "FRIENDS_REQUEST_SEND_FAILED"
             )
         );
     }
@@ -397,15 +408,16 @@ async function update_friend_request(req, res) {
             formatErrorJson(
                 400,
                 "Bad Request",
-                'Invalid friend request.'
+                'Invalid friend request.',
+                "FRIENDS_REQUEST_INVALID"
             )
         );
     }
 
     if (action !== 'accepted' && action !== 'rejected') {
-        return res.status(400).json({
-            error: 'Invalid action. Must be accepted or rejected.'
-        });
+        return res.status(400).json(
+            formatErrorJson(400, "Bad Request", 'Invalid action. Must be accepted or rejected.', "FRIENDS_REQUEST_ACTION_INVALID")
+        );
     }
 
     try {
@@ -424,7 +436,8 @@ async function update_friend_request(req, res) {
                 formatErrorJson(
                     404,
                     "Not Found",
-                    'Friend request not found or already processed'
+                    'Friend request not found or already processed',
+                    "FRIENDS_REQUEST_NOT_FOUND"
                 )
             );
         }
@@ -442,12 +455,12 @@ async function update_friend_request(req, res) {
         if (action === 'accepted') {
             addNotification(request.sender_id, {
                 type: 'friend_accepted',
-                message: `${request.username} ha aceptado tu solicitud de amistad`,
+                params: { username: request.username },
             });
         } else {
             addNotification(request.sender_id, {
                 type: 'friend_rejected',
-                message: `${request.username} ha rechazado tu solicitud de amistad`,
+                params: { username: request.username },
             });
         }
 
@@ -461,7 +474,8 @@ async function update_friend_request(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                'Error processing the friend request'
+                'Error processing the friend request',
+                "FRIENDS_REQUEST_PROCESS_FAILED"
             )
         );
     }
@@ -476,7 +490,8 @@ async function delete_friend(req, res) {
             formatErrorJson(
                 400,
                 "Bad Request",
-                'Invalid friend'
+                'Invalid friend',
+                "FRIENDS_INVALID_FRIEND"
             )
         );
     }
@@ -491,7 +506,7 @@ async function delete_friend(req, res) {
             [req.user.id]
         );
 
-        const username = userResult.rows[0]?.username || 'Un usuario';
+        const username = userResult.rows[0]?.username || '';
 
         const result = await client.query(
             `DELETE FROM friend_requests
@@ -512,7 +527,8 @@ async function delete_friend(req, res) {
                 formatErrorJson(
                     404,
                     "Not Found",
-                    'Friend not found'
+                    'Friend not found',
+                    "FRIENDS_NOT_FOUND"
                 )
             );
         }
@@ -528,7 +544,7 @@ async function delete_friend(req, res) {
 
         addNotification(friendId, {
             type: 'friend_removed',
-            message: `${username} te ha eliminado de sus amigos`,
+            params: { username },
         });
 
         return res.status(204).end();
@@ -541,7 +557,8 @@ async function delete_friend(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                'Error deleting friend'
+                'Error deleting friend',
+                "FRIENDS_REMOVE_FAILED"
             )
         );
     } finally {

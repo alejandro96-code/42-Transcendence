@@ -7,8 +7,9 @@ import { useNavigate } from 'react-router-dom'
 import { authAPI } from '../services/authAPI'
 import { useAppDispatch } from '../store/hooks'
 import { setUser } from '../store/authSlice'
-import { Dropdown } from 'primereact/dropdown'
 import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from '../components/LanguageSwitcher'
+import { translateApiError } from '../services/apiError'
 
 type AuthMode = 'login' | 'register'
 
@@ -24,22 +25,10 @@ export function Login() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
 
   const handleOAuthLogin = () => {
     authAPI.initiateLogin()
-  }
-  
-  const languageOptions = [
-    { label: 'ES', value: 'es' },
-    { label: 'EU', value: 'eu' },
-    { label: 'EN', value: 'en' },
-  ]
-
-  const currentLanguage = languageOptions.find((opt) => i18n.language?.startsWith(opt.value))?.value || 'es'
-
-  const handleLanguageChange = (e: { value: string }) => {
-    i18n.changeLanguage(e.value)
   }
 
   const switchAuthMode = (nextMode: AuthMode) => {
@@ -89,7 +78,7 @@ export function Login() {
       dispatch(setUser(user))
       navigate('/profile')
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : t('login_authentication_error'),)
+      setErrorMessage(translateApiError(t, error, 'login_authentication_error'))
     } finally {
       setIsSubmitting(false)
     }
@@ -100,14 +89,7 @@ export function Login() {
       <div className="login-shell">
         <Card className="shadow-8">
           <div className='header-languages-wrapper'>
-            <Dropdown
-              inputId='language-select-normal'
-              value={currentLanguage}
-              options={languageOptions}
-              onChange={handleLanguageChange}
-              className='p-inputtext-sm'
-              aria-label={t('language_selector')}
-            />
+            <LanguageSwitcher inputId='language-select-normal' />
           </div>
 
           <div className="text-center mb-5">

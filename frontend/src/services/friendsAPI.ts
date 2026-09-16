@@ -1,3 +1,5 @@
+import { readApiError } from './apiError'
+
 const SERVER_IP = import.meta.env.VITE_SERVER_IP || window.location.hostname
 const API_URL = import.meta.env.VITE_API_URL || `http://${SERVER_IP}:4000`
 
@@ -29,26 +31,12 @@ export interface FriendProfile {
   description?: string | null
 }
 
-async function getError(response: Response, fallback: string) {
-  if (!response.headers.get('content-type')?.includes('application/json')) {
-    return fallback
-  }
-
-  try {
-    const data = await response.json()
-    if (typeof data?.error === 'string') return data.error
-  } catch {
-    return fallback
-  }
-  return fallback
-}
-
 async function request(path: string, options?: RequestInit) {
   const response = await fetch(`${API_URL}/api/friends${path}`, {
     credentials: 'include',
     ...options,
   })
-  if (!response.ok) throw new Error(await getError(response, 'No se pudo completar la operación.'))
+  if (!response.ok) throw await readApiError(response, 'FRIENDS_OPERATION_FAILED')
   return response
 }
 
@@ -70,7 +58,7 @@ export const friendsAPI = {
     })
 
     if (!response.ok) {
-      throw new Error(await getError(response, 'No se pudieron cargar los amigos.'))
+      throw await readApiError(response, 'FRIENDS_LOAD_FAILED')
     }
 
     return response.json()
@@ -110,7 +98,7 @@ async searchFriends(query: string) {
   )
 
   if (!response.ok) {
-    throw new Error('No se pudieron buscar tus amigos.')
+    throw await readApiError(response, 'FRIENDS_SEARCH_FAILED')
   }
 
   return await response.json()
@@ -122,7 +110,7 @@ async searchFriends(query: string) {
     })
 
     if (!response.ok) {
-      throw new Error(await getError(response, 'No se pudo obtener el profile.'))
+      throw await readApiError(response, 'FRIENDS_PROFILE_LOAD_FAILED')
     }
 
     return response.json()

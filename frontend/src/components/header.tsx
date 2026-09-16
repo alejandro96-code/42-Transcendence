@@ -3,18 +3,18 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
-import { Dropdown } from 'primereact/dropdown'
 import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { clearUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
 import { friendsAPI, type Friend } from '../services/friendsAPI'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import logo42 from '../../public/img/42.png'
 
 export function Header() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
@@ -82,20 +82,6 @@ export function Header() {
     setIsMenuOpen(false)
   }
 
-  const languageOptions = [
-    { label: 'ES', value: 'es' },
-    { label: 'EU', value: 'eu' },
-    { label: 'EN', value: 'en' },
-  ]
-
-  const currentLanguage =
-    languageOptions.find((opt) => i18n.language?.startsWith(opt.value))
-      ?.value || 'es'
-
-  const handleLanguageChange = (e: { value: string }) => {
-    i18n.changeLanguage(e.value)
-  }
-
   const handleLogout = async () => {
     await authAPI.logout()
     dispatch(clearUser())
@@ -120,14 +106,9 @@ export function Header() {
 
         <div className="header-mobile-controls">
           <div className="header-mobile-language">
-            <Dropdown
-            inputId="language-select-mobile"
-            name="language-mobile"
-            value={currentLanguage}
-            options={languageOptions}
-            onChange={handleLanguageChange}
-            className="p-inputtext-sm"
-            aria-label={t('language_selector')}
+            <LanguageSwitcher
+              inputId="language-select-mobile"
+              name="language-mobile"
             />
           </div>
 
@@ -161,15 +142,7 @@ export function Header() {
 
         <div className="header-actions">
           <div className="header-languages-wrapper">
-            <Dropdown
-              inputId="language-select-normal"
-              name="language"
-              value={currentLanguage}
-              options={languageOptions}
-              onChange={handleLanguageChange}
-              className="p-inputtext-sm"
-              aria-label={t('language_selector')}
-            />
+            <LanguageSwitcher inputId="language-select-normal" name="language" />
           </div>
 
           {isFriendProfile && user && (

@@ -18,6 +18,7 @@ router.post('/watch/:profileUserId', verify_token, (req, res) => {
     if (!Number.isSafeInteger(profileUserId) || profileUserId <= 0) {
         return res.status(400).json({
             error: 'Invalid profile user ID',
+            errorCode: 'NOTIFICATIONS_INVALID_PROFILE_USER_ID',
         });
     }
 
@@ -32,6 +33,7 @@ router.delete('/watch/:profileUserId', verify_token, (req, res) => {
     if (!Number.isSafeInteger(profileUserId) || profileUserId <= 0) {
         return res.status(400).json({
             error: 'Invalid profile user ID',
+            errorCode: 'NOTIFICATIONS_INVALID_PROFILE_USER_ID',
         });
     }
 

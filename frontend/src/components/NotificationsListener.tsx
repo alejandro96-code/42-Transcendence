@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { Toast } from 'primereact/toast'
+import { useTranslation } from 'react-i18next'
 import { notificationsAPI } from '../services/notificationsAPI'
 
 export function NotificationsListener() {
   const toast = useRef<Toast>(null)
+  const { t } = useTranslation()
 
   useEffect(() => {
     const checkNotifications = async () => {
@@ -13,8 +15,8 @@ export function NotificationsListener() {
         notifications.forEach((notification) => {
           toast.current?.show({
             severity: 'info',
-            summary: 'Nueva notificación',
-            detail: notification.message,
+            summary: t('notifications_toast_title'),
+            detail: t(`notification_${notification.type}`, notification.params),
             life: 5000,
           })
         })
@@ -33,7 +35,7 @@ export function NotificationsListener() {
     return () => {
       clearInterval(interval)
     }
-  }, [])
+  }, [t])
 
   return <Toast ref={toast} position="top-right" />
 }

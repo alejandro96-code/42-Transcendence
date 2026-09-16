@@ -15,7 +15,7 @@ async function update_message(req, res) {
 
     if (!Number.isSafeInteger(messageId) || messageId <= 0 || !content || content.length > 1000) {
         return res.status(400).json(formatErrorJson(
-            400, "Bad Request", "id must be a positive integer and content must contain 1 to 1000 characters"
+            400, "Bad Request", "id must be a positive integer and content must contain 1 to 1000 characters", "MESSAGE_UPDATE_INVALID"
         ));
     }
 
@@ -29,7 +29,7 @@ async function update_message(req, res) {
 
     if (updatedMessage.rows.length === 0) {
         return res.status(404).json(formatErrorJson(
-            404, "Not Found", "Message not found or you are not the sender"
+            404, "Not Found", "Message not found or you are not the sender", "MESSAGE_NOT_FOUND"
         ));
     }
 
@@ -40,7 +40,7 @@ async function read_messages(req, res) {
     const recipientId = getRecipientId(req.params.recipientId);
 
     if (!recipientId || recipientId === req.user.id) {
-        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId");
+        let responseBody = formatErrorJson(400, "Bad Request", "Wrong recipientId", "CHAT_RECIPIENT_INVALID");
         return res.status(400).json(responseBody);
     }
 
@@ -51,7 +51,7 @@ async function read_messages(req, res) {
 
     if (!user_row || user_row.rows.length === 0) {
         return res.status(404).json(
-            formatErrorJson(404, 'Not Found', 'Recipient not found')
+            formatErrorJson(404, 'Not Found', 'Recipient not found', "CHAT_RECIPIENT_NOT_FOUND")
         );
     }
 
@@ -86,12 +86,12 @@ async function create_message(req, res) {
 
     if (!recipientId || recipientId === req.user.id) {
         return res.status(400).json(
-            formatErrorJson(400, "Bad Request", "Wrong recipientId")
+            formatErrorJson(400, "Bad Request", "Wrong recipientId", "CHAT_RECIPIENT_INVALID")
         );
     }
 
     if (!content || content.length == 0) {
-        return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!"))
+        return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!", "MESSAGE_CONTENT_EMPTY"))
     }
 
     if (content.length > 1000) {
@@ -99,7 +99,9 @@ async function create_message(req, res) {
             formatErrorJson(
                 413,
                 "Content Too Large",
-                "Content must be between 1 and 1000 characters long"
+                "Content must be between 1 and 1000 characters long",
+                "MESSAGE_CONTENT_TOO_LONG",
+                { max: 1000 }
             )
         );
     }
@@ -114,7 +116,8 @@ async function create_message(req, res) {
             formatErrorJson(
                 404,
                 "Not found",
-                "Message receiver not found in Database"
+                "Message receiver not found in Database",
+                "CHAT_RECIPIENT_NOT_FOUND"
             )
         );
     }
@@ -132,7 +135,8 @@ async function create_message(req, res) {
             formatErrorJson(
                 500,
                 "Internal Server Error",
-                "Something went bad on message creation"
+                "Something went bad on message creation",
+                "MESSAGE_SEND_FAILED"
             )
         );
     }
@@ -143,7 +147,7 @@ async function create_message(req, res) {
 
         addNotification(recipientId, {
             type: 'new_message',
-            message: `${sender.rows[0].username} te ha enviado un mensaje`,
+            params: { username: sender.rows[0].username },
         }
     );
 
@@ -157,7 +161,7 @@ async function delete_message(req, res) {
     if (!Number.isSafeInteger(messageId) || messageId <= 0 ||
         !Number.isSafeInteger(senderId) || senderId !== req.user.id) {
         return res.status(400).json(formatErrorJson(
-            400, "Bad Request", "id and sender_id are required and sender_id must match the authenticated user"
+            400, "Bad Request", "id and sender_id are required and sender_id must match the authenticated user", "MESSAGE_DELETE_INVALID"
         ));
     }
 
@@ -170,7 +174,7 @@ async function delete_message(req, res) {
 
     if (deletedMessage.rows.length === 0) {
         return res.status(404).json(formatErrorJson(
-            404, "Not Found", "Message not found or you are not the sender"
+            404, "Not Found", "Message not found or you are not the sender", "MESSAGE_NOT_FOUND"
         ));
     }
 

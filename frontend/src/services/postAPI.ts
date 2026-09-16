@@ -1,3 +1,5 @@
+import { ApiError, readApiError } from './apiError'
+
 const SERVER_IP =import.meta.env.VITE_SERVER_IP || window.location.hostname
 const API_URL =import.meta.env.VITE_API_URL ||`http://${SERVER_IP}:4000`
 
@@ -15,56 +17,6 @@ export interface ApiPost {
   media?: string[]
 }
 
-async function readErrorMessage(
-  response: Response,
-  fallbackMessage: string,
-): Promise<string> {
-  if (
-    !response.headers.get('content-type')?.includes('application/json')
-  ) {
-    return fallbackMessage
-  }
-
-  try {
-    const data: unknown = await response.json()
-
-    if (
-      typeof data === 'object' &&
-      data !== null &&
-      'description' in data &&
-      typeof data.description === 'string' &&
-      data.description.length > 0
-    ) {
-      return data.description
-    }
-
-    if (
-      typeof data === 'object' &&
-      data !== null &&
-      'message' in data &&
-      typeof data.message === 'string' &&
-      data.message.length > 0
-    ) {
-      return data.message
-    }
-
-    if (
-      typeof data === 'object' &&
-      data !== null &&
-      'error' in data &&
-      typeof data.error === 'string' &&
-      data.error.length > 0 &&
-      data.error !== 'Bad Request'
-    ) {
-      return data.error
-    }
-  } catch {
-    return fallbackMessage
-  }
-
-  return fallbackMessage
-}
-
 export const postsAPI = {
   async deletePost(postId: number): Promise<void> {
     const response = await fetch(`${API_URL}/api/posts`, {
@@ -78,11 +30,7 @@ export const postsAPI = {
       }),
     })
     if (!response.ok) {
-      const message = await readErrorMessage(
-        response,
-        'No se pudo eliminar la publicación.',
-      )
-      throw new Error(message)
+      throw await readApiError(response, 'POST_DELETE_FAILED')
     }
   },
 
@@ -106,13 +54,7 @@ export const postsAPI = {
     )
 
     if (!response.ok) {
-      const message =
-        await readErrorMessage(
-          response,
-          'No se pudo crear la publicación.',
-        )
-
-      throw new Error(message)
+      throw await readApiError(response, 'POST_CREATE_FAILED')
     }
 
     const data: unknown = await response.json()
@@ -123,9 +65,7 @@ export const postsAPI = {
       !('id' in data) ||
       !('content' in data)
     ) {
-      throw new Error(
-        'Respuesta inválida al crear la publicación.',
-      )
+      throw new ApiError('POST_CREATE_INVALID_RESPONSE')
     }
 
     return data as ApiPost
@@ -162,13 +102,7 @@ export const postsAPI = {
     )
 
     if (!response.ok) {
-      const message =
-        await readErrorMessage(
-          response,
-          'No se pudieron cargar las publicaciones.',
-        )
-
-      throw new Error(message)
+      throw await readApiError(response, 'POSTS_LOAD_FAILED')
     }
 
     const data: unknown =

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useAppSelector } from '../store/hooks'
 import {chatAPI,type ChatMessage,} from '../services/chatAPI'
+import { translateApiError } from '../services/apiError'
 
 import { useTranslation } from 'react-i18next'
 
@@ -65,11 +66,7 @@ export function Chat({activeFriend = null,}: ChatProps) {
         }
       } catch (requestError) {
         if (!cancelled) {
-          setError(
-            requestError instanceof Error
-              ? requestError.message
-              : t('chat_error_message'),
-          )
+          setError(translateApiError(t, requestError, 'chat_error_message'))
         }
       } finally {
         if (!cancelled && showLoading) {
@@ -128,11 +125,7 @@ export function Chat({activeFriend = null,}: ChatProps) {
 
       setMessageText('')
     } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : t('chat_error_message'),
-      )
+      setError(translateApiError(t, requestError, 'chat_error_message'))
     } finally {
       setIsSending(false)
     }

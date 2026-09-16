@@ -7,14 +7,22 @@ export const isAuthenticated = (req, res, next) => {
     if (req.isAuthenticated()) {
         return next();
     }
-    res.status(401).json(formatErrorJson(401, "Unauthorized", "Not Authenticated"));
+    res.status(401).json(formatErrorJson(401, "Unauthorized", "Not Authenticated", "AUTH_REQUIRED"));
 };
 
-export function formatErrorJson(code, error, description) {
+// `errorCode` is a stable, language-independent identifier the frontend maps
+// to a translated message (see frontend/src/services/apiError.ts); `error`
+// stays as an English description for logs/debugging tools.
+export function formatErrorJson(code, error, description, errorCode, params) {
     const errorBody = {
         "code": code,
         "phrase": error,
-        "error": description
+        "error": description,
+        "errorCode": errorCode || "SERVER_ERROR",
+    }
+
+    if (params) {
+        errorBody.params = params;
     }
 
     return errorBody;

@@ -47,7 +47,9 @@ function createRateLimiter({ windowMs, max, name }) {
             return res.status(429).json(formatErrorJson(
                 429,
                 'Too Many Requests',
-                `${name} rate limit exceeded. Retry in ${retryAfter} seconds`
+                `${name} rate limit exceeded. Retry in ${retryAfter} seconds`,
+                'RATE_LIMITED',
+                { seconds: retryAfter }
             ));
         }
 
@@ -143,7 +145,7 @@ async function start_server() {
     app.use((error, request, response, next) => {
         if (error instanceof ValidationError) {
             response.status(400).json(formatErrorJson(400, "Bad Request",
-                error.name + " " + error.validationErrors));
+                error.name + " " + error.validationErrors, "VALIDATION_ERROR"));
             return;
         }
 
@@ -295,7 +297,8 @@ async function start_server() {
                 formatErrorJson(
                     400,
                     "Bad Request",
-                    "No avatar image provided"
+                    "No avatar image provided",
+                    "AUTH_AVATAR_MISSING"
                 )
             );
         }
@@ -306,7 +309,8 @@ async function start_server() {
                 formatErrorJson(
                     400,
                     "Bad Request",
-                    "Invalid avatar image"
+                    "Invalid avatar image",
+                    "AUTH_AVATAR_INVALID_FORMAT"
                 )
             );
         }
@@ -318,7 +322,7 @@ async function start_server() {
 
             if (imageBuffer.length === 0 || imageBuffer.length > maxAvatarBytes) {
                 return res.status(413).json(
-                    formatErrorJson(413, "Content Too Large", "Avatar must be smaller than 2 MB")
+                    formatErrorJson(413, "Content Too Large", "Avatar must be smaller than 2 MB", "AUTH_AVATAR_TOO_LARGE", { maxSizeMB: 2 })
                 );
             }
 
@@ -344,7 +348,8 @@ async function start_server() {
                     formatErrorJson(
                         404,
                         "Not Found",
-                        "User not found"
+                        "User not found",
+                        "AUTH_USER_NOT_FOUND"
                     )
                 );
             }
@@ -357,7 +362,8 @@ async function start_server() {
                 formatErrorJson(
                     500,
                     "Internal server error",
-                    `Error on avatar upload: ${error}`
+                    `Error on avatar upload: ${error}`,
+                    "SERVER_ERROR"
                 )
             );
         }
@@ -378,26 +384,26 @@ async function start_server() {
         const email = normalizeText(req.body?.email).toLowerCase();
         
         if (!USERNAME_REGEX.test(username)) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")'));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Usernames must be between 3 and 30 characters long (allowed characters: letters, numbers, ".", "_" and "-")', 'AUTH_INVALID_USERNAME'));
         }
         if (!fullName || fullName.length > 100) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Full name is mandatory and must be at most 100 characters long'));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Full name is mandatory and must be at most 100 characters long', 'AUTH_INVALID_FULL_NAME'));
         }
         if (!EMAIL_REGEX.test(email) || email.length > 100) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Invalid email'));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", 'Invalid email', 'AUTH_INVALID_EMAIL'));
         }
         if (password.length < MIN_PASSWORD_LENGTH) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", `Password must be at least ${MIN_PASSWORD_LENGTH} long`));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", `Password must be at least ${MIN_PASSWORD_LENGTH} long`, 'AUTH_PASSWORD_TOO_SHORT', { minLength: MIN_PASSWORD_LENGTH }));
         }
 
         try {
             const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
             if (existingUser.rows.length > 0) {
-                return res.status(409).json(formatErrorJson(409, "Conflict", 'Username already taken'));
+                return res.status(409).json(formatErrorJson(409, "Conflict", 'Username already taken', 'AUTH_USERNAME_TAKEN'));
             }
             const existingEmail = await pool.query('SELECT id FROM users WHERE LOWER(email) = LOWER($1)', [email]);
             if (existingEmail.rows.length > 0) {
-                return res.status(409).json(formatErrorJson(409, "Conflict", 'Email already associated to an account'));
+                return res.status(409).json(formatErrorJson(409, "Conflict", 'Email already associated to an account', 'AUTH_EMAIL_TAKEN'));
             }
 
             const passwordHash = hashPassword(password);
@@ -412,12 +418,12 @@ async function start_server() {
             const user = result.rows[0];
             req.login(user, (error) => {
                 if (error) {
-                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`, "SERVER_ERROR"));
                 }
                 return res.status(201).json(toPublicUser(user));
             });
         } catch (error) {
-            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
+            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`, "SERVER_ERROR"));
         }
     });
 
@@ -426,7 +432,7 @@ async function start_server() {
         const password = String(req.body?.password ?? '');
 
         if (!username || !password) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", "Username and password can't be blank"));
+            return res.status(400).json(formatErrorJson(400, "Bad Request", "Username and password can't be blank", "AUTH_CREDENTIALS_MISSING"));
         }
 
         try {
@@ -434,28 +440,28 @@ async function start_server() {
             const user = result.rows[0];
 
             if (!user || !verifyPassword(password, user.password_hash)) {
-                return res.status(401).json(formatErrorJson(401, "Unauthorized", "Wrong password or username"));
+                return res.status(401).json(formatErrorJson(401, "Unauthorized", "Wrong password or username", "AUTH_INVALID_CREDENTIALS"));
             }
 
             req.login(user, (error) => {
                 if (error) {
-                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`, "SERVER_ERROR"));
                 }
                 return res.json(toPublicUser(user));
             });
         } catch (error) {
-            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`));
+            return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on login: ${error}`, "SERVER_ERROR"));
         }
     });
 
     app.post('/api/auth/logout', (req, res) => {
         req.logout((err) => {
             if (err) {
-                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${err}`));
+                return res.status(500).json(formatErrorJson(500, "Internal server error", `Error on logout: ${err}`, "SERVER_ERROR"));
             }
             req.session.destroy((sessionError) => {
                 if (sessionError) {
-                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error destroying session: ${sessionError}`));
+                    return res.status(500).json(formatErrorJson(500, "Internal server error", `Error destroying session: ${sessionError}`, "SERVER_ERROR"));
                 }
                 res.clearCookie('connect.sid');
                 return res.status(204).end();
@@ -472,7 +478,9 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
             formatErrorJson(
                 400,
                 "Bad Request",
-                `Profession must be less than ${PROFILE_PROFESSION_MAX_LENGTH} characters long`
+                `Profession must be less than ${PROFILE_PROFESSION_MAX_LENGTH} characters long`,
+                "AUTH_PROFESSION_TOO_LONG",
+                { maxLength: PROFILE_PROFESSION_MAX_LENGTH }
             )
         );
     }
@@ -482,7 +490,9 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
             formatErrorJson(
                 400,
                 "Bad Request",
-                `Description must be less than ${PROFILE_DESCRIPTION_MAX_LENGTH} characters long`
+                `Description must be less than ${PROFILE_DESCRIPTION_MAX_LENGTH} characters long`,
+                "AUTH_DESCRIPTION_TOO_LONG",
+                { maxLength: PROFILE_DESCRIPTION_MAX_LENGTH }
             )
         );
     }
@@ -509,7 +519,8 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
             formatErrorJson(
                 500,
                 "Internal server error",
-                `Error on updating user: ${error}`
+                `Error on updating user: ${error}`,
+                "SERVER_ERROR"
             )
         );
     }
@@ -525,7 +536,7 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
             res.json(result.rows.map(toPublicUser));
         } catch (error) {
             console.error(`Error on user retrieval: ${error}`);
-            res.status(500).json(formatErrorJson(500, "Internal server error", `Error on user retrieval: ${error}`));
+            res.status(500).json(formatErrorJson(500, "Internal server error", `Error on user retrieval: ${error}`, "SERVER_ERROR"));
         }
     });
 
@@ -534,7 +545,7 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
             await pool.query('SELECT 1');
             res.json({ status: 'ok', database: 'connected' });
         } catch (error) {
-            res.status(500).json(formatErrorJson(500, "Internal server error", `Database disconnected`));
+            res.status(500).json(formatErrorJson(500, "Internal server error", `Database disconnected`, "SERVER_ERROR"));
         }
     });
 

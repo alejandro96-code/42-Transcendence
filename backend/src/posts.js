@@ -84,7 +84,8 @@ async function read_posts(req, res) {
         const responseBody = formatErrorJson(
             500,
             "Internal Server Error",
-            "Couldn't read posts"
+            "Couldn't read posts",
+            "POSTS_LOAD_FAILED"
         );
 
         res.status(500).json(responseBody);
@@ -98,7 +99,9 @@ async function create_post(req, res) {
             return res.status(400).json(formatErrorJson(
                 400,
                 "Bad Request",
-                "Attachment must be a valid file no larger than 2 MB"
+                "Attachment must be a valid file no larger than 2 MB",
+                "POST_ATTACHMENT_INVALID",
+                { maxSizeMB: 2 }
             ));
         }
         const media = serializedAttachment
@@ -108,7 +111,7 @@ async function create_post(req, res) {
         const content = String(req.body?.content ?? '').trim();
 
         if (!content || content.length == 0) {
-            return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!"))
+            return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!", "POST_CONTENT_EMPTY"))
         }
 
         if (content.length > 200) {
@@ -116,7 +119,9 @@ async function create_post(req, res) {
                 formatErrorJson(
                     413,
                     "Content Too Large",
-                    "Content must be between 1 and 1000 characters long"
+                    "Content must be between 1 and 1000 characters long",
+                    "POST_CONTENT_TOO_LONG",
+                    { max: 200 }
                 )
             );
         }
@@ -131,7 +136,8 @@ async function create_post(req, res) {
                 formatErrorJson(
                     404,
                     "Not found",
-                    "Post author not found in Database"
+                    "Post author not found in Database",
+                    "POST_AUTHOR_NOT_FOUND"
                 )
             );
         }
@@ -162,7 +168,8 @@ async function create_post(req, res) {
                 formatErrorJson(
                     500,
                     "Internal Server Error",
-                    "Something went bad on post creation"
+                    "Something went bad on post creation",
+                    "POST_CREATE_FAILED"
                 )
             );
         }
@@ -185,7 +192,7 @@ async function create_post(req, res) {
             if (user.id !== authorId) {
                 addNotification(user.id, {
                     type: 'post_mention',
-                    message: `${author_username.rows[0].username} has mentioned you in a post`,
+                    params: { username: author_username.rows[0].username },
                 });
             }
             });
@@ -195,14 +202,14 @@ async function create_post(req, res) {
             if (viewerId !== authorId) {
                 addNotification(viewerId, {
                     type: 'post_created',
-                    message: `${author_username.rows[0].username} has created a new post`,
+                    params: { username: author_username.rows[0].username },
                 });
             }
         }
 
         return res.status(201).json(new_post.rows[0]);
     } catch (error) {
-        return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation"));
+        return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation", "POST_CREATE_FAILED"));
     }
 }
 
@@ -221,20 +228,20 @@ async function delete_post(req, res) {
         const responseBody = formatErrorJson(
             404,
             "Not Found",
-            "Post not found or you are not the author"
+            "Post not found or you are not the author",
+            "POST_NOT_FOUND"
         );
         return res.status(404).json(responseBody);
     }
 
     const deletedPost = deleted_post.rows[0];
-    const authorUsername =
-        deletedPost.author_username || 'A user';
+    const authorUsername = deletedPost.author_username || '';
 
     for (const viewerId of getProfileViewers(req.user.id)) {
         if (viewerId !== req.user.id) {
             addNotification(viewerId, {
                 type: 'post_deleted',
-                message: `${authorUsername} has deleted a post`,
+                params: { username: authorUsername },
             });
         }
     }

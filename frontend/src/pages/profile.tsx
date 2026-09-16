@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Header } from '../components/header'
 import { Footer } from '../components/footer'
 import { PersonalData } from '../components/personal_data'
@@ -9,6 +10,7 @@ import { Chat } from '../components/chat'
 import {friendsAPI,type FriendProfile,} from '../services/friendsAPI'
 
 export function Profile() {
+  const { t } = useTranslation()
   const { friendId } = useParams()
   const [activeChatFriend, setActiveChatFriend] = useState<{
     id: number
@@ -66,7 +68,7 @@ export function Profile() {
 
       <main className="app-content">
         <h1 className="sr-only">
-          Profile de Transcendence
+          {t('profile_page_title')}
         </h1>
 
         <div className="grid content-grid">

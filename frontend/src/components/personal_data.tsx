@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setUser } from '../store/authSlice'
 import { authAPI } from '../services/authAPI'
+import { translateApiError } from '../services/apiError'
 
 interface ProfileUser {
   full_name: string
@@ -94,11 +95,7 @@ export function PersonalData({
       })
       setIsEditing(false)
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : t('personal_data_save_error'),
-      )
+      setErrorMessage(translateApiError(t, error, 'personal_data_save_error'))
     } finally {
       setIsSaving(false)
     }
@@ -122,11 +119,7 @@ export function PersonalData({
       dispatch(setUser(updatedUser))
       setAvatarLoadError(false)
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : t('personal_data_avatar_error'),
-      )
+      setErrorMessage(translateApiError(t, error, 'personal_data_avatar_error'))
     } finally {
       setIsUploadingAvatar(false)
 
