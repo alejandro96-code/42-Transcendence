@@ -18,4 +18,25 @@ export const notificationsAPI = {
 
     return response.json()
   },
+
+  async watchProfile(profileUserId: number): Promise<void> {
+    await fetch(
+      `${API_URL}/api/notifications/watch/${profileUserId}`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      },
+    )
+  },
+
+  async unwatchProfile(profileUserId: number): Promise<void> {
+    await fetch(
+      `${API_URL}/api/notifications/watch/${profileUserId}`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+        keepalive: true,
+      },
+    )
+  },
 }

@@ -2,7 +2,10 @@ import express from 'express';
 import { formatErrorJson } from './utils.js';
 import { pool } from "./db.js";
 import { verify_token } from './token.js';
-import { addNotification } from './notifications.js';
+import {
+    addNotification,
+    getProfileViewers,
+} from './notifications.js';
 
 const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024;
 
@@ -155,40 +158,49 @@ async function create_post(req, res) {
         );
 
         if (!new_post || new_post.rows.length === 0) {
-    return res.status(500).json(
-        formatErrorJson(
-            500,
-            "Internal Server Error",
-            "Something went bad on post creation"
-        )
-    );
-}
+            return res.status(500).json(
+                formatErrorJson(
+                    500,
+                    "Internal Server Error",
+                    "Something went bad on post creation"
+                )
+            );
+        }
 
-const mentionedUsernames = [...new Set(
-        content.match(/@([a-zA-Z0-9_]+)/g)?.map(
-            mention => mention.substring(1)
-        ) || []
-    )];
+        const mentionedUsernames = [...new Set(
+            content.match(/@([a-zA-Z0-9_]+)/g)?.map(
+                mention => mention.substring(1)
+            ) || []
+        )];
 
-    if (mentionedUsernames.length > 0) {
-        const mentionedUsers = await pool.query(
-            `SELECT id, username
-            FROM users
-            WHERE LOWER(username) = ANY($1::text[])`,
-            [mentionedUsernames.map(username => username.toLowerCase())]
-        );
+        if (mentionedUsernames.length > 0) {
+            const mentionedUsers = await pool.query(
+                `SELECT id, username
+                FROM users
+                WHERE LOWER(username) = ANY($1::text[])`,
+                [mentionedUsernames.map(username => username.toLowerCase())]
+            );
 
         mentionedUsers.rows.forEach((user) => {
             if (user.id !== authorId) {
                 addNotification(user.id, {
                     type: 'post_mention',
-                    message: `${author_username.rows[0].username} te ha mencionado en una publicación`,
+                    message: `${author_username.rows[0].username} has mentioned you in a post`,
                 });
             }
-        });
-    }
+            });
+        }
 
-    return res.status(201).json(new_post.rows[0]);
+        for (const viewerId of getProfileViewers(authorId)) {
+            if (viewerId !== authorId) {
+                addNotification(viewerId, {
+                    type: 'post_created',
+                    message: `${author_username.rows[0].username} has created a new post`,
+                });
+            }
+        }
+
+        return res.status(201).json(new_post.rows[0]);
     } catch (error) {
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation"));
     }
@@ -212,6 +224,19 @@ async function delete_post(req, res) {
             "Post not found or you are not the author"
         );
         return res.status(404).json(responseBody);
+    }
+
+    const deletedPost = deleted_post.rows[0];
+    const authorUsername =
+        deletedPost.author_username || 'A user';
+
+    for (const viewerId of getProfileViewers(req.user.id)) {
+        if (viewerId !== req.user.id) {
+            addNotification(viewerId, {
+                type: 'post_deleted',
+                message: `${authorUsername} has deleted a post`,
+            });
+        }
     }
 
     return res.status(204).end();

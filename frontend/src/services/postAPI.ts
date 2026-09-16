@@ -10,6 +10,7 @@ export interface PostAttachment {
 export interface ApiPost {
   id: number
   content: string
+  author_id: number
   created_at?: string
   media?: string[]
 }
@@ -65,6 +66,26 @@ async function readErrorMessage(
 }
 
 export const postsAPI = {
+  async deletePost(postId: number): Promise<void> {
+    const response = await fetch(`${API_URL}/api/posts`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        id: postId,
+      }),
+    })
+    if (!response.ok) {
+      const message = await readErrorMessage(
+        response,
+        'No se pudo eliminar la publicación.',
+      )
+      throw new Error(message)
+    }
+  },
+
   async createPost(
     content: string,
     attachment?: PostAttachment | null,

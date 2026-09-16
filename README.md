@@ -40,9 +40,9 @@ After startup, the application is available at `https://<SERVER_IP>:8443`. Postg
 | `make docker-down-all` | Stops all application and persistent database containers. |
 | `make docker-restart` | Restarts frontend and backend container services. |
 | `make populate` | Populate the database with mocked-up users. |
-| `make test-build` | Install dependencies to executes the test. |
-| `make test-launch` | Launches the tester with all scenarios and shows failed or passed depending on result |
-| `make test-remove` | Eliminate dependencies to executes the test. |
+| `make tester-build` | Install dependencies to executes the test. |
+| `make tester-launch` | Launches the tester with all scenarios and shows failed or passed depending on result |
+| `make tester-remove` | Eliminate dependencies to executes the test. |
 
 *Note:* If an existing PostgreSQL volume is mounted and tables are missing, `make docker-up` automatically re-runs `backend/init.sql`. Alternatively, run `make docker-clean` to purge volumes and reset the state.
 

@@ -6,12 +6,15 @@ import { Paginator, type PaginatorPageChangeEvent} from 'primereact/paginator'
 import { useTranslation } from 'react-i18next'
 import { postsAPI, type ApiPost, type PostAttachment} from '../services/postAPI'
 import { friendsAPI } from '../services/friendsAPI'
+import { useAppSelector } from '../store/hooks'
+import { notificationsAPI } from '../services/notificationsAPI'
 
 const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024
 
 interface Post {
   id: number
   content: string
+  authorId: number
   date: string
   isFromFriend: boolean
   attachment?: PostAttachment | null
@@ -83,6 +86,10 @@ export function PostFeed({
   userId,
 }: PostFeedProps) {
   const { t, i18n } = useTranslation()
+  const currentUser = useAppSelector(
+    (state) => state.auth.user,
+  )
+  const openedProfileId = userId ?? currentUser?.id
   const POSTS_PER_PAGE = 4
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -102,6 +109,8 @@ export function PostFeed({
     useState(false)
   const [mentionStart, setMentionStart] =
     useState<number | null>(null)
+  const [deletingPostId, setDeletingPostId] =
+  useState<number | null>(null)
 
   const onPageChange = (event: PaginatorPageChangeEvent) => {
     setFirst(event.first)
@@ -255,6 +264,7 @@ export function PostFeed({
 
       const newPost: Post = {
         id: Number(createdPost.id),
+        authorId: currentUser?.id ?? 0,
         content: createdPost.content || content,
         date: createdPost.created_at
           ? new Date(
@@ -289,6 +299,38 @@ export function PostFeed({
     }
   }
 
+const handleDeletePost = async (postId: number) => {
+    const confirmed = window.confirm(
+      '¿Seguro que quieres eliminar esta publicación?',
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setDeletingPostId(postId)
+    setImageError('')
+
+    try {
+      await postsAPI.deletePost(postId)
+
+      setPosts((currentPosts) =>
+        currentPosts.filter((post) => post.id !== postId),
+      )
+
+      setFirst((currentFirst) => Math.max(0, currentFirst - 1))
+    } catch (error) {
+      setImageError(
+        error instanceof Error
+          ? error.message
+          : 'No se pudo eliminar la publicación.',
+      )
+    } finally {
+      setDeletingPostId(null)
+    }
+  }
+
+  
   useEffect(() => {
     let cancelled = false
 
@@ -318,6 +360,7 @@ export function PostFeed({
         const loadedPosts: Post[] =
           data.map((post: ApiPost) => ({
             id: Number(post.id),
+            authorId: Number(post.author_id),
             content: post.content,
             date: post.created_at
               ? new Date(
@@ -362,12 +405,12 @@ export function PostFeed({
     void loadPosts()
 
     if (
-      !readOnly &&
+      readOnly ||
       filter === 'mentions'
     ) {
       const interval = setInterval(() => {
         void loadPosts()
-      }, 2000)
+      }, 1000)
 
       return () => {
         cancelled = true
@@ -385,6 +428,18 @@ export function PostFeed({
     i18n.language,
     t,
   ])
+
+  useEffect(() => {
+    if (!openedProfileId) {
+      return
+    }
+
+    void notificationsAPI.watchProfile(openedProfileId)
+
+    return () => {
+      void notificationsAPI.unwatchProfile(openedProfileId)
+    }
+  }, [openedProfileId])
 
   const filteredPosts = posts
 
@@ -660,9 +715,28 @@ export function PostFeed({
               key={post.id}
               className="w-full"
             >
-              <p className="texto mt-0 mb-5">
-                {post.content}
-              </p>
+             <div className="flex justify-content-between align-items-start">
+               <p className="texto mt-0 mb-5">
+                 {post.content}
+               </p>
+
+               {!readOnly &&
+                 currentUser?.id === post.authorId && (
+                   <Button
+                     type="button"
+                     icon="pi pi-trash"
+                     severity="danger"
+                     text
+                     rounded
+                     loading={deletingPostId === post.id}
+                     disabled={deletingPostId !== null}
+                     aria-label="Eliminar publicación"
+                     onClick={() => {
+                       void handleDeletePost(post.id)
+                     }}
+                   />
+                 )}
+             </div>
 
               {post.attachment &&
                 (post.attachment.type.startsWith(
