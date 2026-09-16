@@ -29,20 +29,6 @@ function serializeAttachment(attachment) {
     });
 }
 
-async function read_comments(req, res) {
-    const posts_lists = await pool.query(
-        'SELECT * FROM posts WHERE parent = $1 FETCH FIRST $2 ROWS ONLY',
-        [req.body.parent, req.body.amount || 50]
-    );
-
-    if (!posts_lists || posts_lists.rows.length === 0) {
-        let responseBody = formatErrorJson(404, "Not Found", "No posts were found in database");
-        return res.status(404).json(responseBody);
-    }
-
-    res.json(posts_lists.rows);
-}
-
 async function read_posts(req, res) {
     try {
         const targetUser = req.query.user || req.user.id;
@@ -122,6 +108,16 @@ async function create_post(req, res) {
             return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!"))
         }
 
+        if (content.length > 200) {
+            return res.status(413).json(
+                formatErrorJson(
+                    413,
+                    "Content Too Large",
+                    "Content must be between 1 and 1000 characters long"
+                )
+            );
+        }
+
         const author_username = await pool.query(
             'SELECT username FROM users WHERE id = $1',
             [authorId]
@@ -192,31 +188,10 @@ const mentionedUsernames = [...new Set(
         });
     }
 
-    return res.status(201).json(new_post.rows);
+    return res.status(201).json(new_post.rows[0]);
     } catch (error) {
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation"));
     }
-}
-
-async function create_comment(req, res) {
-    const parent = req.body.parent ? req.body.parent : 0
-
-    const new_post = await pool.query(
-            `INSERT INTO posts (author_id, author_username, content, media, parent)
-            VALUES($1, $2, $3, $4, $5) RETURNING *
-            `,
-            [
-                req.body.author_id, author_username.rows[0].username,
-                req.body.content, media, parent
-            ]
-        );
-
-    if (!new_post || new_post.rows.length === 0) {
-        let responseBody = formatErrorJson(500, "Internal Server Error", "Something went bad on post creation");
-        return res.status(500).json(responseBody);
-    }
-
-    res.status(201).json(new_post.rows);
 }
 
 async function delete_post(req, res) {
@@ -246,8 +221,6 @@ const router = express.Router();
 
 router.use(express.json());
 
-router.get("/comments", verify_token, read_comments);
-router.post("/comments", verify_token, create_comment);
 router.get("/", verify_token, read_posts);
 router.post("/", verify_token, create_post);
 router.delete("/", verify_token, delete_post);

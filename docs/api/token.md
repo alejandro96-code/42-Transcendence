@@ -70,7 +70,7 @@ Example:
 ```json
 {
     "code": 400,
-    "title": "Bad Request",
+    "phrase": "Bad Request",
     "message": "Username and password can't be blank"
 }
 ```
@@ -82,7 +82,7 @@ Example:
 ```json
 {
     "code": 404,
-    "title": "Not Found",
+    "phrase": "Not Found",
     "message": "User not found in database"
 }
 ```
@@ -112,7 +112,7 @@ Example:
 ```json
 {
     "code": 401,
-    "title": "Unauthorized",
+    "phrase": "Unauthorized",
     "message": "Bad token"
 }
 ```

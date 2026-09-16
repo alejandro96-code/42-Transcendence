@@ -90,7 +90,11 @@ async function create_message(req, res) {
         );
     }
 
-    if (!content || content.length > 1000) {
+    if (!content || content.length == 0) {
+        return res.status(400).json(formatErrorJson(400, "Bad Request", "Message content can't be empty!"))
+    }
+
+    if (content.length > 1000) {
         return res.status(413).json(
             formatErrorJson(
                 413,

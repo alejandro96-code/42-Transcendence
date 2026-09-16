@@ -131,7 +131,6 @@ Total Points: 20 points
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Web | Frontend and backend frameworks | Major | 2 | React, TypeScript, and Vite structure the client; Node.js and Express expose server logic. This combination cleanly separates presentation, state, API, and persistence. | alejanr2, fcasaubo |
 | Web | User interaction | Major | 2 | The UI allows editing profiles, posting, reacting, sending friend requests, accepting or rejecting them, and chatting. React Router, Redux Toolkit, and reusable components ensure smooth interaction. | alejanr2, xortega |
-| Web | Public API | Major | 2 | A REST API was implemented in Express for authentication, profiles, posts, friendships, and chat. Routes validate data, return structured errors, and protect private resources via session. | fcasaubo, xortega |
 | Web | Notification system | Minor | 1 | Pending friend requests and mentions in posts act as in-app notifications. They are retrieved via request endpoints and the feed mention filter. | xortega, alejanr2 |
 | Web | Custom design system | Minor | 1 | A custom visual identity was created with SCSS, variables, responsive layouts, and components for profile, posts, friends, header, and chat. PrimeReact and PrimeFlex are used as support, not as a replacement for custom design. | alejanr2 |
 | Web | Advanced search | Minor | 1 | The header allows searching friends by username or full name. The search is restricted to accepted friendships, sorts results, and limits the response to maintain performance. | alejanr2, xortega |
@@ -143,7 +142,7 @@ Total Points: 20 points
 | User Management | OAuth 2.0 Remote Authentication | Minor | 1 | Passport and passport-42 integrate the 42 intra. On first login, the user is created; subsequent logins update public data from the provider. | fcasaubo |
 | AI | Content moderation | Minor | 1 | Offensive words in names, profiles, posts, and messages are filtered before storage. module configures filtering for multiple languages, and the API rejects disallowed content. | fcasaubo, andefern |
 | Modules of Choice | Custom Module: Initial Social Network Seed | Minor | 1 | A mock SQL test script was prepared to provide a local account for testing the platform without relying exclusively on OAuth. This starting point makes it easy to verify linked data across profiles, posts, friends, and chat. | xortega, fcasaubo |
-| Modules of Choice | Custom Module: Social api test | Minor | 1 | Tester with natural language (using Behave) that executes many scenarios, validating the API calls. | xortega, fcasaubo |
+| Modules of Choice | Custom Module: Social api test | Major | 2 | Tester with natural language (using Behave) that executes many scenarios, validating the API calls. | xortega, fcasaubo |
 
 Calculation: 5 major modules × 2 points = 10 points; 10 minor modules × 1 point = 10 points. Total: 20 points.
 
