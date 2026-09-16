@@ -20,6 +20,8 @@ Base URL: `https://<SERVER_IP>:8443`. Set `TOKEN` using
 | DELETE | `/api/posts` | Session or token |
 | GET/POST/PATCH/DELETE | `/api/friends/...` | Session or token |
 | GET | `/api/notifications` | Session or token |
+| GET/POST | `/api/public/users`, `/api/public/posts` | API key |
+| PUT/DELETE | `/api/public/posts/:postId` | API key |
 
 ## Smoke tests
 
@@ -35,6 +37,10 @@ curl -k -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/friends"
 Detailed request bodies and one cURL command for every friends and chat route
 are documented in [friends_endpoints.md](/home/aleja/42-Transcendence/docs/api/friends_endpoints.md)
 and [chat_endpoints.md](/home/aleja/42-Transcendence/docs/api/chat_endpoints.md).
+
+The `/api/public/*` routes are a separate, API-key-secured surface for
+external integrations — see
+[public_api.md](/home/aleja/42-Transcendence/docs/api/public_api.md).
 
 All endpoints can return `429 Too Many Requests`; retry after the seconds
 specified in the `Retry-After` response header.

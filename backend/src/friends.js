@@ -575,6 +575,7 @@ router.get('/requests', verify_token, read_friend_requests);
 router.post('/heartbeat', verify_token, create_heartbeat);
 router.post('/requests', verify_token, create_friend_request);
 router.patch('/requests/:requestId', verify_token, update_friend_request);
+router.put('/requests/:requestId', verify_token, update_friend_request);
 router.delete('/:friendId', verify_token, delete_friend);
 
 export default router;

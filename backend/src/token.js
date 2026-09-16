@@ -13,27 +13,35 @@ async function get_token(req, res) {
         return res.status(400).json(formatErrorJson(400, "Bad Request", "Username and password can't be blank", "AUTH_CREDENTIALS_MISSING"));
     }
 
-    const result = await pool.query('SELECT * FROM users WHERE username = $1 LIMIT 1', [username]);
-    const user = result.rows[0];
-
-    const user_rows = await pool.query(
-        'SELECT id, user_role, password_hash FROM users WHERE username = $1',
-        [username]
-    );
-
-    if (!user_rows || user_rows.rows.length == 0 || !verifyPassword(password, user_rows.rows[0].password_hash)) {
-        return res.status(404).json(formatErrorJson(404, "Not Found", "User not found in database", "AUTH_USER_NOT_FOUND"));
-    }
-
     const jwt_secret = process.env.JWT_SECRET;
-    const token_expiry = process.env.TOKEN_EXPIRY || "2";
 
-    const token_data = {
-        userId: user_rows.rows[0].id,
-        admin: user_rows.rows[0].user_role == "admin" ? true : false,
+    if (!jwt_secret) {
+        console.error('JWT_SECRET is not configured');
+        return res.status(500).json(formatErrorJson(500, "Internal server error", "Token issuing is not configured", "SERVER_ERROR"));
     }
 
-    res.status(200).json({"token": jwt.sign(token_data, jwt_secret, {expiresIn: token_expiry + "h"})});
+    try {
+        const user_rows = await pool.query(
+            'SELECT id, user_role, password_hash FROM users WHERE username = $1',
+            [username]
+        );
+
+        if (!user_rows || user_rows.rows.length == 0 || !verifyPassword(password, user_rows.rows[0].password_hash)) {
+            return res.status(404).json(formatErrorJson(404, "Not Found", "User not found in database", "AUTH_USER_NOT_FOUND"));
+        }
+
+        const token_expiry = process.env.TOKEN_EXPIRY || "2";
+
+        const token_data = {
+            userId: user_rows.rows[0].id,
+            admin: user_rows.rows[0].user_role == "admin" ? true : false,
+        }
+
+        return res.status(200).json({"token": jwt.sign(token_data, jwt_secret, {expiresIn: token_expiry + "h"})});
+    } catch (error) {
+        console.error('Error issuing token:', error);
+        return res.status(500).json(formatErrorJson(500, "Internal server error", "Error issuing token", "SERVER_ERROR"));
+    }
 }
 
 export function verify_token(req, res, next) {

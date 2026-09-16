@@ -86,6 +86,7 @@ setup:
 			db_password=$$(openssl rand -hex 24); \
 			session_secret=$$(openssl rand -hex 32); \
 			jwt_secret=$$(openssl rand -hex 32); \
+			public_api_key=$$(openssl rand -hex 32); \
 			\
 			sed \
 				-e "s|^SERVER_IP=.*|SERVER_IP=$$server_ip|" \
@@ -94,6 +95,7 @@ setup:
 				-e "s|^FORTYTWO_CLIENT_ID=.*|FORTYTWO_CLIENT_ID=$$ft_id|" \
 				-e "s|^FORTYTWO_CLIENT_SECRET=.*|FORTYTWO_CLIENT_SECRET=$$ft_secret|" \
 				-e "s|^JWT_SECRET=.*|JWT_SECRET=$$jwt_secret|" \
+				-e "s|^PUBLIC_API_KEY=.*|PUBLIC_API_KEY=$$public_api_key|" \
 				-e "s|^FORTYTWO_CALLBACK_URL=.*|FORTYTWO_CALLBACK_URL=$$callback_url|" \
 				-e "s|^FRONTEND_URL=.*|FRONTEND_URL=$$frontend_url|" \
 				backend/.env.example > backend/.env; \
@@ -108,6 +110,7 @@ setup:
 			echo "$(GREEN)✓ FORTYTWO_CLIENT_ID configured$(NC)"; \
 			echo "$(GREEN)✓ FORTYTWO_CLIENT_SECRET configured$(NC)"; \
 			echo "$(GREEN)✓ JWT_SECRET configured$(NC)"; \
+			echo "$(GREEN)✓ PUBLIC_API_KEY generated automatically$(NC)"; \
 			echo "$(GREEN)✓ DB_PASSWORD generated automatically$(NC)"; \
 			echo "$(GREEN)✓ SESSION_SECRET generated automatically$(NC)"; \
 			echo ""; \

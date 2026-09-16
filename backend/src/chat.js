@@ -188,6 +188,7 @@ router.use(express.json());
 router.get('/:recipientId', verify_token, read_messages);
 router.post('/:recipientId', verify_token, create_message);
 router.patch("/", verify_token, update_message);
+router.put("/", verify_token, update_message);
 router.delete("/", verify_token, delete_message);
 
 export default router;

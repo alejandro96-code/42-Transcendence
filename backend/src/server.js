@@ -13,6 +13,7 @@ import token_endpoints from "./token.js"
 import { isAuthenticated, formatErrorJson, hashPassword, verifyPassword } from "./utils.js"
 import { verify_token } from "./token.js";
 import notifications_endpoints from "./notificationsRoutes.js";
+import public_api_endpoints from "./publicApi.js";
 
 const MIN_PASSWORD_LENGTH = 6;
 const USERNAME_REGEX = /^[a-zA-Z0-9._-]{3,30}$/;
@@ -139,13 +140,13 @@ async function start_server() {
     app.use(passport.session());
 
     const apiRateLimit = createRateLimiter({
-        //windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
-        //max: Number(process.env.API_RATE_LIMIT_MAX) || 300,
+        windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
+        max: Number(process.env.API_RATE_LIMIT_MAX) || 300,
         name: 'API'
     });
     const authRateLimit = createRateLimiter({
-        //windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
-        //max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 20,
+        windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
+        max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 20,
         name: 'Authentication'
     });
     app.use('/api', apiRateLimit);
@@ -429,7 +430,7 @@ async function start_server() {
         });
     });
 
-app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
+const updateProfile = async (req, res) => {
     const profession = normalizeText(req.body?.profession);
     const description = normalizeText(req.body?.description);
 
@@ -484,7 +485,10 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
             )
         );
     }
-});
+};
+
+    app.patch('/api/auth/me', isAuthenticated, updateProfile);
+    app.put('/api/auth/me', isAuthenticated, updateProfile);
 
     app.get('/', (req, res) => {
         res.json({ message: 'Transcendence API working!' });
@@ -514,6 +518,7 @@ app.patch('/api/auth/me', isAuthenticated, async (req, res) => {
     app.use("/api/friends", friends_endpoints);
     app.use("/api/token", token_endpoints);
     app.use("/api/notifications", notifications_endpoints);
+    app.use("/api/public", public_api_endpoints);
 
     try {
         app.listen(PORT, '0.0.0.0', () => {
