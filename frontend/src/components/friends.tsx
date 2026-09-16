@@ -127,22 +127,6 @@ export function Friends({
     }
   }, [ownerUserId, readOnly, t])
 
-  useEffect(() => {
-    if (readOnly || ownerUserId) {
-      return
-    }
-
-    void friendsAPI.heartbeat()
-
-    const interval = setInterval(() => {
-      void friendsAPI.heartbeat()
-    }, 10000)
-
-    return () => {
-      clearInterval(interval)
-    }
-  }, [ownerUserId, readOnly])
-
   const sortedFriends = useMemo(
     () =>
       [...friendsList].sort((a, b) =>
