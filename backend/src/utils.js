@@ -1,4 +1,3 @@
-import express, { response } from 'express';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { Validator } from "express-json-validator-middleware";
 
@@ -10,9 +9,6 @@ export const isAuthenticated = (req, res, next) => {
     res.status(401).json(formatErrorJson(401, "Unauthorized", "Not Authenticated", "AUTH_REQUIRED"));
 };
 
-// `errorCode` is a stable, language-independent identifier the frontend maps
-// to a translated message (see frontend/src/services/apiError.ts); `error`
-// stays as an English description for logs/debugging tools.
 export function formatErrorJson(code, error, description, errorCode, params) {
     const errorBody = {
         "code": code,
@@ -54,9 +50,6 @@ export function verifyPassword(password, passwordHash) {
     }
 }
 
-// Date doesn't have a method to add n amount of hours
-// For some reason
-// This implements it
 Date.prototype.addHours = function(h) {
   this.setTime(this.getTime() + (h*60*60*1000));
   return this;

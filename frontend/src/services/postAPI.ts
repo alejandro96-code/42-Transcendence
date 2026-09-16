@@ -17,6 +17,25 @@ export interface ApiPost {
   media?: string[]
 }
 
+export interface PostSearchParams {
+  q?: string
+  author?: string
+  hasAttachment?: boolean
+  dateFrom?: string
+  dateTo?: string
+  sort?: 'newest' | 'oldest'
+  page?: number
+  pageSize?: number
+}
+
+export interface PostSearchResult {
+  results: ApiPost[]
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
 export const postsAPI = {
   async deletePost(postId: number): Promise<void> {
     const response = await fetch(`${API_URL}/api/posts`, {
@@ -113,5 +132,31 @@ export const postsAPI = {
     }
 
     return data as ApiPost[]
+  },
+
+  async searchPosts(params: PostSearchParams): Promise<PostSearchResult> {
+    const url = new URL(`${API_URL}/api/posts/search`)
+
+    if (params.q) url.searchParams.set('q', params.q)
+    if (params.author) url.searchParams.set('author', params.author)
+    if (params.hasAttachment !== undefined) {
+      url.searchParams.set('hasAttachment', String(params.hasAttachment))
+    }
+    if (params.dateFrom) url.searchParams.set('dateFrom', params.dateFrom)
+    if (params.dateTo) url.searchParams.set('dateTo', params.dateTo)
+    if (params.sort) url.searchParams.set('sort', params.sort)
+    if (params.page) url.searchParams.set('page', String(params.page))
+    if (params.pageSize) url.searchParams.set('pageSize', String(params.pageSize))
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      throw await readApiError(response, 'POSTS_SEARCH_FAILED')
+    }
+
+    return (await response.json()) as PostSearchResult
   },
 }

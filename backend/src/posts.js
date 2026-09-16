@@ -106,7 +106,7 @@ async function read_posts(req, res) {
 
         res.json(posts_lists.rows);
 
-    } catch (error) {
+    } catch {
         const responseBody = formatErrorJson(
             500,
             "Internal Server Error",
@@ -234,7 +234,7 @@ async function create_post(req, res) {
         }
 
         return res.status(201).json(new_post.rows[0]);
-    } catch (error) {
+    } catch {
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation", "POST_CREATE_FAILED"));
     }
 }
@@ -275,10 +275,97 @@ async function delete_post(req, res) {
     return res.status(204).end();
 }
 
+const SEARCH_MAX_PAGE_SIZE = 50;
+const SEARCH_DEFAULT_PAGE_SIZE = 10;
+
+function parseSearchDate(value, field, errors) {
+    if (value === undefined || value === null || value === '') {
+        return null;
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        errors.push(field);
+        return null;
+    }
+
+    return date;
+}
+
+async function search_posts(req, res) {
+    const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 200) : '';
+    const author = typeof req.query.author === 'string' ? req.query.author.trim().slice(0, 50) : '';
+    const sort = req.query.sort === 'oldest' ? 'oldest' : 'newest';
+
+    let hasAttachment = null;
+    if (req.query.hasAttachment === 'true') {
+        hasAttachment = true;
+    } else if (req.query.hasAttachment === 'false') {
+        hasAttachment = false;
+    }
+
+    const dateErrors = [];
+    const dateFrom = parseSearchDate(req.query.dateFrom, 'dateFrom', dateErrors);
+    const dateTo = parseSearchDate(req.query.dateTo, 'dateTo', dateErrors);
+
+    if (dateErrors.length > 0) {
+        return res.status(400).json(
+            formatErrorJson(400, "Bad Request", `Invalid date: ${dateErrors.join(', ')}`, "POSTS_SEARCH_INVALID_DATE")
+        );
+    }
+
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const pageSize = Math.min(
+        SEARCH_MAX_PAGE_SIZE,
+        Math.max(1, Number.parseInt(req.query.pageSize, 10) || SEARCH_DEFAULT_PAGE_SIZE)
+    );
+    const offset = (page - 1) * pageSize;
+
+    try {
+        const result = await pool.query(
+            `WITH allowed_authors AS (
+                SELECT $1::int AS id
+                UNION
+                SELECT CASE WHEN fr.sender_id = $1 THEN fr.receiver_id ELSE fr.sender_id END
+                FROM friend_requests fr
+                WHERE fr.status = 'accepted' AND $1 IN (fr.sender_id, fr.receiver_id)
+            )
+            SELECT p.*, COUNT(*) OVER() AS total_count
+            FROM posts p
+            WHERE p.author_id IN (SELECT id FROM allowed_authors)
+              AND ($2 = '' OR p.content ILIKE '%' || $2 || '%')
+              AND ($3 = '' OR LOWER(p.author_username) = LOWER($3))
+              AND ($4::boolean IS NULL OR (COALESCE(cardinality(p.media), 0) > 0) = $4)
+              AND ($5::timestamptz IS NULL OR p.created_at >= $5)
+              AND ($6::timestamptz IS NULL OR p.created_at <= $6)
+            ORDER BY p.created_at ${sort === 'oldest' ? 'ASC' : 'DESC'}
+            OFFSET $7 FETCH FIRST $8 ROWS ONLY`,
+            [req.user.id, q, author, hasAttachment, dateFrom, dateTo, offset, pageSize]
+        );
+
+        const total = result.rows.length > 0 ? Number(result.rows[0].total_count) : 0;
+        const results = result.rows.map(({ total_count, ...post }) => post);
+
+        return res.json({
+            results,
+            page,
+            pageSize,
+            total,
+            totalPages: Math.max(1, Math.ceil(total / pageSize)),
+        });
+    } catch (error) {
+        console.error('Error searching posts:', error);
+        return res.status(500).json(
+            formatErrorJson(500, "Internal Server Error", "Couldn't search posts", "POSTS_SEARCH_FAILED")
+        );
+    }
+}
+
 const router = express.Router();
 
 router.use(express.json());
 
+router.get("/search", verify_token, search_posts);
 router.get("/", verify_token, read_posts);
 router.post("/", verify_token, create_post);
 router.delete("/", verify_token, delete_post);

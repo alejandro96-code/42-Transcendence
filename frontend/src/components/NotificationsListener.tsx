@@ -27,8 +27,8 @@ export function NotificationsListener() {
           })
         })
       } catch {
-        // No hacemos nada si el usuario no está autenticado
-        // o si temporalmente no se puede consultar el endpoint.
+        // We do nothing if the user is not authenticated
+        // or if the endpoint cannot be queried temporarily.
       }
     }
 
@@ -36,7 +36,7 @@ export function NotificationsListener() {
 
     const interval = setInterval(() => {
       void checkNotifications()
-    }, 1000)
+    }, 3000)
 
     return () => {
       clearInterval(interval)

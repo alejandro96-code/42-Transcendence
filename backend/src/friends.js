@@ -1,6 +1,6 @@
 import express from 'express';
 import { pool } from './db.js';
-import { formatErrorJson, isAuthenticated } from './utils.js';
+import { formatErrorJson } from './utils.js';
 import { verify_token } from './token.js';
 import { addNotification } from './notifications.js';
 

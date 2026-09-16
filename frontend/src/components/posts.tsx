@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { InputTextarea } from 'primereact/inputtextarea'
+import { InputText } from 'primereact/inputtext'
 import { Button } from 'primereact/button'
 import { Card } from 'primereact/card'
+import { Dropdown } from 'primereact/dropdown'
 import { Paginator, type PaginatorPageChangeEvent} from 'primereact/paginator'
 import { useTranslation } from 'react-i18next'
 import { postsAPI, type ApiPost, type PostAttachment} from '../services/postAPI'
@@ -31,7 +33,6 @@ interface MentionUser {
 
 type FilterType = 'all' | 'my_posts' | 'mentions'
 
-type SortOrder = 'desc' | 'asc'
 
 function parseAttachment(value: unknown): PostAttachment | null {
   if (typeof value !== 'string') {
@@ -76,6 +77,23 @@ function parseAttachment(value: unknown): PostAttachment | null {
   return null
 }
 
+function localeFor(language: string): string {
+  return language === 'en' ? 'en-US' : language === 'eu' ? 'eu-ES' : 'es-ES'
+}
+
+function mapApiPostToPost(post: ApiPost, locale: string): Post {
+  return {
+    id: Number(post.id),
+    authorId: Number(post.author_id),
+    content: post.content,
+    date: post.created_at
+      ? new Date(post.created_at).toLocaleString(locale)
+      : '',
+    isFromFriend: false,
+    attachment: parseAttachment(post.media?.[0]),
+  }
+}
+
 interface PostFeedProps {
   readOnly?: boolean
   initialPosts?: Post[]
@@ -100,7 +118,6 @@ export function PostFeed({
   const [posts, setPosts] = useState<Post[]>(initialPosts)
   const [text, setText] = useState<string>('')
   const [filter, setFilter] = useState<FilterType>('all')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [attachment, setAttachment] =
     useState<PostAttachment | null>(null)
   const [imageError, setImageError] = useState<string>('')
@@ -114,6 +131,78 @@ export function PostFeed({
   const [deletingPostId, setDeletingPostId] =
   useState<number | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
+
+  const SEARCH_PAGE_SIZE = 5
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchAuthor, setSearchAuthor] = useState('')
+  const [searchAttachment, setSearchAttachment] =
+    useState<'any' | 'yes' | 'no'>('any')
+  const [searchDateFrom, setSearchDateFrom] = useState('')
+  const [searchDateTo, setSearchDateTo] = useState('')
+  const [searchSort, setSearchSort] =
+    useState<'newest' | 'oldest'>('newest')
+  const [searchResults, setSearchResults] = useState<Post[] | null>(null)
+  const [searchPage, setSearchPage] = useState(1)
+  const [searchTotal, setSearchTotal] = useState(0)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchError, setSearchError] = useState('')
+
+  const isSearchActive = searchResults !== null
+
+  const runSearch = async (page: number) => {
+    setIsSearching(true)
+    setSearchError('')
+
+    try {
+      const result = await postsAPI.searchPosts({
+        q: searchQuery.trim() || undefined,
+        author: searchAuthor.trim() || undefined,
+        hasAttachment:
+          searchAttachment === 'any'
+            ? undefined
+            : searchAttachment === 'yes',
+        dateFrom: searchDateFrom || undefined,
+        dateTo: searchDateTo || undefined,
+        sort: searchSort,
+        page,
+        pageSize: SEARCH_PAGE_SIZE,
+      })
+
+      const locale = localeFor(i18n.language)
+
+      setSearchResults(
+        result.results.map((post) => mapApiPostToPost(post, locale)),
+      )
+      setSearchPage(result.page)
+      setSearchTotal(result.total)
+    } catch (error) {
+      setSearchError(translateApiError(t, error, 'posts_search_error'))
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleSearchSubmit = () => {
+    void runSearch(1)
+  }
+
+  const handleSearchClear = () => {
+    setSearchQuery('')
+    setSearchAuthor('')
+    setSearchAttachment('any')
+    setSearchDateFrom('')
+    setSearchDateTo('')
+    setSearchSort('newest')
+    setSearchResults(null)
+    setSearchTotal(0)
+    setSearchPage(1)
+    setSearchError('')
+  }
+
+  const onSearchPageChange = (event: PaginatorPageChangeEvent) => {
+    void runSearch(Math.floor(event.first / SEARCH_PAGE_SIZE) + 1)
+  }
 
   const onPageChange = (event: PaginatorPageChangeEvent) => {
     setFirst(event.first)
@@ -256,27 +345,11 @@ export function PostFeed({
           attachment,
         )
 
-      const locale =
-        i18n.language === 'en'
-          ? 'en-US'
-          : i18n.language === 'eu'
-            ? 'eu-ES'
-            : 'es-ES'
-
       const newPost: Post = {
-        id: Number(createdPost.id),
+        ...mapApiPostToPost(createdPost, localeFor(i18n.language)),
         authorId: currentUser?.id ?? 0,
-        content: createdPost.content || content,
-        date: createdPost.created_at
-          ? new Date(
-              createdPost.created_at,
-            ).toLocaleString(locale)
-          : new Date().toLocaleString(locale),
-        isFromFriend: false,
         attachment:
-          parseAttachment(
-            createdPost.media?.[0],
-          ) ?? attachment,
+          parseAttachment(createdPost.media?.[0]) ?? attachment,
       }
 
       setPosts((currentPosts) => [
@@ -343,28 +416,10 @@ const handleDeletePost = async (postId: number) => {
           return
         }
 
-        const locale =
-          i18n.language === 'en'
-            ? 'en-US'
-            : i18n.language === 'eu'
-              ? 'eu-ES'
-              : 'es-ES'
+        const locale = localeFor(i18n.language)
 
         const loadedPosts: Post[] =
-          data.map((post: ApiPost) => ({
-            id: Number(post.id),
-            authorId: Number(post.author_id),
-            content: post.content,
-            date: post.created_at
-              ? new Date(
-                  post.created_at,
-                ).toLocaleString(locale)
-              : '',
-            isFromFriend: false,
-            attachment: parseAttachment(
-              post.media?.[0],
-            ),
-          }))
+          data.map((post: ApiPost) => mapApiPostToPost(post, locale))
 
         setPosts((currentPosts) => {
           const changed =
@@ -434,11 +489,6 @@ const handleDeletePost = async (postId: number) => {
 
   const filteredPosts = posts
 
-  const orderedPosts =
-    sortOrder === 'asc'
-      ? [...filteredPosts].reverse()
-      : filteredPosts
-
   const maxFirst =
     Math.max(
       0,
@@ -456,10 +506,54 @@ const handleDeletePost = async (postId: number) => {
   )
 
   const paginatedPosts =
-    orderedPosts.slice(
+    filteredPosts.slice(
       validFirst,
       validFirst + POSTS_PER_PAGE,
     )
+
+  const renderPostCard = (post: Post) => (
+    <Card key={post.id} className="w-full">
+      <div className="flex justify-content-between align-items-start">
+        <p className="texto mt-0 mb-5">{post.content}</p>
+
+        {!readOnly && currentUser?.id === post.authorId && (
+          <Button
+            type="button"
+            icon="pi pi-trash"
+            severity="danger"
+            text
+            rounded
+            loading={deletingPostId === post.id}
+            disabled={deletingPostId !== null}
+            aria-label={t('posts_delete_aria_label')}
+            onClick={() => {
+              void handleDeletePost(post.id)
+            }}
+          />
+        )}
+      </div>
+
+      {post.attachment &&
+        (post.attachment.type.startsWith('image/') ? (
+          <img
+            src={post.attachment.data}
+            alt={t('posts_image_alt')}
+            className="post-image"
+          />
+        ) : (
+          <a
+            href={post.attachment.data}
+            download={post.attachment.name}
+            className="post-file"
+          >
+            <i className="pi pi-file" aria-hidden="true" />
+            {post.attachment.name}
+          </a>
+        ))}
+
+      <p className="fecha text-color-secondary">{post.date}</p>
+    </Card>
+  )
 
   return (
     <div className="posts-container">
@@ -665,124 +759,201 @@ const handleDeletePost = async (postId: number) => {
                 </Button>
 
                 <Button
-                  onClick={() => {
-                    setSortOrder(
-                      (currentOrder) =>
-                        currentOrder ===
-                        'desc'
-                          ? 'asc'
-                          : 'desc',
-                    )
-                    setFirst(0)
-                  }}
+                  onClick={() => setIsSearchOpen((open) => !open)}
+                  severity={isSearchOpen ? 'info' : 'secondary'}
+                  text={!isSearchOpen}
                 >
-                  {sortOrder === 'desc'
-                    ? t(
-                        'posts_sort_oldest_first',
-                      )
-                    : t(
-                        'posts_sort_newest_first',
-                      )}
+                  {t('posts_search_toggle')}
                 </Button>
+              </div>
+            )}
+
+            {!readOnly && isSearchOpen && (
+              <div className="posts-search-panel surface-100 border-round-sm p-3 mb-4">
+                <div className="grid formgrid">
+                  <div className="col-12 md:col-6">
+                    <label htmlFor="search-q" className="text-sm">
+                      {t('posts_search_query_label')}
+                    </label>
+                    <InputText
+                      id="search-q"
+                      className="w-full"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder={t('posts_search_query_placeholder')}
+                    />
+                  </div>
+
+                  <div className="col-12 md:col-6">
+                    <label htmlFor="search-author" className="text-sm">
+                      {t('posts_search_author_label')}
+                    </label>
+                    <InputText
+                      id="search-author"
+                      className="w-full"
+                      value={searchAuthor}
+                      onChange={(e) => setSearchAuthor(e.target.value)}
+                      placeholder={t('posts_search_author_placeholder')}
+                    />
+                  </div>
+
+                  <div className="col-12 md:col-4">
+                    <label htmlFor="search-attachment" className="text-sm">
+                      {t('posts_search_attachment_label')}
+                    </label>
+                    <Dropdown
+                      inputId="search-attachment"
+                      name="search-attachment"
+                      className="w-full"
+                      value={searchAttachment}
+                      onChange={(e) => setSearchAttachment(e.value)}
+                      options={[
+                        { label: t('posts_search_attachment_any'), value: 'any' },
+                        { label: t('posts_search_attachment_yes'), value: 'yes' },
+                        { label: t('posts_search_attachment_no'), value: 'no' },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="col-6 md:col-2">
+                    <label htmlFor="search-date-from" className="text-sm">
+                      {t('posts_search_date_from_label')}
+                    </label>
+                    <input
+                      id="search-date-from"
+                      type="date"
+                      className="w-full p-inputtext p-component"
+                      value={searchDateFrom}
+                      onChange={(e) => setSearchDateFrom(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-6 md:col-2">
+                    <label htmlFor="search-date-to" className="text-sm">
+                      {t('posts_search_date_to_label')}
+                    </label>
+                    <input
+                      id="search-date-to"
+                      type="date"
+                      className="w-full p-inputtext p-component"
+                      value={searchDateTo}
+                      onChange={(e) => setSearchDateTo(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-12 md:col-4">
+                    <label htmlFor="search-sort" className="text-sm">
+                      {t('posts_search_sort_label')}
+                    </label>
+                    <Dropdown
+                      inputId="search-sort"
+                      name="search-sort"
+                      className="w-full"
+                      value={searchSort}
+                      onChange={(e) => setSearchSort(e.value)}
+                      options={[
+                        { label: t('posts_sort_newest_first'), value: 'newest' },
+                        { label: t('posts_sort_oldest_first'), value: 'oldest' },
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    onClick={handleSearchSubmit}
+                    loading={isSearching}
+                  >
+                    {t('posts_search_submit')}
+                  </Button>
+
+                  {isSearchActive && (
+                    <Button
+                      severity="secondary"
+                      outlined
+                      onClick={handleSearchClear}
+                    >
+                      {t('posts_search_clear')}
+                    </Button>
+                  )}
+                </div>
+
+                {searchError && (
+                  <small className="image-error">{searchError}</small>
+                )}
               </div>
             )}
           </div>
         )}
 
-        <div className="posts-list">
-          {filteredPosts.length === 0 && (
-            <p className="text-color-secondary text-center">
-              {filter === 'mentions'
-                ? t(
-                    'posts_empty_mentions',
-                  )
-                : t(
-                    'posts_empty_state',
-                  )}
-            </p>
-          )}
-
-          {paginatedPosts.map((post) => (
-            <Card
-              key={post.id}
-              className="w-full"
-            >
-             <div className="flex justify-content-between align-items-start">
-               <p className="texto mt-0 mb-5">
-                 {post.content}
-               </p>
-
-               {!readOnly &&
-                 currentUser?.id === post.authorId && (
-                   <Button
-                     type="button"
-                     icon="pi pi-trash"
-                     severity="danger"
-                     text
-                     rounded
-                     loading={deletingPostId === post.id}
-                     disabled={deletingPostId !== null}
-                     aria-label={t('posts_delete_aria_label')}
-                     onClick={() => {
-                       void handleDeletePost(post.id)
-                     }}
-                   />
-                 )}
-             </div>
-
-              {post.attachment &&
-                (post.attachment.type.startsWith(
-                  'image/',
-                ) ? (
-                  <img
-                    src={post.attachment.data}
-                    alt={t(
-                      'posts_image_alt',
-                    )}
-                    className="post-image"
-                  />
-                ) : (
-                  <a
-                    href={
-                      post.attachment.data
-                    }
-                    download={
-                      post.attachment.name
-                    }
-                    className="post-file"
-                  >
-                    <i
-                      className="pi pi-file"
-                      aria-hidden="true"
-                    />
-                    {post.attachment.name}
-                  </a>
-                ))}
-
-              <p className="fecha text-color-secondary">
-                {post.date}
+        {isSearchActive ? (
+          <>
+            <div className="posts-list">
+              <p className="text-color-secondary">
+                {t('posts_search_results_count', { count: searchTotal })}
               </p>
-            </Card>
-          ))}
-        </div>
 
-        {filteredPosts.length >
-          POSTS_PER_PAGE && (
-          <div className="card">
-            <Paginator
-              first={validFirst}
-              rows={POSTS_PER_PAGE}
-              totalRecords={
-                filteredPosts.length
-              }
-              onPageChange={onPageChange}
-              template={{
-                layout:
-                  'PrevPageLink CurrentPageReport NextPageLink',
-              }}
-              className="post-paginator"
-            />
-          </div>
+              {searchResults.length === 0 && (
+                <p className="text-color-secondary text-center">
+                  {t('posts_search_no_results')}
+                </p>
+              )}
+
+              {searchResults.map(renderPostCard)}
+            </div>
+
+            {searchTotal > SEARCH_PAGE_SIZE && (
+              <div className="card">
+                <Paginator
+                  first={(searchPage - 1) * SEARCH_PAGE_SIZE}
+                  rows={SEARCH_PAGE_SIZE}
+                  totalRecords={searchTotal}
+                  onPageChange={onSearchPageChange}
+                  template={{
+                    layout: 'PrevPageLink CurrentPageReport NextPageLink',
+                  }}
+                  className="post-paginator"
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="posts-list">
+              {filteredPosts.length === 0 && (
+                <p className="text-color-secondary text-center">
+                  {filter === 'mentions'
+                    ? t(
+                        'posts_empty_mentions',
+                      )
+                    : t(
+                        'posts_empty_state',
+                      )}
+                </p>
+              )}
+
+              {paginatedPosts.map(renderPostCard)}
+            </div>
+
+            {filteredPosts.length >
+              POSTS_PER_PAGE && (
+              <div className="card">
+                <Paginator
+                  first={validFirst}
+                  rows={POSTS_PER_PAGE}
+                  totalRecords={
+                    filteredPosts.length
+                  }
+                  onPageChange={onPageChange}
+                  template={{
+                    layout:
+                      'PrevPageLink CurrentPageReport NextPageLink',
+                  }}
+                  className="post-paginator"
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

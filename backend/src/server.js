@@ -26,7 +26,7 @@ function createRateLimiter({ windowMs, max, name }) {
 
     return (req, res, next) => {
         const now = Date.now();
-        const key = req.ip || req.socket.remoteAddress || 'unknown';
+        const key = req.user?.id ? `user:${req.user.id}` : (req.ip || req.socket.remoteAddress || 'unknown');
         const entry = requests.get(key);
 
         if (!entry || entry.resetAt <= now) {
@@ -141,7 +141,7 @@ async function start_server() {
 
     const apiRateLimit = createRateLimiter({
         windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS) || 2 * 60 * 1000,
-        max: Number(process.env.API_RATE_LIMIT_MAX) || 300,
+        max: Number(process.env.API_RATE_LIMIT_MAX) || 600,
         name: 'API'
     });
     const authRateLimit = createRateLimiter({
@@ -508,7 +508,7 @@ const updateProfile = async (req, res) => {
         try {
             await pool.query('SELECT 1');
             res.json({ status: 'ok', database: 'connected' });
-        } catch (error) {
+        } catch {
             res.status(500).json(formatErrorJson(500, "Internal server error", `Database disconnected`, "SERVER_ERROR"));
         }
     });

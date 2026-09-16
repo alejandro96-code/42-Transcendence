@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
-import express, { response } from 'express';
-import { formatErrorJson, isAuthenticated, verifyPassword } from './utils.js';
+import express from 'express';
+import { formatErrorJson, verifyPassword } from './utils.js';
 import { pool } from "./db.js";
 
 const router = express.Router();

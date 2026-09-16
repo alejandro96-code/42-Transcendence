@@ -411,7 +411,13 @@ export function Friends({
             <span>{t('friends_dialog_description')}</span>
             <span>{t('friends_dialog_42_note')}</span>
 
+            <label htmlFor="friend-nick" className="sr-only">
+              {t('friends_dialog_description')}
+            </label>
+
             <InputText
+              id="friend-nick"
+              name="friend-nick"
               value={friendNick}
               onChange={(event) => setFriendNick(event.target.value)}
               placeholder={t('friends_dialog_placeholder')}

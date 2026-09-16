@@ -89,7 +89,7 @@ export function Login() {
       <div className="login-shell">
         <Card className="shadow-8">
           <div className='header-languages-wrapper'>
-            <LanguageSwitcher inputId='language-select-normal' />
+            <LanguageSwitcher inputId='language-select-normal' name='language' />
           </div>
 
           <div className="text-center mb-5">
@@ -134,6 +134,7 @@ export function Login() {
               <label htmlFor="password" className="login-label">{t('login_password')}</label>
               <Password
                 inputId="password"
+                name="password"
                 className="inputPassword w-full"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -147,6 +148,7 @@ export function Login() {
                   <label htmlFor="confirmPassword" className="login-label">{t('login_confirm_password')}</label>
                   <Password
                     inputId="confirmPassword"
+                    name="confirmPassword"
                     className="inputPassword w-full"
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
