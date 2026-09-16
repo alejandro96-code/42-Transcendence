@@ -133,7 +133,6 @@ Total Points: 20 points
 | Web | User interaction | Major | 2 | The UI allows editing profiles, posting, reacting, sending friend requests, accepting or rejecting them, and chatting. React Router, Redux Toolkit, and reusable components ensure smooth interaction. | alejanr2, xortega |
 | Web | Notification system | Minor | 1 | Pending friend requests and mentions in posts act as in-app notifications. They are retrieved via request endpoints and the feed mention filter. | xortega, alejanr2 |
 | Web | Custom design system | Minor | 1 | A custom visual identity was created with SCSS, variables, responsive layouts, and components for profile, posts, friends, header, and chat. PrimeReact and PrimeFlex are used as support, not as a replacement for custom design. | alejanr2 |
-| Web | Advanced search | Minor | 1 | The header allows searching friends by username or full name. The search is restricted to accepted friendships, sorts results, and limits the response to maintain performance. | alejanr2, xortega |
 | Web | File upload and management | Minor | 1 | Posts allow an image from the browser. The client validates type and size, converts it to a Data URL, and the API stores it linked to the post; default profile avatars are also provided. | alejanr2, fcasaubo |
 | Accessibility & i18n | WCAG 2.1 AA Compliance | Major | 2 | Added aria-label tags, alternative texts, identifiable controls, and a semantic structure in interactive components. The responsive design and visible error messages ensure accessibility. | alejanr2, andefern |
 | Accessibility & i18n | Three languages | Minor | 1 | i18next and react-i18next manage translations in Spanish, Basque, and English. UI text, dates, and labels adapt to the selected language. | alejanr2, andefern |
@@ -144,7 +143,7 @@ Total Points: 20 points
 | Modules of Choice | Custom Module: Initial Social Network Seed | Minor | 1 | A mock SQL test script was prepared to provide a local account for testing the platform without relying exclusively on OAuth. This starting point makes it easy to verify linked data across profiles, posts, friends, and chat. | xortega, fcasaubo |
 | Modules of Choice | Custom Module: Social api test | Major | 2 | Tester with natural language (using Behave) that executes many scenarios, validating the API calls. | xortega, fcasaubo |
 
-Calculation: 5 major modules × 2 points = 10 points; 10 minor modules × 1 point = 10 points. Total: 20 points.
+Calculation: 5 major modules × 2 points = 10 points; 8 minor modules × 1 point = 8 points. Total: 18 points.
 
 ## Individual Contributions
 

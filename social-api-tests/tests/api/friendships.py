@@ -26,6 +26,25 @@ class FriendshipsApi:
             },
         )
 
+    def get_friends(self, token: str):
+        return self.client.get(
+            "/api/friends",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+        )
+
+    def delete_friend(self, token: str, friend_id: int):
+        return self.client.delete(
+            f"/api/friends/{friend_id}",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+        )
+
+
     def update_request(
         self,
         token: str,

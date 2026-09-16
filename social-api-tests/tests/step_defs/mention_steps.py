@@ -1,5 +1,7 @@
+import pytest
 from pytest_bdd import given, when, then, scenarios, parsers
 
+pytestmark = pytest.mark.order(6)
 
 scenarios("../features/mentions.feature")
 
@@ -85,10 +87,12 @@ def mention_post_created_successfully(
 
     data = response.json()
 
-    assert isinstance(data, list)
-    assert len(data) > 0
+    assert isinstance(data, dict), (
+        f"Expected a post object, got "
+        f"{type(data).__name__}: {data}"
+    )
 
-    post = data[0]
+    post = data
 
     expected_content = f"Hi @{mentioned}!"
 

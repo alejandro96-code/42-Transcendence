@@ -46,13 +46,14 @@ def post_created_successfully(context):
 
     data = response.json()
 
-    assert isinstance(data, list)
-    assert len(data) > 0
+    assert isinstance(data, dict), (
+        f"Expected a post object, got "
+        f"{type(data).__name__}: {data}"
+    )
 
-    post = Post(**data[0])
+    post = Post(**data)
 
     context.posts.append(post)
-
 
 @then(parsers.parse('the post content should be "{expected_content}"'))
 def post_content_should_be(context, expected_content):
