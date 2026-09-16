@@ -1,5 +1,7 @@
+import pytest
 from pytest_bdd import given, when, then, scenarios, parsers
 
+pytestmark = pytest.mark.order(5)
 
 scenarios("../features/chat.feature")
 
