@@ -55,7 +55,7 @@ export function Friends({
     } catch (error) {
       toast.current?.show({
         severity: 'error',
-        summary: 'Error',
+        summary: t('common_error_title'),
         detail: translateApiError(t, error, 'friends_load_error'),
       })
     }
@@ -67,7 +67,7 @@ export function Friends({
     } catch (error) {
       toast.current?.show({
         severity: 'error',
-        summary: 'Error',
+        summary: t('common_error_title'),
         detail: translateApiError(t, error, 'friends_load_dialog_error'),
       })
     }
@@ -89,7 +89,7 @@ export function Friends({
         if (!cancelled) {
           toast.current?.show({
             severity: 'error',
-            summary: 'Error',
+            summary: t('common_error_title'),
             detail: translateApiError(t, error, 'friends_load_error'),
           })
         }
@@ -111,7 +111,7 @@ export function Friends({
         if (!cancelled) {
           toast.current?.show({
             severity: 'error',
-            summary: 'Error',
+            summary: t('common_error_title'),
             detail: translateApiError(t, error, 'friends_load_dialog_error'),
           })
         }
@@ -176,7 +176,7 @@ export function Friends({
         } catch (error) {
           toast.current?.show({
             severity: 'error',
-            summary: 'Error',
+            summary: t('common_error_title'),
             detail: translateApiError(t, error, 'friends_request_response_error'),
           })
         }
@@ -209,7 +209,7 @@ export function Friends({
     } catch (error) {
       toast.current?.show({
         severity: 'error',
-        summary: 'Error',
+        summary: t('common_error_title'),
         detail: translateApiError(t, error, 'friends_request_send_error'),
       })
     }
@@ -234,7 +234,7 @@ export function Friends({
         } catch (error) {
           toast.current?.show({
             severity: 'error',
-            summary: 'Error',
+            summary: t('common_error_title'),
             detail: translateApiError(t, error, 'friends_remove_error'),
           })
         }
