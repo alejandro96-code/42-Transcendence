@@ -235,8 +235,12 @@
   "profile_page_title": "Transcendence profila",
   "personal_data_change_avatar": "Aldatu avatarra",
   "posts_err_delete": "Ezin izan da argitalpena ezabatu.",
+  "posts_err_update": "Ezin izan da argitalpena editatu.",
   "posts_confirm_delete": "Ziur argitalpen hau ezabatu nahi duzula?",
   "posts_delete_aria_label": "Ezabatu argitalpena",
+  "posts_edit_aria_label": "Editatu argitalpena",
+  "posts_edit_cancel": "Utzi",
+  "posts_edit_save": "Gorde aldaketak",
 
   "notifications_toast_title": "Jakinarazpen berria",
   "notification_friend_request": "{{username}}(e)k adiskidetasun-eskaera bidali dizu",
@@ -245,6 +249,7 @@
   "notification_friend_removed": "{{username}}(e)k bere lagunetatik kendu zaitu",
   "notification_post_mention": "{{username}}(e)k argitalpen batean aipatu zaitu",
   "notification_post_created": "{{username}}(e)k argitalpen berri bat sortu du",
+  "notification_post_updated": "{{username}}(e)k argitalpen bat editatu du",
   "notification_post_deleted": "{{username}}(e)k argitalpen bat ezabatu du",
   "notification_new_message": "{{username}}(e)k mezu bat bidali dizu",
 

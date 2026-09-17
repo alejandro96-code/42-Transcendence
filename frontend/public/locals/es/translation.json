@@ -235,8 +235,12 @@
   "profile_page_title": "Perfil de Transcendence",
   "personal_data_change_avatar": "Cambiar avatar",
   "posts_err_delete": "No se pudo eliminar la publicación.",
+  "posts_err_update": "No se pudo editar la publicación.",
   "posts_confirm_delete": "¿Seguro que quieres eliminar esta publicación?",
   "posts_delete_aria_label": "Eliminar publicación",
+  "posts_edit_aria_label": "Editar publicación",
+  "posts_edit_cancel": "Cancelar",
+  "posts_edit_save": "Guardar cambios",
 
   "notifications_toast_title": "Nueva notificación",
   "notification_friend_request": "{{username}} te ha enviado una solicitud de amistad",
@@ -245,6 +249,7 @@
   "notification_friend_removed": "{{username}} te ha eliminado de sus amigos",
   "notification_post_mention": "{{username}} te ha mencionado en una publicación",
   "notification_post_created": "{{username}} ha creado una nueva publicación",
+  "notification_post_updated": "{{username}} ha editado una publicación",
   "notification_post_deleted": "{{username}} ha eliminado una publicación",
   "notification_new_message": "{{username}} te ha enviado un mensaje",
 

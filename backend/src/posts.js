@@ -2,12 +2,44 @@ import express from 'express';
 import { formatErrorJson } from './utils.js';
 import { pool } from "./db.js";
 import { verify_token } from './token.js';
-import {
-    addNotification,
-    getProfileViewers,
-} from './notifications.js';
+import { addNotification } from './notifications.js';
 
 const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024;
+
+async function get_accepted_friend_ids(userId) {
+    const result = await pool.query(
+        `SELECT CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END AS friend_id
+         FROM friend_requests
+         WHERE status = 'accepted'
+           AND (sender_id = $1 OR receiver_id = $1)`,
+        [userId]
+    );
+
+    return result.rows.map((row) => row.friend_id);
+}
+
+async function get_mentioned_user_ids(content, excludeUserId) {
+    const mentionedUsernames = [...new Set(
+        content.match(/@([a-zA-Z0-9_]+)/g)?.map(
+            mention => mention.substring(1)
+        ) || []
+    )];
+
+    if (mentionedUsernames.length === 0) {
+        return [];
+    }
+
+    const mentionedUsers = await pool.query(
+        `SELECT id
+         FROM users
+         WHERE LOWER(username) = ANY($1::text[])`,
+        [mentionedUsernames.map(username => username.toLowerCase())]
+    );
+
+    return mentionedUsers.rows
+        .map((row) => row.id)
+        .filter((id) => id !== excludeUserId);
+}
 
 const ACCEPTED_ATTACHMENT_TYPES = [
     'image/png',
@@ -239,18 +271,75 @@ async function create_post(req, res) {
             });
         }
 
-        for (const viewerId of getProfileViewers(authorId)) {
-            if (viewerId !== authorId) {
-                addNotification(viewerId, {
-                    type: 'post_created',
-                    params: { username: author_username.rows[0].username },
-                });
-            }
+        for (const friendId of await get_accepted_friend_ids(authorId)) {
+            addNotification(friendId, {
+                type: 'post_created',
+                params: { username: author_username.rows[0].username },
+            });
         }
 
         return res.status(201).json(new_post.rows[0]);
     } catch {
         return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post creation", "POST_CREATE_FAILED"));
+    }
+}
+
+async function update_post(req, res) {
+    const postId = Number.parseInt(req.body?.id, 10);
+    const content = String(req.body?.content ?? '').trim();
+
+    if (!Number.isInteger(postId)) {
+        return res.status(400).json(formatErrorJson(
+            400, "Bad Request", "Invalid post id", "POST_INVALID_ID"
+        ));
+    }
+
+    if (!content) {
+        return res.status(400).json(formatErrorJson(
+            400, "Bad Request", "Message content can't be empty!", "POST_CONTENT_EMPTY"
+        ));
+    }
+
+    if (content.length > 200) {
+        return res.status(413).json(formatErrorJson(
+            413, "Content Too Large", "Content must be between 1 and 200 characters long", "POST_CONTENT_TOO_LONG", { max: 200 }
+        ));
+    }
+
+    try {
+        const updated_post = await pool.query(
+            `UPDATE posts
+             SET content = $1,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $2 AND author_id = $3
+             RETURNING *`,
+            [content, postId, req.user.id]
+        );
+
+        if (!updated_post || updated_post.rows.length === 0) {
+            return res.status(404).json(formatErrorJson(
+                404, "Not Found", "Post not found or you are not the author", "POST_NOT_FOUND"
+            ));
+        }
+
+        const updatedPost = updated_post.rows[0];
+        const authorUsername = updatedPost.author_username || '';
+
+        addNotification(req.user.id, {
+            type: 'post_updated',
+            params: { username: authorUsername },
+        });
+
+        for (const mentionedId of await get_mentioned_user_ids(content, req.user.id)) {
+            addNotification(mentionedId, {
+                type: 'post_updated',
+                params: { username: authorUsername },
+            });
+        }
+
+        return res.json(updatedPost);
+    } catch {
+        return res.status(500).json(formatErrorJson(500, "Internal Server Error", "Something went bad on post update", "POST_UPDATE_FAILED"));
     }
 }
 
@@ -278,13 +367,16 @@ async function delete_post(req, res) {
     const deletedPost = deleted_post.rows[0];
     const authorUsername = deletedPost.author_username || '';
 
-    for (const viewerId of getProfileViewers(req.user.id)) {
-        if (viewerId !== req.user.id) {
-            addNotification(viewerId, {
-                type: 'post_deleted',
-                params: { username: authorUsername },
-            });
-        }
+    addNotification(req.user.id, {
+        type: 'post_deleted',
+        params: { username: authorUsername },
+    });
+
+    for (const mentionedId of await get_mentioned_user_ids(deletedPost.content || '', req.user.id)) {
+        addNotification(mentionedId, {
+            type: 'post_deleted',
+            params: { username: authorUsername },
+        });
     }
 
     return res.status(204).end();
@@ -383,6 +475,8 @@ router.use(express.json());
 router.get("/search", verify_token, search_posts);
 router.get("/", verify_token, read_posts);
 router.post("/", verify_token, create_post);
+router.patch("/", verify_token, update_post);
+router.put("/", verify_token, update_post);
 router.delete("/", verify_token, delete_post);
 
 export default router;

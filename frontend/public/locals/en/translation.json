@@ -235,8 +235,12 @@
   "profile_page_title": "Transcendence Profile",
   "personal_data_change_avatar": "Change avatar",
   "posts_err_delete": "Could not delete the post.",
+  "posts_err_update": "Could not edit the post.",
   "posts_confirm_delete": "Are you sure you want to delete this post?",
   "posts_delete_aria_label": "Delete post",
+  "posts_edit_aria_label": "Edit post",
+  "posts_edit_cancel": "Cancel",
+  "posts_edit_save": "Save changes",
 
   "notifications_toast_title": "New notification",
   "notification_friend_request": "{{username}} sent you a friend request",
@@ -245,6 +249,7 @@
   "notification_friend_removed": "{{username}} removed you from their friends",
   "notification_post_mention": "{{username}} mentioned you in a post",
   "notification_post_created": "{{username}} created a new post",
+  "notification_post_updated": "{{username}} edited a post",
   "notification_post_deleted": "{{username}} deleted a post",
   "notification_new_message": "{{username}} sent you a message",
 

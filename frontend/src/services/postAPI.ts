@@ -53,6 +53,40 @@ export const postsAPI = {
     }
   },
 
+  async updatePost(
+    postId: number,
+    content: string,
+  ): Promise<ApiPost> {
+    const response = await fetch(`${API_URL}/api/posts`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        id: postId,
+        content,
+      }),
+    })
+
+    if (!response.ok) {
+      throw await readApiError(response, 'POST_UPDATE_FAILED')
+    }
+
+    const data: unknown = await response.json()
+
+    if (
+      typeof data !== 'object' ||
+      data === null ||
+      !('id' in data) ||
+      !('content' in data)
+    ) {
+      throw new ApiError('POST_UPDATE_INVALID_RESPONSE')
+    }
+
+    return data as ApiPost
+  },
+
   async createPost(
     content: string,
     attachment?: PostAttachment | null,

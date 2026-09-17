@@ -9,8 +9,6 @@ import { useTranslation } from 'react-i18next'
 import { postsAPI, type ApiPost, type PostAttachment} from '../services/postAPI'
 import { friendsAPI } from '../services/friendsAPI'
 import { useAppSelector } from '../store/hooks'
-import { store } from '../store/store'
-import { notificationsAPI } from '../services/notificationsAPI'
 import { translateApiError } from '../services/apiError'
 import { EmptyState } from './ui/EmptyState'
 import { FormField } from './ui/FormField'
@@ -128,7 +126,6 @@ export function PostFeed({
   const currentUser = useAppSelector(
     (state) => state.auth.user,
   )
-  const openedProfileId = userId ?? currentUser?.id
   const POSTS_PER_PAGE = 4
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -150,6 +147,9 @@ export function PostFeed({
   const [deletingPostId, setDeletingPostId] =
   useState<number | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
+  const [editingPostId, setEditingPostId] = useState<number | null>(null)
+  const [editContent, setEditContent] = useState('')
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
 
   const SEARCH_PAGE_SIZE = 5
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -421,7 +421,57 @@ const handleDeletePost = async (postId: number) => {
     }
   }
 
-  
+  const handleStartEdit = (post: Post) => {
+    setEditingPostId(post.id)
+    setEditContent(post.content)
+    setImageError('')
+  }
+
+  const handleCancelEdit = () => {
+    setEditingPostId(null)
+    setEditContent('')
+  }
+
+  const handleSaveEdit = async (postId: number) => {
+    const content = editContent.trim()
+
+    if (!content) {
+      return
+    }
+
+    setIsSavingEdit(true)
+
+    try {
+      const updatedPost = await postsAPI.updatePost(postId, content)
+      const locale = localeFor(i18n.language)
+      const mappedPost = mapApiPostToPost(updatedPost, locale)
+
+      setPosts((currentPosts) =>
+        currentPosts.map((post) =>
+          post.id === postId ? { ...post, content: mappedPost.content } : post,
+        ),
+      )
+
+      setSearchResults((currentResults) =>
+        currentResults
+          ? currentResults.map((post) =>
+              post.id === postId
+                ? { ...post, content: mappedPost.content }
+                : post,
+            )
+          : currentResults,
+      )
+
+      setEditingPostId(null)
+      setEditContent('')
+    } catch (error) {
+      setImageError(translateApiError(t, error, 'posts_err_update'))
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
+
   useEffect(() => {
     let cancelled = false
 
@@ -498,20 +548,6 @@ const handleDeletePost = async (postId: number) => {
     t,
   ])
 
-  useEffect(() => {
-    if (!openedProfileId) {
-      return
-    }
-
-    void notificationsAPI.watchProfile(openedProfileId)
-
-    return () => {
-      if (store.getState().auth.isAuthenticated) {
-        void notificationsAPI.unwatchProfile(openedProfileId)
-      }
-    }
-  }, [openedProfileId])
-
   const filteredPosts = posts
 
   const maxFirst =
@@ -536,49 +572,107 @@ const handleDeletePost = async (postId: number) => {
       validFirst + POSTS_PER_PAGE,
     )
 
-  const renderPostCard = (post: Post) => (
-    <Card key={post.id} className="w-full">
-      <div className="flex justify-content-between align-items-start">
-        <p className="texto mt-0 mb-5">{post.content}</p>
+  const renderPostCard = (post: Post) => {
+    const isEditing = editingPostId === post.id
+    const isOwnPost = !readOnly && currentUser?.id === post.authorId
 
-        {!readOnly && currentUser?.id === post.authorId && (
-          <Button
-            type="button"
-            icon="pi pi-trash"
-            severity="danger"
-            text
-            rounded
-            loading={deletingPostId === post.id}
-            disabled={deletingPostId !== null}
-            aria-label={t('posts_delete_aria_label')}
-            onClick={() => {
-              void handleDeletePost(post.id)
-            }}
-          />
+    return (
+      <Card key={post.id} className="w-full">
+        <div className="flex justify-content-between align-items-start">
+          {isEditing ? (
+            <FormField
+              id={`edit-post-${post.id}`}
+              label={t('posts_content_aria_label')}
+              hideLabel
+              className="w-full mb-3"
+            >
+              <InputTextarea
+                id={`edit-post-${post.id}`}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value.slice(0, 200))}
+                rows={3}
+                maxLength={200}
+                autoFocus
+                className="w-full"
+              />
+            </FormField>
+          ) : (
+            <p className="texto mt-0 mb-5">{post.content}</p>
+          )}
+
+          {isOwnPost && !isEditing && (
+            <div className="flex gap-1">
+              <Button
+                type="button"
+                icon="pi pi-pencil"
+                severity="secondary"
+                text
+                rounded
+                disabled={deletingPostId !== null}
+                aria-label={t('posts_edit_aria_label')}
+                onClick={() => handleStartEdit(post)}
+              />
+
+              <Button
+                type="button"
+                icon="pi pi-trash"
+                severity="danger"
+                text
+                rounded
+                loading={deletingPostId === post.id}
+                disabled={deletingPostId !== null}
+                aria-label={t('posts_delete_aria_label')}
+                onClick={() => {
+                  void handleDeletePost(post.id)
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {isEditing && (
+          <div className="flex justify-content-end gap-2 mb-3">
+            <Button
+              type="button"
+              label={t('posts_edit_cancel')}
+              severity="secondary"
+              text
+              disabled={isSavingEdit}
+              onClick={handleCancelEdit}
+            />
+
+            <Button
+              type="button"
+              label={t('posts_edit_save')}
+              loading={isSavingEdit}
+              disabled={!editContent.trim()}
+              onClick={() => void handleSaveEdit(post.id)}
+            />
+          </div>
         )}
-      </div>
 
-      {post.attachment &&
-        (post.attachment.type.startsWith('image/') ? (
-          <img
-            src={post.attachment.data}
-            alt={t('posts_image_alt')}
-            className="post-image"
-          />
-        ) : (
-          <a
-            href={post.attachment.data}
-            download={post.attachment.name}
-            className="post-file"
-          >
-            <i className="pi pi-file" aria-hidden="true" />
-            {post.attachment.name}
-          </a>
-        ))}
+        {post.attachment &&
+          (post.attachment.type.startsWith('image/') ? (
+            <img
+              src={post.attachment.data}
+              alt={t('posts_image_alt')}
+              className="post-image"
+            />
+          ) : (
+            <a
+              href={post.attachment.data}
+              download={post.attachment.name}
+              className="post-file"
+            >
+              <i className="pi pi-file" aria-hidden="true" />
+              {post.attachment.name}
+            </a>
+          ))}
 
-      <p className="fecha text-color-secondary">{post.date}</p>
-    </Card>
-  )
+        <p className="fecha text-color-secondary">{post.date}</p>
+      </Card>
+    )
+  }
 
   return (
     <div className="posts-container">
