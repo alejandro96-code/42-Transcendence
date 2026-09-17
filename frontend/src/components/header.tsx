@@ -91,9 +91,9 @@ export function Header() {
   }
 
   return (
-    <div className="header-container">
+    <header className="header-container">
       <div className="header-bar">
-        <div className="header-nav">
+        <nav className="header-nav" aria-label={t('header_nav_aria_label')}>
           <div className="header-brand">
             <Link to="/profile" className="header-brand">
               <img
@@ -103,7 +103,7 @@ export function Header() {
               />
             </Link>
           </div>
-        </div>
+        </nav>
 
         <div className="header-mobile-controls">
           <div className="header-mobile-language">
@@ -301,6 +301,6 @@ export function Header() {
           </Button>
         </div>
       </div>
-    </div>
+    </header>
   )
 }

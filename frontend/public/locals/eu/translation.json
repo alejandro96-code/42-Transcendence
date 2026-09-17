@@ -20,6 +20,8 @@
 
   "header_menu_aria_label": "Ireki menua",
   "header_logo_alt": "Transcendence logotipoa",
+  "header_nav_aria_label": "Nabigazio nagusia",
+  "skip_to_content": "Saltatu eduki nagusira",
   "header_search_aria_label": "Bilatu lagunak",
   "header_search_placeholder": "Bilatu...",
   "header_search_friends_placeholder": "Bilatu lagunak...",

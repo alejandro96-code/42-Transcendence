@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Header } from '../components/header'
 import { Footer } from '../components/footer'
+import { SkipLink } from '../components/ui/SkipLink'
 import { PersonalData } from '../components/personal_data'
 import { PostFeed } from '../components/posts'
 import { Friends } from '../components/friends'
@@ -90,9 +91,10 @@ export function Profile() {
 
   return (
     <div className="app-shell profile-layout">
+      <SkipLink targetId="main-content" label={t('skip_to_content')} />
       <Header />
 
-      <main className="app-content">
+      <main className="app-content" id="main-content" tabIndex={-1}>
         <h1 className="sr-only">
           {t('profile_page_title')}
         </h1>

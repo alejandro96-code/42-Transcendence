@@ -3,15 +3,17 @@ import { useTranslation } from 'react-i18next'
 import { Header } from '../components/header'
 import { Footer } from '../components/footer'
 import { PageHeading } from '../components/ui/PageHeading'
+import { SkipLink } from '../components/ui/SkipLink'
 
 export function PrivacyPolicy() {
   const { t } = useTranslation()
 
   return (
     <div className='app-shell legal-layout'>
+      <SkipLink targetId="main-content" label={t('skip_to_content')} />
       <Header />
 
-      <main className='legal-content'>
+      <main className='legal-content' id="main-content" tabIndex={-1}>
         <article className='legal-card'>
           <PageHeading
             title={t('privacy_title')}

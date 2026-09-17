@@ -20,6 +20,8 @@
   
   "header_menu_aria_label": "Abrir menú",
   "header_logo_alt": "Logo de Transcendence",
+  "header_nav_aria_label": "Navegación principal",
+  "skip_to_content": "Saltar al contenido principal",
   "header_search_aria_label": "Buscar amigos",
   "header_search_placeholder": "Buscar...",
   "header_search_friends_placeholder": "Buscar amigos...",

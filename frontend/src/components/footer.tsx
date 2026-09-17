@@ -5,7 +5,7 @@ export function Footer() {
   const { t } = useTranslation()
 
   return (
-    <div className="footer-container">
+    <footer className="footer-container">
       <div className="surface-card px-4 py-3 flex flex-column align-items-center gap-2">
         <small className="text-color-secondary">{t('footer_rights')}</small>
         <div className="flex align-items-center gap-3">
@@ -18,6 +18,6 @@ export function Footer() {
           </Link>
         </div>
       </div>
-    </div>
+    </footer>
   )
 }

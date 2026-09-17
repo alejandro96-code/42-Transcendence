@@ -22,10 +22,12 @@ const esTranslation = await fetchTranslation('es');
 const enTranslation = await fetchTranslation('en');
 const euTranslation = await fetchTranslation('eu');
 
+const initialLanguage = readStoredLanguage() || 'es';
+
 i18n
   .use(initReactI18next)
   .init({
-    lng: readStoredLanguage() || 'es',
+    lng: initialLanguage,
     fallbackLng: 'es',
     resources: {
       es: { translation: esTranslation },
@@ -40,7 +42,11 @@ i18n
     },
   });
 
+document.documentElement.lang = initialLanguage;
+
 i18n.on('languageChanged', (lng) => {
+  document.documentElement.lang = lng;
+
   try {
     window.localStorage.setItem(STORED_LANGUAGE_KEY, lng);
   } catch {

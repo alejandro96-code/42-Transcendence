@@ -114,10 +114,14 @@
             font-size: 0.85rem;
             color-scheme: dark;
 
-            &:hover,
-            &:focus {
+            &:hover {
                 border-color: $color-4;
-                outline: none;
+            }
+
+            &:focus-visible {
+                border-color: $color-accent;
+                outline: 2px solid $color-accent;
+                outline-offset: 2px;
             }
         }
 
