@@ -1,8 +1,13 @@
 import express from 'express';
+import { createHash, timingSafeEqual } from 'crypto';
 import { pool } from './db.js';
 import { formatErrorJson } from './utils.js';
 
 const MAX_CONTENT_LENGTH = 200;
+
+function hashKey(value) {
+    return createHash('sha256').update(value).digest();
+}
 
 function requireApiKey(req, res, next) {
     const apiKey = req.headers['x-api-key'];
@@ -15,7 +20,10 @@ function requireApiKey(req, res, next) {
         );
     }
 
-    if (!apiKey || apiKey !== expectedKey) {
+    const isValid = typeof apiKey === 'string' && apiKey.length > 0 &&
+        timingSafeEqual(hashKey(apiKey), hashKey(expectedKey));
+
+    if (!isValid) {
         return res.status(401).json(
             formatErrorJson(401, "Unauthorized", "Missing or invalid API key", "PUBLIC_API_KEY_INVALID")
         );

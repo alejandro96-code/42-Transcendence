@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY,
     author_id INT,
-    FOREIGN KEY (author_id) REFERENCES users(id),
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
     author_username VARCHAR(50),
     content VARCHAR(200),
     media TEXT[],
