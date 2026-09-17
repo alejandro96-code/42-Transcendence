@@ -19,6 +19,21 @@ import { StatPill } from './ui/StatPill'
 
 const MAX_ATTACHMENT_SIZE = 2 * 1024 * 1024
 
+const ACCEPTED_ATTACHMENT_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'text/csv',
+]
+
+const ACCEPTED_ATTACHMENT_EXTENSIONS =
+  '.png,.jpg,.jpeg,.webp,.gif,.pdf,.doc,.docx,.txt,.csv'
+
 interface Post {
   id: number
   content: string
@@ -302,6 +317,12 @@ export function PostFeed({
 
     setImageError('')
 
+    if (!ACCEPTED_ATTACHMENT_TYPES.includes(file.type)) {
+      setImageError(t('posts_err_attachment_invalid_type'))
+      e.target.value = ''
+      return
+    }
+
     if (file.size > MAX_ATTACHMENT_SIZE) {
       setImageError(
         t('posts_err_image_too_large', {
@@ -313,6 +334,7 @@ export function PostFeed({
           ).toFixed(2),
         }),
       )
+      e.target.value = ''
       return
     }
 
@@ -322,8 +344,7 @@ export function PostFeed({
       setAttachment({
         data: reader.result as string,
         name: file.name,
-        type:
-          file.type || 'application/octet-stream',
+        type: file.type,
       })
 
       e.target.value = ''
@@ -676,6 +697,7 @@ const handleDeletePost = async (postId: number) => {
                 id="post-image-upload"
                 ref={fileInputRef}
                 type="file"
+                accept={ACCEPTED_ATTACHMENT_EXTENSIONS}
                 onChange={handleFileSelect}
                 className="hidden-file-input"
               />

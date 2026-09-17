@@ -120,6 +120,7 @@
   "posts_btn_publish": "Publish",
   "posts_err_not_an_image": "Invalid file type",
   "posts_err_image_too_large": "File is too heavy. Maximum {{maxSize}} (current: {{currentSize}} MB)",
+  "posts_err_attachment_invalid_type": "File type not allowed. Accepted formats: images (PNG, JPG, WEBP, GIF), PDF, Word, TXT and CSV",
   "posts_err_publish": "Could not publish the post.",
   "posts_err_load": "Could not load posts.",
   "posts_filter_my_posts": "Your posts",

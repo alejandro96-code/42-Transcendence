@@ -120,6 +120,7 @@
   "posts_btn_publish": "Argitaratu",
   "posts_err_not_an_image": "Fitxategi mota baliogabea",
   "posts_err_image_too_large": "Fitxategia gehiegi pisatzen du. Gehienez {{maxSize}} (orain: {{currentSize}} MB)",
+  "posts_err_attachment_invalid_type": "Fitxategi mota ez dago baimenduta. Onartutako formatuak: irudiak (PNG, JPG, WEBP, GIF), PDF, Word, TXT eta CSV",
   "posts_err_publish": "Ezin izan da mezua argitaratu.",
   "posts_err_load": "Ezin izan dira mezuak kargatu.",
   "posts_filter_my_posts": "Zure postak",
